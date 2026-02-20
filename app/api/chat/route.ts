@@ -1,1 +1,310 @@
-"import { NextRequest, NextResponse } from 'next/server';\nimport Anthropic from '@anthropic-ai/sdk';\nimport {\n  getPendingTasksSummary,\n  getContext,\n  getLearnings,\n  getCategories,\n  createTask,\n  getTasks,\n  updateTask,\n  completeTask,\n  bulkUpdateStatus,\n  logInteraction,\n} from '@/lib/supabase';\nimport { prioritizeTasks } from '@/lib/ai';\nimport { Task } from '@/lib/types';\n\nexport const dynamic = 'force-dynamic';\nexport const maxDuration = 30;\n\nconst USER_ID = '823d6746-d7b4-4521-b592-d747be1917e7';\n\nlet _anthropic: Anthropic | null = null;\nfunction getClient(): Anthropic {\n  if (!_anthropic) {\n    _anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });\n  }\n  return _anthropic;\n}\n\n// POST /api/chat — Action-aware AI chat router\nexport async function POST(request: NextRequest) {\n  try {\n    const body = await request.json();\n    const { message, conversation_history } = body;\n\n    if (!message) {\n      return NextResponse.json({ error: 'message is required' }, { status: 400 });\n    }\n\n    // Gather all context\n    const [tasks, context, learnings, categories] = await Promise.all([\n      getPendingTasksSummary(),\n      getContext(USER_ID),\n      getLearnings(USER_ID),\n      getCategories(USER_ID),\n    ]);\n\n    const contextText = context?.context_text || 'No context provided.';\n    const categoryList = categories.map(c => c.name).join(', ') || 'Tanaor, eCom Academy, Content, Investments, Personal, New Venture';\n    const learningsText = learnings.length > 0\n      ? learnings.map(l => `- ${l.learning}`).join('\\n')\n      : 'No learnings yet.';\n\n    const tasksList = tasks.length > 0\n      ? tasks.map(t =>\n          `- [${t.id}] \"${t.title}\" | Status: ${t.status} | Priority: ${t.priority} | Time: ${t.estimated_minutes || '?'}min | Category: ${t.category || 'general'} | Score: ${t.smart_score || '?'}`\n        ).join('\\n')\n      : 'No pending tasks.';\n\n    const systemPrompt = `You are TaskBuddy, Daniel's AI task manager and personal chief of staff. You don't just chat — you TAKE ACTION.\n\n## About Daniel\n${contextText}\n\n## Current Tasks\n${tasksList}\n\n## Available Categories\n${categoryList}\n\n## Learnings About Daniel\n${learningsText}\n\n## Your Job\nWhen Daniel messages you, analyze what he needs and respond with BOTH a friendly message AND any actions to execute.\n\nCRITICAL RULES:\n1. If he mentions ANY task, activity, or thing he needs to do → CREATE IT as a task. Even casual mentions like \"I need to call Noa\" or \"gotta review Q3 numbers\" are tasks.\n2. If he talks about priorities changing, focus shifting, or what matters most → REPRIORITIZE all today's tasks.\n3. If he gives a \"brain dump\" (multiple items) → CREATE MULTIPLE TASKS, one for each item.\n4. If he asks to complete/finish/done a task → COMPLETE IT.\n5. If he asks to move/reschedule tasks → RESCHEDULE them.\n6. If he just asks a question or wants advice → respond conversationally with NO actions.\n\nFor task creation, infer:\n- category: from context (jewelry/Noa/sister = Tanaor, courses/students = eCom Academy, etc.)\n- priority: from urgency cues (default \"medium\", urgent/asap/critical = \"high\"/\"critical\")\n- estimated_minutes: from task complexity (quick call = 15, email = 10, meeting = 30, deep work = 60-120)\n- focus_required: from type (emails/admin = \"low\", reviews = \"medium\", writing/strategy = \"high\")\n\nYou MUST respond with valid JSON only (no markdown backticks, no extra text). Format:\n{\n  \"response\": \"Your friendly message to Daniel\",\n  \"actions\": [\n    {\n      \"type\": \"create_task\",\n      \"data\": {\n        \"title\": \"Task title\",\n        \"category\": \"Category name or null\",\n        \"priority\": \"low|medium|high|critical\",\n        \"estimated_minutes\": number or null,\n        \"difficulty\": \"easy|medium|hard\",\n        \"focus_required\": \"low|medium|high\",\n        \"description\": \"Optional description\",\n        \"due_date\": \"YYYY-MM-DD or null\"\n      }\n    },\n    {\n      \"type\": \"reprioritize\",\n      \"data\": { \"reason\": \"Why reprioritizing\" }\n    },\n    {\n      \"type\": \"complete_task\",\n      \"data\": { \"task_id\": \"uuid\", \"title\": \"for confirmation\" }\n    },\n    {\n      \"type\": \"reschedule\",\n      \"data\": { \"task_ids\": [\"uuid\"], \"new_status\": \"inbox|today|archived\" }\n    }\n  ]\n}\n\nIf no actions needed (pure conversation), use: \"actions\": []\n\nBe warm, concise, and action-oriented. You're not just a chatbot — you're a doer.`;\n\n    // Build messages\n    const messages = [\n      ...(conversation_history || []).map((m: any) => ({\n        role: m.role as 'user' | 'assistant',\n        content: m.content,\n      })),\n      { role: 'user' as const, content: message },\n    ];\n\n    // Call Claude\n    const aiResponse = await getClient().messages.create({\n      model: 'claude-sonnet-4-20250514',\n      max_tokens: 2048,\n      system: systemPrompt,\n      messages,\n    });\n\n    const rawContent = (aiResponse.content[0] as { type: string; text: string }).text;\n\n    // Parse the structured response\n    let parsed: { response: string; actions: any[] };\n    try {\n      parsed = JSON.parse(rawContent);\n    } catch {\n      // Try extracting JSON from response\n      const match = rawContent.match(/\\{[\\s\\S]*\\}/);\n      if (match) {\n        parsed = JSON.parse(match[0]);\n      } else {\n        // Fallback: treat as pure conversation\n        parsed = { response: rawContent, actions: [] };\n      }\n    }\n\n    // Execute actions\n    const actionsTaken: any[] = [];\n\n    for (const action of (parsed.actions || [])) {\n      try {\n        switch (action.type) {\n          case 'create_task': {\n            const taskData = action.data;\n            const newTask = await createTask({\n              title: taskData.title,\n              description: taskData.description || null,\n              category: taskData.category || null,\n              priority: taskData.priority || 'medium',\n              difficulty: taskData.difficulty || 'medium',\n              estimated_minutes: taskData.estimated_minutes || null,\n              focus_required: taskData.focus_required || 'medium',\n              due_date: taskData.due_date || null,\n              status: 'today',\n              source: 'app_text',\n              created_by: USER_ID,\n            } as Partial<Task>);\n\n            actionsTaken.push({\n              type: 'task_created',\n              task: {\n                id: newTask.id,\n                title: newTask.title,\n                category: newTask.category,\n                priority: newTask.priority,\n                estimated_minutes: newTask.estimated_minutes,\n              },\n            });\n\n            // Log interaction\n            await logInteraction({\n              user_id: USER_ID,\n              user_input: message,\n              ai_action: 'create_task',\n              ai_response: `Created task: ${newTask.title}`,\n              tasks_affected: [newTask.id],\n            });\n            break;\n          }\n\n          case 'reprioritize': {\n            const todayTasks = await getTasks({ status: 'today' });\n            if (todayTasks.length > 0) {\n              const prioritized = await prioritizeTasks(\n                todayTasks,\n                contextText,\n                learnings\n              );\n              for (const pt of prioritized.tasks) {\n                await updateTask(pt.id, {\n                  smart_score: pt.smart_score,\n                  score_breakdown: pt.score_breakdown,\n                  position_today: pt.position,\n                  is_do_now: pt.is_do_now,\n                  ai_reason: pt.ai_reason,\n                });\n              }\n              actionsTaken.push({\n                type: 'reprioritized',\n                task_count: todayTasks.length,\n                new_do_now: prioritized.tasks.find(t => t.is_do_now)?.id || null,\n              });\n\n              await logInteraction({\n                user_id: USER_ID,\n                user_input: message,\n                ai_action: 'reprioritize',\n                ai_response: prioritized.confirmation,\n                tasks_affected: prioritized.tasks.map(t => t.id),\n              });\n            }\n            break;\n          }\n\n          case 'complete_task': {\n            if (action.data?.task_id) {\n              await completeTask(action.data.task_id);\n              actionsTaken.push({\n                type: 'task_completed',\n                task_id: action.data.task_id,\n                title: action.data.title,\n              });\n            }\n            break;\n          }\n\n          case 'reschedule': {\n            if (action.data?.task_ids?.length > 0) {\n              await bulkUpdateStatus(action.data.task_ids, action.data.new_status || 'inbox');\n              actionsTaken.push({\n                type: 'tasks_rescheduled',\n                task_ids: action.data.task_ids,\n                new_status: action.data.new_status,\n              });\n            }\n            break;\n          }\n        }\n      } catch (actionError) {\n        console.error(`Action ${action.type} failed:`, actionError);\n        actionsTaken.push({\n          type: 'error',\n          action_type: action.type,\n          error: actionError instanceof Error ? actionError.message : 'Action failed',\n        });\n      }\n    }\n\n    // After creating tasks, auto-reprioritize if we created any\n    const createdTasks = actionsTaken.filter(a => a.type === 'task_created');\n    const alreadyReprioritized = actionsTaken.some(a => a.type === 'reprioritized');\n\n    if (createdTasks.length > 0 && !alreadyReprioritized) {\n      try {\n        const todayTasks = await getTasks({ status: 'today' });\n        if (todayTasks.length > 1) {\n          const prioritized = await prioritizeTasks(todayTasks, contextText, learnings);\n          for (const pt of prioritized.tasks) {\n            await updateTask(pt.id, {\n              smart_score: pt.smart_score,\n              score_breakdown: pt.score_breakdown,\n              position_today: pt.position,\n              is_do_now: pt.is_do_now,\n              ai_reason: pt.ai_reason,\n            });\n          }\n          actionsTaken.push({\n            type: 'auto_reprioritized',\n            task_count: todayTasks.length,\n          });\n        }\n      } catch (e) {\n        console.error('Auto-reprioritize after create failed:', e);\n      }\n    }\n\n    return NextResponse.json({\n      response: parsed.response,\n      actions_taken: actionsTaken,\n    });\n  } catch (error) {\n    console.error('Chat error:', error);\n    return NextResponse.json({ error: 'Failed to chat' }, { status: 500 });\n  }\n}"
+import { NextRequest, NextResponse } from 'next/server';
+import Anthropic from '@anthropic-ai/sdk';
+import {
+  getPendingTasksSummary,
+  getContext,
+  getLearnings,
+  getCategories,
+  createTask,
+  getTasks,
+  updateTask,
+  completeTask,
+  bulkUpdateStatus,
+  logInteraction,
+} from '@/lib/supabase';
+import { prioritizeTasks } from '@/lib/ai';
+import { Task } from '@/lib/types';
+
+export const dynamic = 'force-dynamic';
+export const maxDuration = 30;
+
+const USER_ID = '823d6746-d7b4-4521-b592-d747be1917e7';
+
+let _anthropic: Anthropic | null = null;
+function getClient(): Anthropic {
+  if (!_anthropic) {
+    _anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  }
+  return _anthropic;
+}
+
+// POST /api/chat — Action-aware AI chat router
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { message, conversation_history } = body;
+
+    if (!message) {
+      return NextResponse.json({ error: 'message is required' }, { status: 400 });
+    }
+
+    // Gather all context
+    const [tasks, context, learnings, categories] = await Promise.all([
+      getPendingTasksSummary(),
+      getContext(USER_ID),
+      getLearnings(USER_ID),
+      getCategories(USER_ID),
+    ]);
+
+    const contextText = context?.context_text || 'No context provided.';
+    const categoryList = categories.map(c => c.name).join(', ') || 'Tanaor, eCom Academy, Content, Investments, Personal, New Venture';
+    const learningsText = learnings.length > 0
+      ? learnings.map(l => `- ${l.learning}`).join('\n')
+      : 'No learnings yet.';
+
+    const tasksList = tasks.length > 0
+      ? tasks.map(t =>
+          `- [${t.id}] "${t.title}" | Status: ${t.status} | Priority: ${t.priority} | Time: ${t.estimated_minutes || '?'}min | Category: ${t.category || 'general'} | Score: ${t.smart_score || '?'}`
+        ).join('\n')
+      : 'No pending tasks.';
+
+    const systemPrompt = `You are TaskBuddy, Daniel's AI task manager and personal chief of staff. You don't just chat — you TAKE ACTION.
+
+## About Daniel
+${contextText}
+
+## Current Tasks
+${tasksList}
+
+## Available Categories
+${categoryList}
+
+## Learnings About Daniel
+${learningsText}
+
+## Your Job
+When Daniel messages you, analyze what he needs and respond with BOTH a friendly message AND any actions to execute.
+
+CRITICAL RULES:
+1. If he mentions ANY task, activity, or thing he needs to do → CREATE IT as a task. Even casual mentions like "I need to call Noa" or "gotta review Q3 numbers" are tasks.
+2. If he talks about priorities changing, focus shifting, or what matters most → REPRIORITIZE all today's tasks.
+3. If he gives a "brain dump" (multiple items) → CREATE MULTIPLE TASKS, one for each item.
+4. If he asks to complete/finish/done a task → COMPLETE IT.
+5. If he asks to move/reschedule tasks → RESCHEDULE them.
+6. If he just asks a question or wants advice → respond conversationally with NO actions.
+
+For task creation, infer:
+- category: from context (jewelry/Noa/sister = Tanaor, courses/students = eCom Academy, etc.)
+- priority: from urgency cues (default "medium", urgent/asap/critical = "high"/"critical")
+- estimated_minutes: from task complexity (quick call = 15, email = 10, meeting = 30, deep work = 60-120)
+- focus_required: from type (emails/admin = "low", reviews = "medium", writing/strategy = "high")
+
+You MUST respond with valid JSON only (no markdown backticks, no extra text). Format:
+{
+  "response": "Your friendly message to Daniel",
+  "actions": [
+    {
+      "type": "create_task",
+      "data": {
+        "title": "Task title",
+        "category": "Category name or null",
+        "priority": "low|medium|high|critical",
+        "estimated_minutes": number or null,
+        "difficulty": "easy|medium|hard",
+        "focus_required": "low|medium|high",
+        "description": "Optional description",
+        "due_date": "YYYY-MM-DD or null"
+      }
+    },
+    {
+      "type": "reprioritize",
+      "data": { "reason": "Why reprioritizing" }
+    },
+    {
+      "type": "complete_task",
+      "data": { "task_id": "uuid", "title": "for confirmation" }
+    },
+    {
+      "type": "reschedule",
+      "data": { "task_ids": ["uuid"], "new_status": "inbox|today|archived" }
+    }
+  ]
+}
+
+If no actions needed (pure conversation), use: "actions": []
+
+Be warm, concise, and action-oriented. You're not just a chatbot — you're a doer.`;
+
+    // Build messages
+    const messages = [
+      ...(conversation_history || []).map((m: any) => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content,
+      })),
+      { role: 'user' as const, content: message },
+    ];
+
+    // Call Claude
+    const aiResponse = await getClient().messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2048,
+      system: systemPrompt,
+      messages,
+    });
+
+    const rawContent = (aiResponse.content[0] as { type: string; text: string }).text;
+
+    // Parse the structured response
+    let parsed: { response: string; actions: any[] };
+    try {
+      parsed = JSON.parse(rawContent);
+    } catch {
+      // Try extracting JSON from response
+      const match = rawContent.match(/\{[\s\S]*\}/);
+      if (match) {
+        parsed = JSON.parse(match[0]);
+      } else {
+        // Fallback: treat as pure conversation
+        parsed = { response: rawContent, actions: [] };
+      }
+    }
+
+    // Execute actions
+    const actionsTaken: any[] = [];
+
+    for (const action of (parsed.actions || [])) {
+      try {
+        switch (action.type) {
+          case 'create_task': {
+            const taskData = action.data;
+            const newTask = await createTask({
+              title: taskData.title,
+              description: taskData.description || null,
+              category: taskData.category || null,
+              priority: taskData.priority || 'medium',
+              difficulty: taskData.difficulty || 'medium',
+              estimated_minutes: taskData.estimated_minutes || null,
+              focus_required: taskData.focus_required || 'medium',
+              due_date: taskData.due_date || null,
+              status: 'today',
+              source: 'app_text',
+              created_by: USER_ID,
+            } as Partial<Task>);
+
+            actionsTaken.push({
+              type: 'task_created',
+              task: {
+                id: newTask.id,
+                title: newTask.title,
+                category: newTask.category,
+                priority: newTask.priority,
+                estimated_minutes: newTask.estimated_minutes,
+              },
+            });
+
+            // Log interaction
+            await logInteraction({
+              user_id: USER_ID,
+              user_input: message,
+              ai_action: 'create_task',
+              ai_response: `Created task: ${newTask.title}`,
+              tasks_affected: [newTask.id],
+            });
+            break;
+          }
+
+          case 'reprioritize': {
+            const todayTasks = await getTasks({ status: 'today' });
+            if (todayTasks.length > 0) {
+              const prioritized = await prioritizeTasks(
+                todayTasks,
+                contextText,
+                learnings
+              );
+              for (const pt of prioritized.tasks) {
+                await updateTask(pt.id, {
+                  smart_score: pt.smart_score,
+                  score_breakdown: pt.score_breakdown,
+                  position_today: pt.position,
+                  is_do_now: pt.is_do_now,
+                  ai_reason: pt.ai_reason,
+                });
+              }
+              actionsTaken.push({
+                type: 'reprioritized',
+                task_count: todayTasks.length,
+                new_do_now: prioritized.tasks.find(t => t.is_do_now)?.id || null,
+              });
+
+              await logInteraction({
+                user_id: USER_ID,
+                user_input: message,
+                ai_action: 'reprioritize',
+                ai_response: prioritized.confirmation,
+                tasks_affected: prioritized.tasks.map(t => t.id),
+              });
+            }
+            break;
+          }
+
+          case 'complete_task': {
+            if (action.data?.task_id) {
+              await completeTask(action.data.task_id);
+              actionsTaken.push({
+                type: 'task_completed',
+                task_id: action.data.task_id,
+                title: action.data.title,
+              });
+            }
+            break;
+          }
+
+          case 'reschedule': {
+            if (action.data?.task_ids?.length > 0) {
+              await bulkUpdateStatus(action.data.task_ids, action.data.new_status || 'inbox');
+              actionsTaken.push({
+                type: 'tasks_rescheduled',
+                task_ids: action.data.task_ids,
+                new_status: action.data.new_status,
+              });
+            }
+            break;
+          }
+        }
+      } catch (actionError) {
+        console.error(`Action ${action.type} failed:`, actionError);
+        actionsTaken.push({
+          type: 'error',
+          action_type: action.type,
+          error: actionError instanceof Error ? actionError.message : 'Action failed',
+        });
+      }
+    }
+
+    // After creating tasks, auto-reprioritize if we created any
+    const createdTasks = actionsTaken.filter(a => a.type === 'task_created');
+    const alreadyReprioritized = actionsTaken.some(a => a.type === 'reprioritized');
+
+    if (createdTasks.length > 0 && !alreadyReprioritized) {
+      try {
+        const todayTasks = await getTasks({ status: 'today' });
+        if (todayTasks.length > 1) {
+          const prioritized = await prioritizeTasks(todayTasks, contextText, learnings);
+          for (const pt of prioritized.tasks) {
+            await updateTask(pt.id, {
+              smart_score: pt.smart_score,
+              score_breakdown: pt.score_breakdown,
+              position_today: pt.position,
+              is_do_now: pt.is_do_now,
+              ai_reason: pt.ai_reason,
+            });
+          }
+          actionsTaken.push({
+            type: 'auto_reprioritized',
+            task_count: todayTasks.length,
+          });
+        }
+      } catch (e) {
+        console.error('Auto-reprioritize after create failed:', e);
+      }
+    }
+
+    return NextResponse.json({
+      response: parsed.response,
+      actions_taken: actionsTaken,
+    });
+  } catch (error) {
+    console.error('Chat error:', error);
+    return NextResponse.json({ error: 'Failed to chat' }, { status: 500 });
+  }
+}
