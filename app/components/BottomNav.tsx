@@ -15,7 +15,7 @@ export default function BottomNav({ show = true }: BottomNavProps) {
   const isActive = (path: string) => pathname === path;
 
   return (
-    <nav className="bottom-nav fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center h-16 safe-area-inset-bottom">
+    <nav className="bottom-nav fixed bottom-0 left-0 right-0 flex justify-around items-center h-16 safe-area-inset-bottom z-30">
       {/* Today */}
       <Link
         href="/today"
@@ -24,14 +24,10 @@ export default function BottomNav({ show = true }: BottomNavProps) {
         }`}
         title="Today"
       >
-        <svg
-          className="w-6 h-6"
-          fill="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zm-5.04-6.71l-2.75 3.54h3.02l4.25-5.7h-3.02l-1.5 2.16z" />
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={isActive('/today') ? 2.5 : 1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
         </svg>
-        <span className="text-xs font-medium">Today</span>
+        <span className={`text-xs ${isActive('/today') ? 'font-bold' : 'font-medium'}`}>Today</span>
       </Link>
 
       {/* All Tasks */}
@@ -42,32 +38,10 @@ export default function BottomNav({ show = true }: BottomNavProps) {
         }`}
         title="All Tasks"
       >
-        <svg
-          className="w-6 h-6"
-          fill="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" />
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={isActive('/tasks') ? 2.5 : 1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
         </svg>
-        <span className="text-xs font-medium">Tasks</span>
-      </Link>
-
-      {/* Settings */}
-      <Link
-        href="/settings"
-        className={`flex-1 flex flex-col items-center justify-center gap-1 py-2 px-4 transition-colors ${
-          isActive('/settings') ? 'text-[#C45D3E]' : 'text-gray-400'
-        }`}
-        title="Settings"
-      >
-        <svg
-          className="w-6 h-6"
-          fill="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l1.72-1.35c.15-.12.19-.34.1-.51l-1.63-2.83c-.12-.22-.37-.29-.59-.22l-2.03.8c-.42-.32-.9-.6-1.44-.78l-.3-2.15c-.04-.24-.24-.41-.48-.41h-3.27c-.24 0-.43.17-.47.41l-.3 2.15c-.54.18-1.02.46-1.44.78l-2.03-.8c-.22-.09-.47 0-.59.22L2.74 8.87c-.1.16-.06.39.1.51l1.72 1.35c-.05.3-.07.62-.07.94s.02.64.07.94l-1.72 1.35c-.15.12-.19.34-.1.51l1.63 2.83c.12.22.37.29.59.22l2.03-.8c.42.32.9.6 1.44.78l.3 2.15c.04.24.24.41.48.41h3.27c.24 0 .43-.17.47-.41l.3-2.15c.54-.18 1.02-.46 1.44-.78l2.03.8c.22.09.47 0 .59-.22l1.63-2.83c.1-.16.06-.39-.1-.51l-1.72-1.35zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
-        </svg>
-        <span className="text-xs font-medium">Settings</span>
+        <span className={`text-xs ${isActive('/tasks') ? 'font-bold' : 'font-medium'}`}>All Tasks</span>
       </Link>
     </nav>
   );
