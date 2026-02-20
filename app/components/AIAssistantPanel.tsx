@@ -176,7 +176,7 @@ export default function AIAssistantPanel() {
       if (card.type === 'tasks_created') {
         return (
           <div key={i} className="mt-2.5 space-y-1.5">
-            {card.tasks.map((task: any, j: number) => (
+            {(card.tasks || []).map((task: any, j: number) => (
               <div key={j} className="flex items-center gap-2.5 bg-white/60 dark:bg-white/5 backdrop-blur-sm rounded-xl px-3 py-2 border border-[#C45D3E]/15">
                 <div className="w-5 h-5 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center flex-shrink-0">
                   <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
