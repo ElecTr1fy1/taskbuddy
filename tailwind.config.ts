@@ -53,7 +53,7 @@ const config: Config = {
         sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
-        card: '10px',
+        card: '16px',
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-out',
