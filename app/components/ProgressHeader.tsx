@@ -51,7 +51,7 @@ export default function ProgressHeader({ tasks, userName = 'Daniel' }: ProgressH
           {totalCount > 0 ? (
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               {completedCount} of {totalCount} done
-              {timeLeftMinutes > 0 && ` Â· ~${formatTimeLeft(timeLeftMinutes)} left`}
+              {timeLeftMinutes > 0 && ` · ~${formatTimeLeft(timeLeftMinutes)} left`}
             </p>
           ) : (
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
