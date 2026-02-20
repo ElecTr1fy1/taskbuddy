@@ -40,19 +40,17 @@ export default function TodayPage() {
     setIsLoading(true);
     try {
       // Fetch today's tasks and all tasks
-      const [todayRes, allRes, categoriesRes] = await Promise.all([
+      const [todayRes, allRes] = await Promise.all([
         fetch('/api/tasks?status=today'),
         fetch('/api/tasks'),
-        fetch('/api/categories').catch(() => null),
       ]);
 
       const todayData = await todayRes.json();
       const allData = await allRes.json();
-      const categoriesData = categoriesRes ? await categoriesRes.json() : null;
 
       setTasks(todayData.tasks || []);
       setAllTasks(allData.tasks || []);
-      setCategories(categoriesData?.categories || DEFAULT_CATEGORIES.map((cat, idx) => ({
+      setCategories(DEFAULT_CATEGORIES.map((cat, idx) => ({
         id: `cat-${idx}`,
         user_id: user.id,
         name: cat.name,
@@ -121,24 +119,21 @@ export default function TodayPage() {
       const response = await fetch('/api/ai/parse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text, user_id: user.id }),
       });
 
-      const data: ParseResponse = await response.json();
+      const data = await response.json();
+
+      if (!response.ok) {
+        setAiMessage(data.error || 'Something went wrong.');
+        return;
+      }
 
       // Handle response based on type
-      if (data.type === 'task' && data.task) {
-        // Create task
-        const createRes = await fetch('/api/tasks', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data.task),
-        });
-
-        if (createRes.ok) {
-          setAiMessage(data.response);
-          await loadData();
-        }
+      if (data.type === 'task') {
+        // Task was already created by the parse API
+        setAiMessage(data.response);
+        await loadData();
       } else if (data.type === 'command' && data.command) {
         // Handle command (e.g., reshuffle)
         setAiMessage(data.response);
