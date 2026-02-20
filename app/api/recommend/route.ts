@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPendingTasksSummary } from '@/lib/supabase';
 import { recommendTasks } from '@/lib/ai';
 
+export const dynamic = 'force-dynamic';
+
 // POST /api/recommend
 export async function POST(request: NextRequest) {
   try {

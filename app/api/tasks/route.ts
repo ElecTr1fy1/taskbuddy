@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getTasks, createTask } from '@/lib/supabase';
 import { TaskFilters, Task } from '@/lib/types';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/tasks — list tasks with optional filters
 export async function GET(request: NextRequest) {
   try {

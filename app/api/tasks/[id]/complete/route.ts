@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { completeTask } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 // PATCH /api/tasks/[id]/complete — mark task as complete
 export async function PATCH(
   request: NextRequest,

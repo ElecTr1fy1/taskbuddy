@@ -8,6 +8,8 @@ import {
 } from '@/lib/supabase';
 import { prioritizeTasks } from '@/lib/ai';
 
+export const dynamic = 'force-dynamic';
+
 // POST /api/ai/prioritize — prioritize today's tasks
 export async function POST(request: NextRequest) {
   try {

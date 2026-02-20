@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { bulkUpdateStatus } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 // PATCH /api/tasks/bulk — bulk update task status
 export async function PATCH(request: NextRequest) {
   try {

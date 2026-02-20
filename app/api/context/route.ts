@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getContext, upsertContext } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/context — get user context
 export async function GET(request: NextRequest) {
   try {

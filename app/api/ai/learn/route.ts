@@ -5,6 +5,8 @@ import {
 } from '@/lib/supabase';
 import { extractLearnings } from '@/lib/ai';
 
+export const dynamic = 'force-dynamic';
+
 // POST /api/ai/learn — extract and store learnings from recent interactions
 export async function POST(request: NextRequest) {
   try {

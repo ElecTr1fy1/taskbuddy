@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getLearnings, deleteLearning } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/learnings — get all active learnings for a user
 export async function GET(request: NextRequest) {
   try {

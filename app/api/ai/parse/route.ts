@@ -9,6 +9,8 @@ import {
 import { parseInput as aiParseInput } from '@/lib/ai';
 import { Task } from '@/lib/types';
 
+export const dynamic = 'force-dynamic';
+
 // POST /api/ai/parse — parse natural language input
 export async function POST(request: NextRequest) {
   try {

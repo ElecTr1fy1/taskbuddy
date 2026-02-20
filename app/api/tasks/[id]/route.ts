@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getTask, updateTask, softDeleteTask } from '@/lib/supabase';
 import { Task } from '@/lib/types';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/tasks/[id]
 export async function GET(
   request: NextRequest,
