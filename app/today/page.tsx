@@ -1,1 +1,325 @@
-"'use client';\n\nimport { useEffect, useState, useCallback } from 'react';\nimport { useRouter } from 'next/navigation';\nimport { Task, Category, DEFAULT_CATEGORIES } from '@/lib/types';\nimport { useAuth } from '@/app/components/AuthProvider';\nimport { useApp } from '@/app/context/AppProvider';\nimport ProgressHeader from '@/app/components/ProgressHeader';\nimport DoNowCard from '@/app/components/DoNowCard';\nimport TaskCard from '@/app/components/TaskCard';\nimport TaskDetailSheet from '@/app/components/TaskDetailSheet';\nimport SkeletonCard from '@/app/components/SkeletonCard';\nimport QuickAddButton from '@/app/components/QuickAddButton';\nimport BottomNav from '@/app/components/BottomNav';\n\nfunction CollapsibleSection({ title, count, color, borderColor, children }: {\n  title: string;\n  count: number;\n  color: string;\n  borderColor: string;\n  children: React.ReactNode;\n}) {\n  const [isOpen, setIsOpen] = useState(false);\n  return (\n    <div>\n      <button\n        onClick={() => setIsOpen(!isOpen)}\n        className=\"flex items-center gap-2 mb-2 w-full group\"\n      >\n        <span className={`text-xs font-bold uppercase tracking-wider ${color}`}>\n          {title} ({count})\n        </span>\n        <div className={`flex-1 h-px ${borderColor}`} />\n        <svg\n          className={`w-4 h-4 ${color} transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}\n          fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\" strokeWidth={2}\n        >\n          <path strokeLinecap=\"round\" strokeLinejoin=\"round\" d=\"m19 9-7 7-7-7\" />\n        </svg>\n      </button>\n      <div className={`transition-all duration-300 ease-out overflow-hidden ${isOpen ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>\n        {children}\n      </div>\n    </div>\n  );\n}\n\nexport default function TodayPage() {\n  const router = useRouter();\n  const { user, loading: authLoading } = useAuth();\n  const { refreshKey } = useApp();\n\n  const [tasks, setTasks] = useState<Task[]>([]);\n  const [allTasks, setAllTasks] = useState<Task[]>([]);\n  const [categories, setCategories] = useState<Category[]>([]);\n  const [isLoading, setIsLoading] = useState(true);\n  const [isSubmitting, setIsSubmitting] = useState(false);\n  const [selectedTask, setSelectedTask] = useState<Task | null>(null);\n  const [detailSheetOpen, setDetailSheetOpen] = useState(false);\n\n  useEffect(() => {\n    if (!authLoading && !user) {\n      router.push('/login');\n    }\n  }, [user, authLoading, router]);\n\n  const loadData = useCallback(async () => {\n    if (!user) return;\n\n    setIsLoading(true);\n    try {\n      const [todayRes, allRes] = await Promise.all([\n        fetch('/api/tasks?status=today'),\n        fetch('/api/tasks'),\n      ]);\n\n      const todayData = await todayRes.json();\n      const allData = await allRes.json();\n\n      setTasks(todayData.tasks || []);\n      setAllTasks(allData.tasks || []);\n      setCategories(DEFAULT_CATEGORIES.map((cat, idx) => ({\n        id: `cat-${idx}`,\n        user_id: user.id,\n        name: cat.name,\n        color: cat.color,\n        sort_order: idx,\n        created_at: new Date().toISOString(),\n      })));\n    } catch (error) {\n      console.error('Failed to load data:', error);\n    } finally {\n      setIsLoading(false);\n    }\n  }, [user]);\n\n  useEffect(() => {\n    loadData();\n  }, [loadData, refreshKey]);\n\n  const handleTaskComplete = async (taskId: string) => {\n    try {\n      await fetch(`/api/tasks/${taskId}/complete`, { method: 'POST' });\n      await loadData();\n    } catch (error) {\n      console.error('Failed to complete task:', error);\n    }\n  };\n\n  const handleTaskTap = (taskId: string) => {\n    const task = [...tasks, ...allTasks].find(t => t.id === taskId);\n    if (task) {\n      setSelectedTask(task);\n      setDetailSheetOpen(true);\n    }\n  };\n\n  const handleDetailSave = async (updates: Partial<Task>) => {\n    if (!selectedTask) return;\n    try {\n      const response = await fetch(`/api/tasks/${selectedTask.id}`, {\n        method: 'PUT',\n        headers: { 'Content-Type': 'application/json' },\n        body: JSON.stringify(updates),\n      });\n      if (response.ok) {\n        await loadData();\n        setDetailSheetOpen(false);\n        setSelectedTask(null);\n      }\n    } catch (error) {\n      console.error('Failed to save task:', error);\n    }\n  };\n\n  const handleQuickAdd = async (text: string) => {\n    if (!text.trim() || isSubmitting || !user) return;\n    setIsSubmitting(true);\n    try {\n      const response = await fetch('/api/ai/parse', {\n        method: 'POST',\n        headers: { 'Content-Type': 'application/json' },\n        body: JSON.stringify({ text, user_id: user.id }),\n      });\n      if (response.ok) {\n        await loadData();\n      }\n    } catch (error) {\n      console.error('Failed to add task:', error);\n    } finally {\n      setIsSubmitting(false);\n    }\n  };\n\n  // Find do-now task\n  const doNowTask = tasks.find(t => t.is_do_now && t.status !== 'completed');\n\n  // Remaining tasks sorted by position\n  const upNextTasks = tasks\n    .filter(t => !t.is_do_now && t.status !== 'completed')\n    .sort((a, b) => (a.position_today || 0) - (b.position_today || 0));\n\n  // Completed tasks today\n  const completedTasks = tasks.filter(t => t.status === 'completed');\n\n  // Overdue tasks\n  const overdueTasks = allTasks.filter(t => {\n    if (!t.due_date || t.status === 'completed') return false;\n    const dueDate = new Date(t.due_date);\n    const today = new Date();\n    today.setHours(0, 0, 0, 0);\n    return dueDate < today;\n  });\n\n  const getCategoryColor = (categoryName: string | null) => {\n    if (!categoryName) return '#D1D5DB';\n    const cat = categories.find(c => c.name === categoryName);\n    return cat?.color || '#D1D5DB';\n  };\n\n  if (authLoading) {\n    return (\n      <div className=\"min-h-screen bg-[#FAF8F5] flex items-center justify-center\">\n        <div className=\"inline-block w-8 h-8 border-4 border-[#C45D3E] border-t-transparent rounded-full animate-spin\" />\n      </div>\n    );\n  }\n\n  if (!user) return null;\n\n  return (\n    <div className=\"pb-32 min-h-screen bg-[#FAF8F5] dark:bg-[#1D1B17]\">\n      {/* Progress Header with greeting */}\n      <ProgressHeader tasks={[...tasks, ...allTasks.filter(t => t.status === 'completed')]} />\n\n      {/* Content */}\n      <div className=\"px-5 py-4 space-y-5\">\n        {isLoading ? (\n          <div className=\"space-y-3\">\n            <SkeletonCard />\n            <SkeletonCard />\n            <SkeletonCard />\n          </div>\n        ) : tasks.length === 0 ? (\n          /* Empty state */\n          <div className=\"text-center py-16\">\n            <div className=\"w-20 h-20 mx-auto mb-5 rounded-full bg-[#FEF3EC] dark:bg-[#3A2A20] flex items-center justify-center\">\n              <svg className=\"w-10 h-10 text-[#C45D3E]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\" strokeWidth={1.5}>\n                <path strokeLinecap=\"round\" strokeLinejoin=\"round\" d=\"M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z\" />\n              </svg>\n            </div>\n            <h2 className=\"text-lg font-bold text-gray-900 dark:text-[#F0EDE8] mb-2\">\n              No tasks for today\n            </h2>\n            <p className=\"text-sm text-gray-500 dark:text-gray-400 max-w-[260px] mx-auto mb-6\">\n              Add a task below or tell the AI assistant what you're working on today.\n            </p>\n          </div>\n        ) : (\n          <>\n            {/* DO NOW Hero Card */}\n            {doNowTask && (\n              <div>\n                <div className=\"flex items-center gap-2 mb-2\">\n                  <span className=\"text-xs font-bold text-[#C45D3E] uppercase tracking-wider\">Do Now</span>\n                  <div className=\"flex-1 h-px bg-[#C45D3E]/20\" />\n                </div>\n                <DoNowCard\n                  task={doNowTask}\n                  onComplete={handleTaskComplete}\n                />\n              </div>\n            )}\n\n            {/* UP NEXT Section */}\n            {upNextTasks.length > 0 && (\n              <div>\n                <div className=\"flex items-center gap-2 mb-2\">\n                  <span className=\"text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider\">Up Next</span>\n                  <div className=\"flex-1 h-px bg-gray-200 dark:bg-gray-700\" />\n                </div>\n                <div className=\"space-y-2\">\n                  {upNextTasks.map(task => (\n                    <TaskCard\n                      key={task.id}\n                      task={task}\n                      onComplete={handleTaskComplete}\n                      onTap={handleTaskTap}\n                      categoryColor={getCategoryColor(task.category)}\n                    />\n                  ))}\n                </div>\n              </div>\n            )}\n\n            {/* NEEDS ATTENTION Section */}\n            {overdueTasks.length > 0 && (\n              <div>\n                <div className=\"flex items-center gap-2 mb-2\">\n                  <svg className=\"w-3.5 h-3.5 text-red-500\" fill=\"currentColor\" viewBox=\"0 0 20 20\">\n                    <path fillRule=\"evenodd\" d=\"M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z\" clipRule=\"evenodd\" />\n                  </svg>\n                  <span className=\"text-xs font-bold text-red-500 uppercase tracking-wider\">Needs Attention</span>\n                  <div className=\"flex-1 h-px bg-red-200 dark:bg-red-900\" />\n                </div>\n                <div className=\"space-y-2\">\n                  {overdueTasks.map(task => (\n                    <div key={task.id} className=\"opacity-80\">\n                      <TaskCard\n                        task={task}\n                        onComplete={handleTaskComplete}\n                        onTap={handleTaskTap}\n                        categoryColor={getCategoryColor(task.category)}\n                      />\n                    </div>\n                  ))}\n                </div>\n              </div>\n            )}\n\n            {/* Completed today — collapsible */}\n            {completedTasks.length > 0 && (\n              <CollapsibleSection\n                title=\"Completed\"\n                count={completedTasks.length}\n                color=\"text-green-600 dark:text-green-400\"\n                borderColor=\"bg-green-200 dark:bg-green-900\"\n              >\n                <div className=\"space-y-2 opacity-60\">\n                  {completedTasks.map(task => (\n                    <TaskCard\n                      key={task.id}\n                      task={task}\n                      onComplete={handleTaskComplete}\n                      onTap={handleTaskTap}\n                      categoryColor={getCategoryColor(task.category)}\n                    />\n                  ))}\n                </div>\n              </CollapsibleSection>\n            )}\n          </>\n        )}\n\n        {/* Quick Add */}\n        <QuickAddButton onSubmit={handleQuickAdd} isLoading={isSubmitting} />\n      </div>\n\n      {/* Task Detail Sheet */}\n      <TaskDetailSheet\n        task={selectedTask}\n        isOpen={detailSheetOpen}\n        onClose={() => {\n          setDetailSheetOpen(false);\n          setSelectedTask(null);\n        }}\n        onSave={handleDetailSave}\n        categories={categories}\n      />\n\n      {/* Bottom Nav */}\n      <BottomNav />\n    </div>\n  );\n}"
+'use client';
+
+import { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { Task, Category, DEFAULT_CATEGORIES } from '@/lib/types';
+import { useAuth } from '@/app/components/AuthProvider';
+import { useApp } from '@/app/context/AppProvider';
+import ProgressHeader from '@/app/components/ProgressHeader';
+import DoNowCard from '@/app/components/DoNowCard';
+import TaskCard from '@/app/components/TaskCard';
+import TaskDetailSheet from '@/app/components/TaskDetailSheet';
+import SkeletonCard from '@/app/components/SkeletonCard';
+import QuickAddButton from '@/app/components/QuickAddButton';
+import BottomNav from '@/app/components/BottomNav';
+
+function CollapsibleSection({ title, count, color, borderColor, children }: {
+  title: string;
+  count: number;
+  color: string;
+  borderColor: string;
+  children: React.ReactNode;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 mb-2 w-full group"
+      >
+        <span className={`text-xs font-bold uppercase tracking-wider ${color}`}>
+          {title} ({count})
+        </span>
+        <div className={`flex-1 h-px ${borderColor}`} />
+        <svg
+          className={`w-4 h-4 ${color} transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+          fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="m19 9-7 7-7-7" />
+        </svg>
+      </button>
+      <div className={`transition-all duration-300 ease-out overflow-hidden ${isOpen ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+export default function TodayPage() {
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+  const { refreshKey } = useApp();
+
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [allTasks, setAllTasks] = useState<Task[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [detailSheetOpen, setDetailSheetOpen] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, authLoading, router]);
+
+  const loadData = useCallback(async () => {
+    if (!user) return;
+
+    setIsLoading(true);
+    try {
+      const [todayRes, allRes] = await Promise.all([
+        fetch('/api/tasks?status=today'),
+        fetch('/api/tasks'),
+      ]);
+
+      const todayData = await todayRes.json();
+      const allData = await allRes.json();
+
+      setTasks(todayData.tasks || []);
+      setAllTasks(allData.tasks || []);
+      setCategories(DEFAULT_CATEGORIES.map((cat, idx) => ({
+        id: `cat-${idx}`,
+        user_id: user.id,
+        name: cat.name,
+        color: cat.color,
+        sort_order: idx,
+        created_at: new Date().toISOString(),
+      })));
+    } catch (error) {
+      console.error('Failed to load data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData, refreshKey]);
+
+  const handleTaskComplete = async (taskId: string) => {
+    try {
+      await fetch(`/api/tasks/${taskId}/complete`, { method: 'POST' });
+      await loadData();
+    } catch (error) {
+      console.error('Failed to complete task:', error);
+    }
+  };
+
+  const handleTaskTap = (taskId: string) => {
+    const task = [...tasks, ...allTasks].find(t => t.id === taskId);
+    if (task) {
+      setSelectedTask(task);
+      setDetailSheetOpen(true);
+    }
+  };
+
+  const handleDetailSave = async (updates: Partial<Task>) => {
+    if (!selectedTask) return;
+    try {
+      const response = await fetch(`/api/tasks/${selectedTask.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+      if (response.ok) {
+        await loadData();
+        setDetailSheetOpen(false);
+        setSelectedTask(null);
+      }
+    } catch (error) {
+      console.error('Failed to save task:', error);
+    }
+  };
+
+  const handleQuickAdd = async (text: string) => {
+    if (!text.trim() || isSubmitting || !user) return;
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/ai/parse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, user_id: user.id }),
+      });
+      if (response.ok) {
+        await loadData();
+      }
+    } catch (error) {
+      console.error('Failed to add task:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Find do-now task
+  const doNowTask = tasks.find(t => t.is_do_now && t.status !== 'completed');
+
+  // Remaining tasks sorted by position
+  const upNextTasks = tasks
+    .filter(t => !t.is_do_now && t.status !== 'completed')
+    .sort((a, b) => (a.position_today || 0) - (b.position_today || 0));
+
+  // Completed tasks today
+  const completedTasks = tasks.filter(t => t.status === 'completed');
+
+  // Overdue tasks
+  const overdueTasks = allTasks.filter(t => {
+    if (!t.due_date || t.status === 'completed') return false;
+    const dueDate = new Date(t.due_date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return dueDate < today;
+  });
+
+  const getCategoryColor = (categoryName: string | null) => {
+    if (!categoryName) return '#D1D5DB';
+    const cat = categories.find(c => c.name === categoryName);
+    return cat?.color || '#D1D5DB';
+  };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center">
+        <div className="inline-block w-8 h-8 border-4 border-[#C45D3E] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) return null;
+
+  return (
+    <div className="pb-32 min-h-screen bg-[#FAF8F5] dark:bg-[#1D1B17]">
+      {/* Progress Header with greeting */}
+      <ProgressHeader tasks={[...tasks, ...allTasks.filter(t => t.status === 'completed')]} />
+
+      {/* Content */}
+      <div className="px-5 py-4 space-y-5">
+        {isLoading ? (
+          <div className="space-y-3">
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </div>
+        ) : tasks.length === 0 ? (
+          /* Empty state */
+          <div className="text-center py-16">
+            <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-[#FEF3EC] dark:bg-[#3A2A20] flex items-center justify-center">
+              <svg className="w-10 h-10 text-[#C45D3E]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
+              </svg>
+            </div>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-[#F0EDE8] mb-2">
+              No tasks for today
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 max-w-[260px] mx-auto mb-6">
+              Add a task below or tell the AI assistant what you're working on today.
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* DO NOW Hero Card */}
+            {doNowTask && (
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs font-bold text-[#C45D3E] uppercase tracking-wider">Do Now</span>
+                  <div className="flex-1 h-px bg-[#C45D3E]/20" />
+                </div>
+                <DoNowCard
+                  task={doNowTask}
+                  onComplete={handleTaskComplete}
+                />
+              </div>
+            )}
+
+            {/* UP NEXT Section */}
+            {upNextTasks.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Up Next</span>
+                  <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+                </div>
+                <div className="space-y-2">
+                  {upNextTasks.map(task => (
+                    <TaskCard
+                      key={task.id}
+                      task={task}
+                      onComplete={handleTaskComplete}
+                      onTap={handleTaskTap}
+                      categoryColor={getCategoryColor(task.category)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* NEEDS ATTENTION Section */}
+            {overdueTasks.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <svg className="w-3.5 h-3.5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-xs font-bold text-red-500 uppercase tracking-wider">Needs Attention</span>
+                  <div className="flex-1 h-px bg-red-200 dark:bg-red-900" />
+                </div>
+                <div className="space-y-2">
+                  {overdueTasks.map(task => (
+                    <div key={task.id} className="opacity-80">
+                      <TaskCard
+                        task={task}
+                        onComplete={handleTaskComplete}
+                        onTap={handleTaskTap}
+                        categoryColor={getCategoryColor(task.category)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Completed today — collapsible */}
+            {completedTasks.length > 0 && (
+              <CollapsibleSection
+                title="Completed"
+                count={completedTasks.length}
+                color="text-green-600 dark:text-green-400"
+                borderColor="bg-green-200 dark:bg-green-900"
+              >
+                <div className="space-y-2 opacity-60">
+                  {completedTasks.map(task => (
+                    <TaskCard
+                      key={task.id}
+                      task={task}
+                      onComplete={handleTaskComplete}
+                      onTap={handleTaskTap}
+                      categoryColor={getCategoryColor(task.category)}
+                    />
+                  ))}
+                </div>
+              </CollapsibleSection>
+            )}
+          </>
+        )}
+
+        {/* Quick Add */}
+        <QuickAddButton onSubmit={handleQuickAdd} isLoading={isSubmitting} />
+      </div>
+
+      {/* Task Detail Sheet */}
+      <TaskDetailSheet
+        task={selectedTask}
+        isOpen={detailSheetOpen}
+        onClose={() => {
+          setDetailSheetOpen(false);
+          setSelectedTask(null);
+        }}
+        onSave={handleDetailSave}
+        categories={categories}
+      />
+
+      {/* Bottom Nav */}
+      <BottomNav />
+    </div>
+  );
+}
