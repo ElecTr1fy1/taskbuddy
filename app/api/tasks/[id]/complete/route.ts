@@ -3,8 +3,8 @@ import { completeTask } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
-// PATCH /api/tasks/[id]/complete — mark task as complete
-export async function PATCH(
+// POST /api/tasks/[id]/complete — mark task as complete
+export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -24,3 +24,6 @@ export async function PATCH(
     );
   }
 }
+
+// Also support PATCH for API consumers
+export { POST as PATCH };
