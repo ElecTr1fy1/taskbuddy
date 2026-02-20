@@ -46,10 +46,6 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     }
   };
 
-  if (!mounted) {
-    return <>{children}</>;
-  }
-
   return (
     <ThemeContext.Provider value={{ isDark, toggle }}>
       {children}
@@ -60,7 +56,8 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 export function useTheme() {
   const context = useContext(ThemeContext);
   if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+    // Return safe defaults during SSR/prerendering when provider isn't available
+    return { isDark: false, toggle: () => {} };
   }
   return context;
 }

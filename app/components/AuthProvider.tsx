@@ -119,7 +119,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    // Return safe defaults during SSR/prerendering when provider isn't available
+    return { user: null, profile: null, loading: true, signIn: async () => {}, signOut: async () => {} };
   }
   return context;
 }
