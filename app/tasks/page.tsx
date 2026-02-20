@@ -4,19 +4,20 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Task, Category, TaskFilters, DEFAULT_CATEGORIES } from '@/lib/types';
 import { useAuth } from '@/app/components/AuthProvider';
-import SearchBar from '@/app/components/SearchBar';
-import FilterBar from '@/app/components/FilterBar';
+import { useApp } from '@/app/context/AppProvider';
+import ProgressHeader from '@/app/components/ProgressHeader';
+import FilterPanel from '@/app/components/FilterPanel';
 import TaskCard from '@/app/components/TaskCard';
 import TaskDetailSheet from '@/app/components/TaskDetailSheet';
-import InputBar from '@/app/components/InputBar';
 import SkeletonCard from '@/app/components/SkeletonCard';
+import QuickAddButton from '@/app/components/QuickAddButton';
 import BottomNav from '@/app/components/BottomNav';
 
 export default function TasksPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  const { refreshKey } = useApp();
 
-  // State
   const [tasks, setTasks] = useState<Task[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,17 +34,14 @@ export default function TasksPage() {
   });
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
-  const [addSheetOpen, setAddSheetOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Redirect to login if not authenticated
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/login');
     }
   }, [user, authLoading, router]);
 
-  // Load tasks and categories
   const loadData = useCallback(async () => {
     if (!user) return;
 
@@ -75,38 +73,17 @@ export default function TasksPage() {
 
   useEffect(() => {
     loadData();
-  }, [loadData]);
+  }, [loadData, refreshKey]);
 
-  // Apply search and filters
   const filteredTasks = useMemo(() => {
     let result = tasks.filter(task => !task.is_deleted);
 
-    // Apply status filter
-    if (filters.status) {
-      result = result.filter(t => t.status === filters.status);
-    }
+    if (filters.status) result = result.filter(t => t.status === filters.status);
+    if (filters.category) result = result.filter(t => t.category === filters.category);
+    if (filters.priority) result = result.filter(t => t.priority === filters.priority);
+    if (filters.time_max) result = result.filter(t => t.estimated_minutes <= (filters.time_max as number));
+    if (filters.focus) result = result.filter(t => t.focus_required === filters.focus);
 
-    // Apply category filter
-    if (filters.category) {
-      result = result.filter(t => t.category === filters.category);
-    }
-
-    // Apply priority filter
-    if (filters.priority) {
-      result = result.filter(t => t.priority === filters.priority);
-    }
-
-    // Apply time filter
-    if (filters.time_max) {
-      result = result.filter(t => t.estimated_minutes <= (filters.time_max as number));
-    }
-
-    // Apply focus filter
-    if (filters.focus) {
-      result = result.filter(t => t.focus_required === filters.focus);
-    }
-
-    // Apply search
     if (searchValue.trim()) {
       const query = searchValue.toLowerCase();
       result = result.filter(
@@ -116,34 +93,26 @@ export default function TasksPage() {
       );
     }
 
-    // Apply sorting
     const sortBy = filters.sort_by || 'smart_score';
     const sortDir = filters.sort_dir === 'asc' ? 1 : -1;
 
     result.sort((a, b) => {
       let aVal: any = a[sortBy as keyof Task];
       let bVal: any = b[sortBy as keyof Task];
-
       if (aVal === null || aVal === undefined) aVal = -Infinity;
       if (bVal === null || bVal === undefined) bVal = -Infinity;
-
-      if (typeof aVal === 'string') {
-        return aVal.localeCompare(bVal) * sortDir;
-      }
-
+      if (typeof aVal === 'string') return aVal.localeCompare(bVal) * sortDir;
       return (aVal - bVal) * sortDir;
     });
 
     return result;
   }, [tasks, filters, searchValue]);
 
-  // Handle search with debounce
   const handleSearchChange = (value: string) => {
     setSearchValue(value);
     setFilters(prev => ({ ...prev, search: value }));
   };
 
-  // Handle task completion
   const handleTaskComplete = async (taskId: string) => {
     try {
       await fetch(`/api/tasks/${taskId}/complete`, { method: 'POST' });
@@ -153,7 +122,6 @@ export default function TasksPage() {
     }
   };
 
-  // Handle task tap
   const handleTaskTap = (taskId: string) => {
     const task = tasks.find(t => t.id === taskId);
     if (task) {
@@ -162,17 +130,14 @@ export default function TasksPage() {
     }
   };
 
-  // Handle detail sheet save
   const handleDetailSave = async (updates: Partial<Task>) => {
     if (!selectedTask) return;
-
     try {
       const response = await fetch(`/api/tasks/${selectedTask.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),
       });
-
       if (response.ok) {
         await loadData();
         setDetailSheetOpen(false);
@@ -183,21 +148,17 @@ export default function TasksPage() {
     }
   };
 
-  // Handle add task submission
-  const handleAddTask = async (text: string) => {
-    if (!text.trim() || isSubmitting) return;
-
+  const handleQuickAdd = async (text: string) => {
+    if (!text.trim() || isSubmitting || !user) return;
     setIsSubmitting(true);
     try {
-      const response = await fetch('/api/tasks', {
+      const response = await fetch('/api/ai/parse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: text }),
+        body: JSON.stringify({ text, user_id: user.id }),
       });
-
       if (response.ok) {
         await loadData();
-        setAddSheetOpen(false);
       }
     } catch (error) {
       console.error('Failed to add task:', error);
@@ -206,7 +167,6 @@ export default function TasksPage() {
     }
   };
 
-  // Get category color
   const getCategoryColor = (categoryName: string | null) => {
     if (!categoryName) return '#D1D5DB';
     const cat = categories.find(c => c.name === categoryName);
@@ -216,44 +176,55 @@ export default function TasksPage() {
   if (authLoading) {
     return (
       <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block w-8 h-8 border-4 border-[#C45D3E] border-t-transparent rounded-full animate-spin" />
-        </div>
+        <div className="inline-block w-8 h-8 border-4 border-[#C45D3E] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
   return (
-    <div className="pb-20 min-h-screen bg-[#FAF8F5]">
-      {/* Search Bar */}
-      <div className="sticky top-0 z-20 bg-[#FAF8F5]">
-        <SearchBar value={searchValue} onChange={handleSearchChange} />
-        <FilterBar filters={filters} onFilterChange={setFilters} categories={categories} />
+    <div className="pb-32 min-h-screen bg-[#FAF8F5] dark:bg-[#1D1B17]">
+      {/* Header */}
+      <div className="px-5 pt-5 pb-3">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-[#F0EDE8]">All Tasks</h1>
+          <span className="text-sm text-gray-500 dark:text-gray-400">
+            {filteredTasks.length} task{filteredTasks.length !== 1 ? 's' : ''}
+          </span>
+        </div>
+
+        {/* Filter Panel */}
+        <FilterPanel
+          filters={filters}
+          onFilterChange={setFilters}
+          categories={categories}
+          searchValue={searchValue}
+          onSearchChange={handleSearchChange}
+        />
       </div>
 
       {/* Task List */}
-      <div className="px-4 py-4">
+      <div className="px-5 py-3">
         {isLoading ? (
-          // Loading skeletons
           <div className="space-y-2">
             <SkeletonCard />
             <SkeletonCard />
             <SkeletonCard />
           </div>
         ) : filteredTasks.length === 0 ? (
-          // Empty state
-          <div className="text-center py-12">
-            <p className="text-gray-600 text-lg">No tasks found.</p>
+          <div className="text-center py-16">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-[#2A2724] flex items-center justify-center">
+              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+              </svg>
+            </div>
+            <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">No tasks found</p>
             {searchValue && (
-              <p className="text-gray-500 text-sm mt-2">Try a different search.</p>
+              <p className="text-gray-400 text-xs mt-1">Try a different search</p>
             )}
           </div>
         ) : (
-          // Task list
           <div className="space-y-2">
             {filteredTasks.map(task => (
               <TaskCard
@@ -266,45 +237,12 @@ export default function TasksPage() {
             ))}
           </div>
         )}
-      </div>
 
-      {/* Floating Add Button */}
-      <button
-        onClick={() => setAddSheetOpen(true)}
-        className="fixed bottom-24 right-4 w-14 h-14 bg-[#C45D3E] rounded-full shadow-lg flex items-center justify-center text-white hover:bg-[#A84C2F] transition-colors"
-        aria-label="Add task"
-      >
-        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-          <path
-            fillRule="evenodd"
-            d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-            clipRule="evenodd"
-          />
-        </svg>
-      </button>
-
-      {/* Add Task Input (Bottom Sheet) */}
-      {addSheetOpen && (
-        <div className="fixed inset-0 z-40 flex flex-col">
-          {/* Overlay */}
-          <div
-            className="flex-1 bg-black/40"
-            onClick={() => setAddSheetOpen(false)}
-          />
-
-          {/* Input area */}
-          <div className="bg-white rounded-t-3xl p-4 pb-6 shadow-xl">
-            <div className="text-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Add Task</h3>
-            </div>
-            <InputBar
-              onSubmit={handleAddTask}
-              isLoading={isSubmitting}
-              placeholder="What do you need to do?"
-            />
-          </div>
+        {/* Quick Add at bottom */}
+        <div className="mt-4">
+          <QuickAddButton onSubmit={handleQuickAdd} isLoading={isSubmitting} />
         </div>
-      )}
+      </div>
 
       {/* Task Detail Sheet */}
       <TaskDetailSheet
