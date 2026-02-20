@@ -49,13 +49,11 @@ export default function TaskCard({
 
   const handleTouchEnd = () => {
     if (offsetX > 50) {
-      // Swipe right = complete
       setSwiped('complete');
       setTimeout(() => {
         onComplete(task.id);
       }, 300);
     } else if (offsetX < -50) {
-      // Swipe left = archive
       setSwiped('archive');
       setTimeout(() => {
         onArchive?.(task.id);
@@ -79,7 +77,6 @@ export default function TaskCard({
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Reveal backgrounds */}
       {swiped === 'complete' && (
         <div className="absolute inset-0 bg-green-100 flex items-center justify-end pr-4">
           <span className="text-green-700 font-semibold">Done</span>
@@ -91,14 +88,12 @@ export default function TaskCard({
         </div>
       )}
 
-      {/* Main content */}
       <div
         className={`relative px-4 py-3 flex gap-3 items-start transition-transform duration-300 ${
           offsetX !== 0 ? 'translate-x-0' : ''
         }`}
         style={{ transform: `translateX(${offsetX}px)` }}
       >
-        {/* Checkbox */}
         <button
           onClick={() => onComplete(task.id)}
           className="flex-shrink-0 w-7 h-7 rounded-full border-2 border-gray-300 flex items-center justify-center mt-1 transition-colors"
@@ -124,18 +119,15 @@ export default function TaskCard({
           )}
         </button>
 
-        {/* Priority border */}
         <div
           className="absolute left-0 top-0 bottom-0 w-[3px]"
           style={{ backgroundColor: priorityColor }}
         />
 
-        {/* Main content area */}
         <div
           className="flex-1 flex flex-col gap-2 cursor-pointer"
           onClick={() => onTap(task.id)}
         >
-          {/* Title */}
           <h3
             className={`text-base font-semibold leading-tight ${
               task.status === 'completed'
@@ -146,7 +138,6 @@ export default function TaskCard({
             {task.title}
           </h3>
 
-          {/* Bottom row: category pill and score/time */}
           <div className="flex items-center justify-between gap-2">
             {task.category && (
               <CategoryPill
@@ -157,12 +148,13 @@ export default function TaskCard({
             )}
             {!task.category && <div className="flex-1" />}
 
-            {/* Score badge and time estimate */}
             <div className="flex items-center gap-2">
               <ScoreBadge score={task.smart_score} />
-              <span className="text-sm font-bold text-gray-700">
-                {formatTimeEstimate(task.estimated_minutes)}
-              </span>
+              {task.estimated_minutes != null && (
+                <span className="text-sm font-bold text-gray-700">
+                  {formatTimeEstimate(task.estimated_minutes)}
+                </span>
+              )}
             </div>
           </div>
         </div>

@@ -5,8 +5,10 @@ import {
   getLearnings,
   getCategories,
   createTask,
+  getTasks,
+  updateTask,
 } from '@/lib/supabase';
-import { parseInput as aiParseInput } from '@/lib/ai';
+import { parseInput as aiParseInput, prioritizeTasks } from '@/lib/ai';
 import { Task } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -48,6 +50,7 @@ export async function POST(request: NextRequest) {
 
     // Handle based on type
     if (parsed.type === 'task' && parsed.task) {
+      // Create task with 'today' status so it shows on the Today page
       const newTask = await createTask({
         title: parsed.task.title,
         description: parsed.task.description,
@@ -57,13 +60,37 @@ export async function POST(request: NextRequest) {
         estimated_minutes: parsed.task.estimated_minutes,
         focus_required: parsed.task.focus_required,
         due_date: parsed.task.due_date,
-        status: 'inbox',
+        status: 'today',
         source: source || 'app_text',
         created_by: user_id,
         notes: parsed.task.blocks_description,
       } as Partial<Task>);
 
       result.task = newTask;
+
+      // Auto-prioritize all today's tasks after adding a new one
+      try {
+        const todayTasks = await getTasks({ status: 'today' });
+        if (todayTasks.length > 0) {
+          const prioritized = await prioritizeTasks(
+            todayTasks,
+            contextText,
+            learnings
+          );
+          // Update task records with new scores and positions
+          for (const pt of prioritized.tasks) {
+            await updateTask(pt.id, {
+              smart_score: pt.smart_score,
+              score_breakdown: pt.score_breakdown,
+              position_today: pt.position,
+              is_do_now: pt.is_do_now,
+              ai_reason: pt.ai_reason,
+            });
+          }
+        }
+      } catch (prioritizeError) {
+        console.error('Auto-prioritize failed (non-fatal):', prioritizeError);
+      }
 
       // Log interaction
       await logInteraction({

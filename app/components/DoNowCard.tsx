@@ -75,9 +75,11 @@ export default function DoNowCard({ task, onComplete }: DoNowCardProps) {
 
         {/* Time estimate */}
         <div className="flex-shrink-0 text-right flex flex-col items-end gap-1">
-          <span className="text-base font-bold text-gray-700">
-            {formatTimeEstimate(task.estimated_minutes)}
-          </span>
+          {task.estimated_minutes != null && (
+            <span className="text-base font-bold text-gray-700">
+              {formatTimeEstimate(task.estimated_minutes)}
+            </span>
+          )}
           {task.smart_score !== null && (
             <ScoreBadge score={task.smart_score} />
           )}
