@@ -30,38 +30,42 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Check initial auth session
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          await fetchProfile(session.user.id);
-        }
-      } catch (error) {
-        console.error('Auth check failed:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    let initialCheckDone = false;
 
-    checkAuth();
-
-    // Listen for auth changes
+    // Listen for auth changes FIRST (Supabase docs recommend this pattern)
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        await fetchProfile(session.user.id);
+        // Use setTimeout to avoid Supabase deadlock during token refresh
+        setTimeout(async () => {
+          await fetchProfile(session.user.id);
+          if (!initialCheckDone) {
+            initialCheckDone = true;
+            setLoading(false);
+          }
+        }, 0);
       } else {
         setProfile(null);
+        if (!initialCheckDone) {
+          initialCheckDone = true;
+          setLoading(false);
+        }
       }
     });
 
+    // Fallback: if onAuthStateChange doesn't fire within 3 seconds, stop loading
+    const timeout = setTimeout(() => {
+      if (!initialCheckDone) {
+        initialCheckDone = true;
+        setLoading(false);
+      }
+    }, 3000);
+
     return () => {
       subscription?.unsubscribe();
+      clearTimeout(timeout);
     };
   }, []);
 
