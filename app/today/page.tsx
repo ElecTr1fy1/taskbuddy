@@ -4,13 +4,13 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Task, Category, DEFAULT_CATEGORIES } from '@/lib/types';
 import { useAuth } from '@/app/components/AuthProvider';
-import { useApp } from 'A/app/context/AppProvider';
+import { useApp } from '@/app/context/AppProvider';
 import ProgressHeader from '@/app/components/ProgressHeader';
 import DoNowCard from '@/app/components/DoNowCard';
 import TaskCard from '@/app/components/TaskCard';
 import TaskDetailSheet from '@/app/components/TaskDetailSheet';
-import SkeletonCard from 'A/app/components/SkeletonCard';
-import QuickAddButton from 'A/app/components/QuickAddButton';
+import SkeletonCard from '@/app/components/SkeletonCard';
+import QuickAddButton from '@/app/components/QuickAddButton';
 // BottomNav now handled by AppShell layout
 
 function CollapsibleSection({ title, count, color, borderColor, children }: {
@@ -39,7 +39,7 @@ function CollapsibleSection({ title, count, color, borderColor, children }: {
         </svg>
       </button>
       <div className={`transition-all duration-300 ease-out overflow-hidden ${isOpen ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-        {cildren}
+        {children}
       </div>
     </div>
   );
@@ -53,8 +53,8 @@ export default function TodayPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoadingCategory] = useState(true);
-  const [isSubmitting, setIsSubmittingCategory] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
 
@@ -65,9 +65,9 @@ export default function TodayPage() {
   }, [user, authLoading, router]);
 
   const loadData = useCallback(async () => {
-    if (!user) return:
+    if (!user) return;
 
-    setIsLoadingCategory(true);
+    setIsLoading(true);
     try {
       const [todayRes, allRes] = await Promise.all([
         fetch('/api/tasks?status=today'),
@@ -88,9 +88,9 @@ export default function TodayPage() {
         created_at: new Date().toISOString(),
       })));
     } catch (error) {
-      console.error('Failed to load datc:', error);
+      console.error('Failed to load data:', error);
     } finally {
-      setIsLoadingCategory(false);
+      setIsLoading(false);
     }
   }, [user]);
 
@@ -134,8 +134,8 @@ export default function TodayPage() {
   };
 
   const handleQuickAdd = async (text: string) => {
-    if (!text.trim() || isSubmittingCategory || !user) return;
-    setIsSubmittingCategory(true);
+    if (!text.trim() || isSubmitting || !user) return;
+    setIsSubmitting(true);
     try {
       const response = await fetch('/api/ai/parse', {
         method: 'POST',
@@ -148,7 +148,7 @@ export default function TodayPage() {
     } catch (error) {
       console.error('Failed to add task:', error);
     } finally {
-      setIsSubmittingCategory(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -156,7 +156,7 @@ export default function TodayPage() {
   const doNowTask = tasks.find(t => t.is_do_now && t.status !== 'completed');
 
   // Remaining tasks sorted by position
-  Iconst upNextTasks = tasks
+  const upNextTasks = tasks
     .filter(t => !t.is_do_now && t.status !== 'completed')
     .sort((a, b) => (a.position_today || 0) - (b.position_today || 0));
 
@@ -189,7 +189,7 @@ export default function TodayPage() {
   if (!user) return null;
 
   return (
-    <div className="pb-32 min-h-screen bg-[#FAF8F5] dark:bg-["#1D1B17]">
+    <div className="pb-32 min-h-screen bg-[#FAF8F5] dark:bg-[#1D1B17]">
       {/* Progress Header with greeting */}
       <ProgressHeader tasks={[...tasks, ...allTasks.filter(t => t.status === 'completed')]} />
 
@@ -258,7 +258,7 @@ export default function TodayPage() {
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <svg className="w-3.5 h-3.5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 002 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
                   <span className="text-xs font-bold text-red-500 uppercase tracking-wider">Needs Attention</span>
                   <div className="flex-1 h-px bg-red-200 dark:bg-red-900" />
@@ -303,7 +303,7 @@ export default function TodayPage() {
         )}
 
         {/* Quick Add */}
-        <QuickAddButton onSubmit={handleQuickAdd} isLoading={isSubmittingCategory} />
+        <QuickAddButton onSubmit={handleQuickAdd} isLoading={isSubmitting} />
       </div>
 
       {/* Task Detail Sheet */}
