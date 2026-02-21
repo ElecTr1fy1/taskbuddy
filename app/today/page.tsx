@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/app/components/AuthProvider';
 import { Check, Sparkles, ChevronDown, ChevronRight, ChevronLeft, Mic, Send, Sun, Moon, LayoutDashboard, ListTodo, Archive, Settings, Search, X, GripVertical, Clock, User, Target, Plus, ExternalLink, Trash2, BarChart3, AlertTriangle, Calendar, Circle, Zap, Brain } from 'lucide-react';
 
 // ─── TASK DATA ────────────────────────────────────────────────
@@ -63,13 +62,8 @@ const aiSuggestions = ['Plan my day', 'I have 45 minutes', "I'm low energy", "Wh
 
 export default function TaskBuddyV7() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, authLoading, router]);
+  const user = { email: 'danielm@tanaorjewelry.com' };
+  const authLoading = false;
 
   const [dark, setDark] = useState('light');
   const [tasks, setTasks] = useState(tasks0);
