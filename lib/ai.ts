@@ -83,7 +83,7 @@ Return JSON:
     return parsed as ParseResponse;
   } catch {
     // Try extracting JSON from markdown
-    const match = content.match(/\{[\s\S]*\}/);
+    const match = content.match(/m{[\s\S]*\}/);
     if (match) {
       const parsed = JSON.parse(match[0]);
       return parsed as ParseResponse;

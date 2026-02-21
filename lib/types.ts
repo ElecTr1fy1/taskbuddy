@@ -138,7 +138,7 @@ export interface TaskFilters {
 export const DEFAULT_CATEGORIES: { name: string; color: string }[] = [
   { name: 'Tanaor', color: '#BFDBFE' },
   { name: 'eCom Academy', color: '#BBF7D0' },
-  { name: 'Content', color: '#DDD6FE' },
+  { name: 'Content', color: '#DDD6FF' },
   { name: 'Investments', color: '#FED7AA' },
   { name: 'Personal', color: '#FBCFE8' },
   { name: 'New Venture', color: '#A5F3FC' },
@@ -150,60 +150,10 @@ I'm Daniel, a 25-year-old Israeli entrepreneur based in Dubai. I run multiple bu
 
 ## My Businesses
 
-### Tanaor (Jewelry Brand)
-- Biblical inscription jewelry, co-founded with my sister and mom
-- Revenue: ~â‚ª20M/year Israel + ~$6M/year US
-- I'm stepping back to a strategic role, not day-to-day
-
-### eCom Academy (Education Business) â€” TOP PRIORITY
-- Israel's largest e-commerce training program
-- ~â‚ª1M/month revenue, 75% profit margin, 1000+ students
-- Targeting â‚ª50M/year
-
-### New Venture (with Lior)
-- Co-founder Lior, 80/20 equity split
-- Targeting $120M+ exit in 4 years
-
-### Content / Personal Brand
-- 50K+ subscriber YouTube channel in Israel
-- Scaling personal brand as acquisition channel for eCom Academy
-
-## My Priorities (in order)
-1. Scale eCom Academy toward â‚ª50M/year
-2. Build and grow personal brand / content
-3. Develop new venture with Lior
-4. Maintain Tanaor strategic oversight
-5. Optimize investment portfolio
-
-## How I Work
-- I value speed and efficiency above all
-- I'm direct â€” give me clear recommendations
-- My time is worth $300-400K/month â€” help me spend it on highest-leverage activities`;
-
-// Priority colors for border
-export const PRIORITY_COLORS: Record<TaskPriority, string> = {
-  critical: '#DC2626',
-  high: '#EA580C',
-  medium: '#2563EB',
-  low: '#D1D5DB',
-};
-
-// Legacy stats type
-export interface Stats {
-  pending: number;
-  completed: number;
-  completed_today: number;
-  streak: number;
-  total_effort_pending: number;
-  categories: Record<string, number>;
-  level: number;
-  xp_progress: number;
-}
-
-// Legacy recommend response type
-export interface RecommendResponse {
-  message: string;
-  recommended: Task[];
-  time_plan: string[];
-  reasoning: string;
-}
+### Tanaor Brand
+- Biblical inscription jewel‹),ÈÛËY›İ[™YÚ]^HÚ\İ\ˆ[™[ÛB‹H™]™[YNˆ¸ ªŒŒKŞYX\ˆ\Ü˜Y[
+È‰“KŞYX\ˆTÂ‹HIÛHİ\[™È˜XÚÈÈHİ˜]YÚXÈ›ÛK›İ^K]ËY^B‚ˆÈÈÈPÛÛHXØY[^H
+YXØ][Ûˆ\Ú[™\ÜÊH8 %Ô’SÔ’UB‹H\Ü˜Y[	ÜÈ\™Ù\İKXÛÛ[Y\˜ÙH˜Z[š[™È›ÙÜ˜[B‹H¸ ªŒSKÛ[Û™]™[YKÍIH›Ùš]X\™Ú[‹L
+ÈİY[Â‹H\™Ù][™È8 ªLKŞYX\‚‚ˆÈÈÈ™]È™[\™H
+Ú][ÜŠB‹HÛËY›İ[™\ˆ[Ü‹ÌŒ\]Z]HÜ]‹H\™Ù][™È	LŒJÈ^][ˆYX\œÂ‚ˆÈÈÈÛÛ[È\œÛÛ˜[œ˜[™‹HLÊÈİXœØÜšX™\ˆ[İUX™HÚ[›™[[ˆ\Ü˜Y[‹HØØ[[™È\œÛÛ˜[œ˜[™\ÈXÜ]Z\Ú][ÛˆÚ[›™[›ÜˆPÛÛHXØY[^B‚ˆÈÈ^Hš[Üš]Y\È
+[ˆÜ™\ŠBŒKˆØØ[HPÛÛHXØY[^HİØ\™8 ¢ êÍLKŞYX\‚—‹ˆZ[[™Ü›İÈ\œÛÛ˜[œ˜[™ÈÛÛ[ŒËˆ]™[Ü™]È™[\™HÚ][Ü‚ˆXZ[Z[ˆ[˜[Üˆİ˜]YÚXÈİ™\œÚYÚKˆÜ[Z^™H[™\İY[Ü›Û[Â‚ˆÈÈİÈHÛÜšÈB‹HH˜[YHÜYY[™Y™šXÚY[˜ŞHX›İ™H[‹HIÛH\™Xİ8 %ˆÚ]™HYHÛX\ˆ™XÛÛ[Y[™][ÛœÂ‹H^H[YH\ÈÛÜ	ÌMËÛ[Û8 %ˆ[YHÜ[™]ÛˆYÚ\İ[]™\˜YÙHXİ]š]Y\ØÂ‚‹ïòRSÔ’UWĞÓÓÔ”Îˆ™XÛÜ™\ÚÔš[Üš]Kİš[™ÏˆHÂˆÜš]XØ[ˆ	ÈÑÌŒ‰ËˆYÚˆ	ÈÑPMNÉËˆYY][Nˆ	ÈÌMŒÑP‰ËˆİÎˆ	ÈÑQQ‰ËŸNÂ‚‹ËÈYØXŞHİ]È\B™^Ü[\™˜XÙHİ]ÈÂˆ[™[™Îˆ[X™\ÂˆÛÛ\]Yˆ[X™\ÂˆÛÛ\]YİÙ^Nˆ[X™\Âˆİ™XZÎˆ[X™\Âˆİ[ÙY™›ÜÜ[™[™Îˆ[X™\ÂˆØ]YÛÜšY\Îˆ™XÛÜ™İš[™Ë[X™\Âˆ]™[ˆ[X™\ÂˆÜ›ÙÜ™\ÜÎˆ[X™\ÂŸB‚‹ËÈYØXŞH™XÛÛ[Y[™™\ÜÛœÙH\B™^Ü[\™˜XÙH™XÛÛ[Y[™™\ÜÛœÙHÂˆY\ÜØYÙNˆİš[™ÎÂˆ™XÛÛ[Y[™Yˆ\ÚÖ×NÂˆ[YWÜ[ˆİš[™Ö×NÂˆ™X\ÛÛš[™Îˆİš[™ÎÂŸB

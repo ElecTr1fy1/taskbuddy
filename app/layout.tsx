@@ -4,6 +4,7 @@ import { AuthProvider } from '@/app/components/AuthProvider';
 import { ThemeProvider } from '@/app/components/ThemeProvider';
 import { AppProvider } from '@/app/context/AppProvider';
 import GlobalPanels from '@/app/components/GlobalPanels';
+import AppShell from '@/app/components/AppShell';
 
 export const metadata: Metadata = {
   title: 'TaskBuddy',
@@ -33,7 +34,9 @@ export default function RootLayout({
         <AuthProvider>
           <ThemeProvider>
             <AppProvider>
-              {children}
+              <AppShell>
+                {children}
+              </AppShell>
               <GlobalPanels />
             </AppProvider>
           </ThemeProvider>

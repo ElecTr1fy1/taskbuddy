@@ -1,35 +1,51 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import BottomNav from 'A/app/components/BottomNav';
-import DesktopSidebar from 'A/app/components/DesktopSidebar';
-import GlobalPanels from 'A/app/components/GlobalPanels';
+import DesktopSidebar from './DesktopSidebar';
+import BottomNav from './BottomNav';
+import AIReviewPanel from './AIReviewPanel';
 
-interface AppShellProps {
-  children: React.ReactNode;
-}
-
-export default function AppShell({ children }: AppShellProps) {
+export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const showMobileNav = pathname !== '/login' && pathname !== '/';
+
+  // Don't show shell on login page
+  const isAuth = pathname !== '/login' && pathname !== '/';
+
+  if (!isAuth) {
+    return <>{children}</>;
+  }
 
   return (
-    <div className="flex h-screen bg-white dark:bg-gray-920">
+    <div className="min-h-screen bg-[#FAF8F5] dark:bg-[#1D1B17]">
+      {/* Desktop sidebar */}
       <DesktopSidebar />
-      <div className="flex-1 flex flex-col overflow-y-auto w-full">
-        <main className="flex-1 overflow-y-auto">
-  
-  
-    <dO0ÀIay/>
-  
-  
-   5•dbö>
-      <BottomNav show={showMobileNav} />
+
+      {/* Main content area â€” offset on desktop */}
+      <div className="lg:ml-56">
+        {/* Desktop header with AI Review button */}
+        <div className="hidden lg:flex items-center justify-between px-6 py-3 border-b border-gray-200/30 dark:border-gray-700/30 bg-[#FAF8F5]/80 dark:bg-[#1D1B17]/80 backdrop-blur-xl sticky top-0 z-10">
+          <h1 className="text-lg font-bold text-gray-900 dark:text-[#F0EDE8]">
+            {pathname === '/today' ? 'Today' : pathname === '/tasks' ? 'All Tasks' : pathname === '/settings' ? 'Settings' : 'TaskBuddy'}
+          </h1>
+          <AIReviewPanel />
+        </div>
+
+        {/* Mobile header with AI Review button */}
+        <div className="lg:hidden flex items-center justify-between px-5 py-2.5 sticky top-0 z-10 bg-[#FAF8F5]/90 dark:bg-[#1D1B17]/90 backdrop-blur-xl">
+          <h1 className="text-base font-bold text-gray-900 dark:text-[#F0EDE8]">
+            {pathname === '/today' ? 'Today' : pathname === '/tasks' ? 'All Tasks' : pathname === '/settings' ? 'Settings' : 'TaskBuddy'}
+          </h1>
+          <AIReviewPanel />
+        </div>
+
+        {/* Page content */}
+        {children}
       </div>
-      <GlobalPanels />
+
+      {/* Mobile bottom nav (hidden on desktop) */}
+      <div className="lg:hidden">
+        <BottomNav />
+      </div>
     </div>
-  
-  
-   5•dbö>
-  };
+  );
 }
