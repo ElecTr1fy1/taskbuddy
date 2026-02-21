@@ -29,8 +29,269 @@
 
 * {
   scrollbar-width: thin;
-  scrollbar-gutter: stable;
+  scrollbar-color: #C45D3E33 transparent;
+  -webkit-tap-highlight-color: transparent;
 }
 
+body {
+  background: linear-gradient(180deg, var(--bg) 0%, var(--bg-end) 100%);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #C45D3E33; border-radius: 2px; }
+
+/* ─── Glass Card System ─── */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-card-elevated {
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(196, 93, 62, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+/* DO NOW card glow */
+.donow-glow {
+  background: linear-gradient(135deg, rgba(254, 243, 236, 0.9) 0%, rgba(255, 248, 244, 0.9) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5px solid rgba(196, 93, 62, 0.15);
+  border-radius: 20px;
+  box-shadow: 0 0 0 1px rgba(196, 93, 62, 0.05), 0 8px 32px rgba(196, 93, 62, 0.1), 0 2px 8px rgba(196, 93, 62, 0.05);
+}
+
+.dark .donow-glow {
+  background: linear-gradient(135deg, rgba(58, 42, 32, 0.9) 0%, rgba(48, 35, 28, 0.9) 100%);
+  border: 1.5px solid rgba(196, 93, 62, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(196, 93, 62, 0.1);
+}
+
+/* ─── Priority borders ─── */
+.border-priority-critical { border-left: 3px solid #DC2626; }
+.border-priority-high { border-left: 3px solid #EA580C; }
+.border-priority-medium { border-left: 3px solid #2563EB; }
+.border-priority-low { border-left: 3px solid #D1D5DB; }
+
+/* ─── Checkbox ─── */
+.checkbox-round {
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  border: 2px solid #D1D5DB;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+}
+
+.checkbox-round:hover {
+  border-color: #C45D3E;
+  background: #C45D3E11;
+  transform: scale(1.05);
+}
+
+.checkbox-round.checked {
+  background: #C45D3E;
+  border-color: #C45D3E;
+  animation: scaleCheck 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes scaleCheck {
+  0% { transform: scale(0.8); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* ─── Animations ─── */
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slideDown {
+  0% { opacity: 0; transform: translate(-50%, -12px); }
+  100% { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@keyframes fadeUp {
+  0% { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-in-right { animation: slideInRight 0.3s ease-out; }
+.animate-slide-down { animation: slideDown 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.animate-fade-up { animation: fadeUp 0.4s ease-out; }
+.ai-pill { animation: fadeIn 0.3s ease-out; }
+
+/* Staggered entrance for task cards */
+.task-enter { animation: fadeUp 0.35s ease-out both; }
+.task-enter:nth-child(1) { animation-delay: 0ms; }
+.task-enter:nth-child(2) { animation-delay: 50ms; }
+.task-enter:nth-child(3) { animation-delay: 100ms; }
+.task-enter:nth-child(4) { animation-delay: 150ms; }
+.task-enter:nth-child(5) { animation-delay: 200ms; }
+
+/* ─── Sheet & Overlays ─── */
+.sheet-overlay {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* ─── Swipe ─── */
+.swipe-complete { background: #22C55E; }
+.swipe-archive { background: #8B8B8B; }
+
+.task-card {
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  touch-action: pan-y;
+}
+
+/* ─── Bottom nav ─── */
+.bottom-nav {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: rgba(245, 243, 240, 0.92);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.dark .bottom-nav {
+  background: rgba(42, 39, 36, 0.92);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ─── Input bar ─── */
+.input-bar {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background: rgba(245, 243, 240, 0.95);
+}
+.dark .input-bar {
+  background: rgba(42, 39, 36, 0.95);
+}
+
+/* ─── AI Review animations ─── */
+.ai-review-pulse {
+  animation: aiReviewPulse 2s ease-in-out infinite;
+}
+
+@keyframes aiReviewPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.08); opacity: 0.85; }
+}
+
+.ai-review-loading-bar {
+  animation: aiReviewLoadingBar 3s ease-in-out infinite;
+}
+
+@keyframes aiReviewLoadingBar {
+  0% { width: 5%; }
+  50% { width: 70%; }
+  100% { width: 95%; }
+}
+
+/* ─── Desktop sidebar ─── */
+.desktop-sidebar {
+  transition: all 0.3s ease;
+}
+
+/* ─── Score badges ─── */
+.score-high { color: #C45D3E; }
+.score-medium { color: #8A8A8A; }
+.score-low { color: #D1D5DB; }
+
+/* ─── Filter pills ─── */
+.filter-pill {
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.filter-pill.active {
+  background: #C45D3E;
+  color: white;
+  border-color: #C45D3E;
+}
+
+/* ─── Skeleton loading ─── */
+.skeleton {
+  background: linear-gradient(90deg, var(--card) 25%, rgba(0,0,0,0.04) 50%, var(--card) 75%);
+  background-size: 200% 100%;
+  animation: skeleton 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ─── Progress bar gradient ─── */
+.progress-gradient {
+  background: linear-gradient(90deg, #C45D3E 0%, #E8845C 50%, #F4A574 100%);
+}
+
+/* ─── Scrollbar hiding ─── */
+.scrollbar-none, .no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar, .no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ─── Safe areas ─── */
+.safe-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px);
+}
+
+.safe-top {
+  padding-top: max(env(safe-area-inset-top, 0px), 16px);
+}
+
+/* ─── Prevent overscroll ─── */
 html {
-  @apply a睁 tight rtl
+  overscroll-behavior: none;
+  height: -webkit-fill-available;
+}
+
+/* ─── Rounded card shape ─── */
+.rounded-card {
+  border-radius: 16px;
+}
+
+/* ─── Smart Score ring ─── */
+.score-ring {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
