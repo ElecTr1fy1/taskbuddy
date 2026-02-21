@@ -86,7 +86,8 @@ export default function TaskBuddyV7() {
   const [dragOverId, setDragOverId] = useState(null);
   const [settingsTab, setSettingsTab] = useState('context');
   const [ctxSaved, setCtxSaved] = useState(false);
-  const [aiOpen, setAiOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(true);
+  const [celPhase, setCelPhase] = useState(null);
   const [expanded, setExpanded] = useState(null);
   const [quickAdd, setQuickAdd] = useState('');
   const [briefingOpen, setBriefingOpen] = useState(true);
@@ -167,7 +168,43 @@ export default function TaskBuddyV7() {
   const playCompletionSound = () => { try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination); osc.frequency.setValueAtTime(800, ctx.currentTime); osc.frequency.setValueAtTime(1200, ctx.currentTime + 0.1); gain.gain.setValueAtTime(0.3, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3); osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.3); } catch(e) {} };
 
   // ─── ACTIONS ──────────────────────────────────────────────
-  const complete = (id) => { playCompletionSound(); setCelebrating(id); setTimeout(() => { setTasks((p) => p.map((t) => (t.id === id ? { ...t, done: true } : t))); setCelebrating(null); }, 800); };
+  const complete = (id) => { playCompletionSound(); setCelebrating(id); setCelPhase('confetti'); setTimeout(() => setCelPhase('slideout'), 600); setTimeout(() => { setTasks((p) => p.map((t) => (t.id === id ? { ...t, done: true } : t))); setCelebrating(null); setCelPhase(null); }, 1400); };
+
+  // ─── AI TASK INSIGHT ──────────────────────────────────────
+  const getTaskInsight = (t) => {
+    const s = score(t);
+    const tips = [];
+    let intro = '**' + t.title + '** — Priority score: ' + s + '/100\n\n';
+    if (t.notes) intro += '\u{1F4DD} *' + t.notes + '*\n\n';
+    if (t.dueDate) {
+      const d = Math.ceil((new Date(t.dueDate) - new Date()) / 86400000);
+      if (d < 0) tips.push('\u{1F534} This is **' + Math.abs(d) + ' days overdue**. Do it now or reschedule with a clear new date.');
+      else if (d === 0) tips.push('\u{1F534} **Due today.** Block the next ' + (t.time < 60 ? t.time + ' minutes' : Math.round(t.time/60) + ' hours') + ' and knock this out.');
+      else if (d === 1) tips.push('\u{1F7E1} Due **tomorrow**. Start today if it takes more than ' + Math.round(t.time/2) + 'm.');
+      else tips.push('\u{1F4C5} Due in **' + d + ' days**. You have time, but don\'t let it slip.');
+    }
+    if (t.effort >= 7) tips.push('\u{1F4AA} High effort — schedule during your **peak energy** hours.');
+    if (t.time >= 90) tips.push('\u{23F0} ' + Math.round(t.time/60) + 'h+ task. Break into **2-3 focused sessions**.');
+    if (t.time <= 20 && t.effort <= 3) tips.push('\u{26A1} Quick win — just **do it now** in under 20 minutes.');
+    if (t.age >= 7) tips.push('\u{23F3} Sitting for **' + t.age + ' days**. Commit to a start time or remove it.');
+    const bd = [];
+    if (t.subtasks && t.subtasks.length > 0) {
+      const dn = t.subtasks.filter(x => x.done).length;
+      bd.push('\n**Progress: ' + dn + '/' + t.subtasks.length + ' subtasks done**');
+      const nx = t.subtasks.find(x => !x.done);
+      if (nx) bd.push('\u{1F449} Next step: **' + nx.title + '**');
+    } else {
+      bd.push('\n**Suggested breakdown:**');
+      if (t.time >= 60) { bd.push('1. Research / gather what you need (' + Math.round(t.time*0.2) + 'm)'); bd.push('2. Do the core work (' + Math.round(t.time*0.6) + 'm)'); bd.push('3. Review and finalize (' + Math.round(t.time*0.2) + 'm)'); }
+      else { bd.push('1. Open/prep what you need (5m)'); bd.push('2. Execute (' + Math.max(t.time-10,5) + 'm)'); bd.push('3. Quick review (5m)'); }
+    }
+    return intro + (tips.length > 0 ? tips.join('\n') + '\n' : '') + bd.join('\n');
+  };
+  const sendTaskInsight = (t) => {
+    setAiOpen(true);
+    setMsgs((p) => [...p, { role: 'user', text: 'Tell me about "' + t.title + '"' }]);
+    setTimeout(() => { setMsgs((p) => [...p, { role: 'ai', text: getTaskInsight(t) }]); }, 600);
+  };
   const deleteTask = (id) => { setTasks((p) => p.filter((t) => t.id !== id)); setExpanded(null); };
   const parseQuickAdd = (input) => {
     let title = input, dueDate = null, deadlineType = null, time = 30;
@@ -295,12 +332,17 @@ export default function TaskBuddyV7() {
   const confetti = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#F38181', '#AA96DA', '#95E1D3', '#FF9FF3', '#48DBFB'];
 
   // ─── RENDER: CHECKBOX ────────────────────────────────────
-  const renderChk = (t) => (
-    <button onClick={(e) => { e.stopPropagation(); complete(t.id); }} style={{ width: 22, height: 22, borderRadius: '50%', border: '2px solid ' + c.acc, background: t.done ? c.acc : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, position: 'relative', transition: 'all 0.2s' }}>
-      {t.done && <Check size={12} color="#fff" />}
-      {celebrating === t.id && confetti.map((col, i) => <div key={i} style={{ position: 'absolute', width: 6, height: 6, borderRadius: '50%', background: col, animation: 'cp' + i + ' 0.6s ease-out forwards' }} />)}
+  const renderChk = (t) => {
+    const isCel = celebrating === t.id;
+    const isConfetti = isCel && celPhase === 'confetti';
+    const sc = score(t) >= 81 ? c.ok : score(t) >= 61 ? c.acc : score(t) >= 31 ? c.warn : c.danger;
+    return (
+    <button onClick={(e) => { e.stopPropagation(); if (!isCel) complete(t.id); }} style={{ width: 22, height: 22, borderRadius: '50%', border: '2px solid ' + sc, background: isConfetti ? sc : t.done ? sc : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, position: 'relative', transition: 'all 0.2s' }}>
+      {(t.done || isConfetti) && <Check size={12} color="#fff" style={isConfetti ? { animation: 'checkPop 0.3s ease forwards' } : {}} />}
+      {isConfetti && confetti.map((col, i) => <div key={i} style={{ position: 'absolute', width: i%2===0 ? 8 : 6, height: i%2===0 ? 8 : 6, borderRadius: i%3===0 ? '50%' : '2px', background: col, animation: 'cp' + i + ' 0.8s cubic-bezier(0.25,0.46,0.45,0.94) forwards' }} />)}
     </button>
-  );
+    );
+  };
 
   // ─── RENDER: DETAIL ──────────────────────────────────────
   const renderDetail = (t) => (
@@ -321,6 +363,7 @@ export default function TaskBuddyV7() {
       <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
         {[{ l: 'Impact', v: t.impact }, { l: 'Urgency', v: t.urgency }, { l: 'Effort', v: t.effort }, { l: 'Score', v: score(t) }].map((b) => <div key={b.l} style={{ flex: 1, textAlign: 'center', padding: '6px 0', borderRadius: 6, background: c.bg, border: '1px solid ' + c.bdr }}><div style={{ fontSize: 10, color: c.sub, marginBottom: 2 }}>{b.l}</div><div style={{ fontSize: 14, fontWeight: 700, color: b.l === 'Score' ? c.acc : c.txt }}>{b.v}</div></div>)}
       </div>
+      <button onClick={(e) => { e.stopPropagation(); sendTaskInsight(t); }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1px solid ' + c.acc + '40', background: c.acc + '10', color: c.acc, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginBottom: 10, width: '100%', justifyContent: 'center' }}><Sparkles size={14} /> Get AI tips & breakdown</button>
       <button onClick={(e) => { e.stopPropagation(); deleteTask(t.id); }} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', color: c.danger, fontSize: 12, cursor: 'pointer', padding: '4px 0' }}><Trash2 size={13} /> Delete task</button>
     </div>
   );
@@ -333,7 +376,7 @@ export default function TaskBuddyV7() {
     const subDone = t.subtasks ? t.subtasks.filter((s) => s.done).length : 0, subTotal = t.subtasks ? t.subtasks.length : 0;
     return (
       <div key={t.id} draggable={drag} onDragStart={drag ? () => handleDragStart(t.id) : undefined} onDragOver={drag ? (e) => handleDragOver(e, t.id) : undefined} onDragLeave={drag ? handleDragLeave : undefined} onDrop={drag ? () => handleDrop(t.id) : undefined}
-        style={{ borderRadius: 10, border: large ? '2px solid ' + c.acc : '1px solid ' + c.bdr, background: large ? c.doNow : c.card, marginBottom: 8, opacity: isCelebrating ? 0 : isDragging ? 0.4 : dim ? 0.6 : 1, cursor: drag ? 'grab' : 'default', transition: 'opacity 0.5s ease, transform 0.5s ease, max-height 0.3s ease 0.4s, margin 0.3s ease 0.4s', boxShadow: large ? '0 2px 12px rgba(124,140,248,0.12)' : '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden', transform: isCelebrating ? 'translateX(80px)' : 'translateX(0)', maxHeight: isCelebrating ? '0px' : '500px', borderTop: dragOverId === t.id && dragId !== t.id ? '3px solid ' + c.acc : 'none' }}>
+        style={{ borderRadius: 10, border: large ? '2px solid ' + c.acc : '1px solid ' + c.bdr, background: large ? c.doNow : c.card, marginBottom: 8, opacity: (isCelebrating && celPhase === 'slideout') ? 0 : isDragging ? 0.4 : dim ? 0.6 : 1, cursor: drag ? 'grab' : 'default', transition: isCelebrating ? 'none' : 'opacity 0.3s ease, transform 0.3s ease', boxShadow: large ? '0 2px 12px rgba(124,140,248,0.12)' : '0 1px 3px rgba(0,0,0,0.06)', overflow: 'visible', animation: (isCelebrating && celPhase === 'slideout') ? 'taskSlideOut 0.8s ease forwards' : 'none', transform: isDragging ? 'scale(0.98)' : 'translateX(0)', borderTop: dragOverId === t.id && dragId !== t.id ? '3px solid ' + c.acc : 'none' }}>
         <div onClick={() => setExpanded(isExp ? null : t.id)} style={{ display: 'flex', alignItems: 'center', gap: mobile ? 8 : 10, padding: large ? '14px 16px' : '10px 14px', cursor: 'pointer' }}>
           {drag && !mobile && <GripVertical size={14} color={c.sub} style={{ flexShrink: 0, opacity: 0.5 }} />}
           {renderChk(t)}
@@ -346,10 +389,16 @@ export default function TaskBuddyV7() {
               {reasons(t).map((r, i) => <span key={i} style={{ fontSize: 10, color: c.sub }}>{r}</span>)}
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-            <div style={{ minWidth: 36, height: 24, borderRadius: 6, background: (score(t) >= 81 ? c.ok : score(t) >= 61 ? c.acc : score(t) >= 31 ? c.warn : c.danger) + '18', border: '1px solid ' + (score(t) >= 81 ? c.ok : score(t) >= 61 ? c.acc : score(t) >= 31 ? c.warn : c.danger), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: score(t) >= 81 ? c.ok : score(t) >= 61 ? c.acc : score(t) >= 31 ? c.warn : c.danger }}>{score(t)}</div>
-            {!mobile && <span style={{ fontSize: 12, fontWeight: 500, color: c.txt, display: 'flex', alignItems: 'center', gap: 4 }}><Clock size={12} /> {fmt(t.time)}</span>}
-            <ChevronRight size={14} color={c.sub} style={{ transform: isExp ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} />
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, flexShrink: 0 }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: c.sub, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 3 }}>Priority</div>
+              <div style={{ minWidth: 36, height: 26, borderRadius: 6, background: (score(t) >= 81 ? c.ok : score(t) >= 61 ? c.acc : score(t) >= 31 ? c.warn : c.danger) + '18', border: '1px solid ' + (score(t) >= 81 ? c.ok : score(t) >= 61 ? c.acc : score(t) >= 31 ? c.warn : c.danger), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: score(t) >= 81 ? c.ok : score(t) >= 61 ? c.acc : score(t) >= 31 ? c.warn : c.danger }}>{score(t)}</div>
+            </div>
+            {!mobile && <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: c.sub, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 3 }}>Est.</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: c.txt, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{fmt(t.time)}</div>
+            </div>}
+            <ChevronRight size={14} color={c.sub} style={{ transform: isExp ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s', marginTop: 12 }} />
           </div>
         </div>
         {isExp && renderDetail(t)}
@@ -619,20 +668,24 @@ export default function TaskBuddyV7() {
 
       {/* ── AI Panel ── */}
       {aiOpen && (
-        <div style={mobile ? { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: c.bg, zIndex: 50, display: 'flex', flexDirection: 'column' } : { width: 280, borderLeft: '1px solid ' + c.bdr, background: c.side, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+        <div style={mobile ? { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: c.bg, zIndex: 50, display: 'flex', flexDirection: 'column' } : { width: 340, borderLeft: '1px solid ' + c.bdr, background: c.side, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
           <div style={{ padding: '10px 14px', borderBottom: '1px solid ' + c.bdr, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Sparkles size={14} color={c.acc} /><span style={{ fontSize: 13, fontWeight: 600, color: c.txt }}>AI Assistant</span><span style={{ fontSize: 9, color: c.acc, background: c.acc + '18', padding: '1px 5px', borderRadius: 4, fontWeight: 600 }}>Opus 4.6</span></div>
             <button onClick={() => setAiOpen(false)} style={{ background: 'transparent', border: 'none', color: c.sub, cursor: 'pointer' }}><X size={14} /></button>
           </div>
           <div style={{ flex: 1, overflowY: 'auto', padding: 12 }}>
-            {msgs.length === 0 && <div style={{ textAlign: 'center', padding: '20px 10px' }}><Sparkles size={24} color={c.acc} style={{ marginBottom: 8 }} /><div style={{ fontSize: 13, fontWeight: 600, color: c.txt, marginBottom: 4 }}>Hi Daniel!</div><div style={{ fontSize: 12, color: c.sub, marginBottom: 16, lineHeight: 1.5 }}>Ask me anything about your tasks.</div><div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>{aiSuggestions.map((s) => <button key={s} onClick={() => sendMsg(s)} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid ' + c.bdr, background: c.card, color: c.txt, fontSize: 12, cursor: 'pointer', textAlign: 'left' }}>{s}</button>)}</div></div>}
-            {msgs.map((m, i) => <div key={i} style={{ marginBottom: 10, display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start' }}><div style={{ maxWidth: '88%', padding: '8px 12px', borderRadius: 10, background: m.role === 'user' ? c.acc : c.card, color: m.role === 'user' ? '#fff' : c.txt, fontSize: 12, lineHeight: 1.5, border: m.role === 'ai' ? '1px solid ' + c.bdr : 'none', whiteSpace: 'pre-wrap' }}>{m.text}</div></div>)}
+            {msgs.length === 0 && <div style={{ textAlign: 'center', padding: '20px 10px' }}><Sparkles size={24} color={c.acc} style={{ marginBottom: 8 }} /><div style={{ fontSize: 13, fontWeight: 600, color: c.txt, marginBottom: 4 }}>Hi Daniel!</div><div style={{ fontSize: 12, color: c.sub, marginBottom: 6, lineHeight: 1.5 }}>Ask me anything about your tasks — plan your day, get advice, or click any task for an AI breakdown.</div><div style={{ fontSize: 11, color: c.sub, marginBottom: 16, fontStyle: 'italic' }}>Tip: Expand any task and tap "Get AI tips" for instant insights.</div><div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>{aiSuggestions.map((s) => <button key={s} onClick={() => sendMsg(s)} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid ' + c.bdr, background: c.card, color: c.txt, fontSize: 12, cursor: 'pointer', textAlign: 'left' }}>{s}</button>)}</div></div>}
+            {msgs.map((m, i) => <div key={i} style={{ marginBottom: 10, display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start' }}><div style={{ maxWidth: '88%', padding: '10px 14px', borderRadius: 12, background: m.role === 'user' ? c.acc : c.card, color: m.role === 'user' ? '#fff' : c.txt, fontSize: 12, lineHeight: 1.6, border: m.role === 'ai' ? '1px solid ' + c.bdr : 'none', whiteSpace: 'pre-wrap' }}>{m.text}</div></div>)}
           </div>
-          {recording && <div style={{ padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 8, borderTop: '1px solid ' + c.bdr }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#F85149', animation: 'blink 1s infinite' }} /><span style={{ fontSize: 12, color: c.danger }}>Listening...</span></div>}
-          <div style={{ padding: '8px 12px', borderTop: '1px solid ' + c.bdr, display: 'flex', gap: 6 }}>
-            <button onClick={() => setRecording(!recording)} style={{ width: 32, height: 32, borderRadius: '50%', border: '1px solid ' + (recording ? c.danger : c.bdr), background: recording ? c.danger + '18' : 'transparent', color: recording ? c.danger : c.sub, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}><Mic size={14} /></button>
-            <input value={aiInput} onChange={(e) => setAiInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') sendMsg(aiInput); }} placeholder="Ask anything..." style={{ flex: 1, background: c.card, border: '1px solid ' + c.bdr, borderRadius: 8, padding: '6px 10px', color: c.txt, fontSize: 12, outline: 'none' }} />
-            <button onClick={() => sendMsg(aiInput)} disabled={!aiInput.trim()} style={{ width: 32, height: 32, borderRadius: '50%', border: 'none', background: aiInput.trim() ? c.acc : c.bdr, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: aiInput.trim() ? 'pointer' : 'default', flexShrink: 0 }}><Send size={14} /></button>
+          {recording && <div style={{ padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 8, borderTop: '1px solid ' + c.bdr }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#F85149', animation: 'blink 1s infinite' }} /><span style={{ fontSize: 12, color: c.danger }}>Recording... tap mic to stop</span></div>}
+          <div style={{ padding: '12px 14px', borderTop: '1px solid ' + c.bdr }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+              <textarea value={aiInput} onChange={(e) => { setAiInput(e.target.value); e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'; }} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(aiInput); } }} placeholder="Describe what's on your mind — use as much detail as you need..." rows={3} style={{ flex: 1, background: c.card, border: '1px solid ' + c.bdr, borderRadius: 10, padding: '10px 14px', color: c.txt, fontSize: 13, outline: 'none', lineHeight: 1.5, minHeight: 72, maxHeight: 120, fontFamily: 'inherit', resize: 'none' }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <button onClick={() => setRecording(!recording)} style={{ width: 36, height: 36, borderRadius: '50%', border: recording ? 'none' : '1px solid ' + c.bdr, background: recording ? c.danger : c.card, color: recording ? '#fff' : c.sub, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, animation: recording ? 'micPulse 1.5s infinite' : 'none' }}><Mic size={15} /></button>
+                <button onClick={() => sendMsg(aiInput)} disabled={!aiInput.trim()} style={{ width: 36, height: 36, borderRadius: '50%', border: 'none', background: aiInput.trim() ? c.acc : c.bdr, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: aiInput.trim() ? 'pointer' : 'default', flexShrink: 0 }}><Send size={15} /></button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -646,14 +699,17 @@ export default function TaskBuddyV7() {
 
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        @keyframes cp0 { to { transform: translate(20px, -25px) scale(0); opacity: 0; } }
-        @keyframes cp1 { to { transform: translate(-18px, -20px) scale(0); opacity: 0; } }
-        @keyframes cp2 { to { transform: translate(25px, 10px) scale(0); opacity: 0; } }
-        @keyframes cp3 { to { transform: translate(-5px, 28px) scale(0); opacity: 0; } }
-        @keyframes cp4 { to { transform: translate(15px, -30px) scale(0); opacity: 0; } }
-        @keyframes cp5 { to { transform: translate(-22px, 5px) scale(0); opacity: 0; } }
-        @keyframes cp6 { to { transform: translate(10px, 22px) scale(0); opacity: 0; } }
-        @keyframes cp7 { to { transform: translate(-15px, -18px) scale(0); opacity: 0; } }
+        @keyframes cp0 { 0% { transform: translate(0,0) scale(1); opacity:1; } 100% { transform: translate(28px, -35px) scale(0); opacity:0; } }
+        @keyframes cp1 { 0% { transform: translate(0,0) scale(1); opacity:1; } 100% { transform: translate(-24px, -28px) scale(0); opacity:0; } }
+        @keyframes cp2 { 0% { transform: translate(0,0) scale(1); opacity:1; } 100% { transform: translate(32px, 14px) scale(0); opacity:0; } }
+        @keyframes cp3 { 0% { transform: translate(0,0) scale(1); opacity:1; } 100% { transform: translate(-8px, 34px) scale(0); opacity:0; } }
+        @keyframes cp4 { 0% { transform: translate(0,0) scale(1); opacity:1; } 100% { transform: translate(20px, -40px) scale(0); opacity:0; } }
+        @keyframes cp5 { 0% { transform: translate(0,0) scale(1); opacity:1; } 100% { transform: translate(-30px, 8px) scale(0); opacity:0; } }
+        @keyframes cp6 { 0% { transform: translate(0,0) scale(1); opacity:1; } 100% { transform: translate(14px, 28px) scale(0); opacity:0; } }
+        @keyframes cp7 { 0% { transform: translate(0,0) scale(1); opacity:1; } 100% { transform: translate(-20px, -22px) scale(0); opacity:0; } }
+        @keyframes taskSlideOut { 0% { opacity:1; transform:translateX(0); } 60% { opacity:1; transform:translateX(0); } 100% { opacity:0; transform:translateX(80px); } }
+        @keyframes checkPop { 0% { transform:scale(0); } 50% { transform:scale(1.3); } 100% { transform:scale(1); } }
+        @keyframes micPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(229,83,75,0.4); } 50% { box-shadow: 0 0 0 8px rgba(229,83,75,0); } }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         @keyframes fadeSlide { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.7; } }
