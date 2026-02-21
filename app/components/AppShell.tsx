@@ -9,7 +9,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   // Don't show shell on login page
-  const isAuth = pathname !== '/login' && pathname !== '/';
+  const isAuth = pathname !== '/login' && pathname !== '/' && pathname !== '/today';
 
   if (!isAuth) {
     return <>{children}</>;
