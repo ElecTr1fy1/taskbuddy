@@ -26,8 +26,14 @@ export default function QuickAddButton({ onSubmit, isLoading = false }: QuickAdd
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') { e.preventDefault(); handleSubmit(); }
-    if (e.key === 'Escape') { setText(''); setIsExpanded(false); }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSubmit();
+    }
+    if (e.key === 'Escape') {
+      setText('');
+      setIsExpanded(false);
+    }
   };
 
   if (!isExpanded) {
@@ -52,7 +58,11 @@ export default function QuickAddButton({ onSubmit, isLoading = false }: QuickAdd
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={handleKeyDown}
-        onBlur={() => { if (!text.trim()) setIsExpanded(false); }}
+        onBlur={() => {
+          if (!text.trim()) {
+            setIsExpanded(false);
+          }
+        }}
         placeholder="What do you need to do?"
         className="flex-1 bg-transparent text-sm text-gray-900 dark:text-[#F0EDE8] placeholder:text-gray-400 outline-none"
         disabled={isLoading}

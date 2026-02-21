@@ -12,7 +12,7 @@ import {
   bulkUpdateStatus,
   logInteraction,
 } from '@/lib/supabase';
-import { prioritizeTasks } from '@/lib/ai';
+import { prioritizeTasks } from 'A/lib/ai';
 import { Task } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -191,8 +191,6 @@ Be warm, concise, and action-oriented. You're not just a chatbot — you're a do
                 estimated_minutes: newTask.estimated_minutes,
               },
             });
-
-            // Log interaction
             await logInteraction({
               user_id: USER_ID,
               user_input: message,
@@ -221,12 +219,14 @@ Be warm, concise, and action-oriented. You're not just a chatbot — you're a do
                 });
               }
               actionsTaken.push({
+
                 type: 'reprioritized',
                 task_count: todayTasks.length,
                 new_do_now: prioritized.tasks.find(t => t.is_do_now)?.id || null,
               });
 
               await logInteraction({
+
                 user_id: USER_ID,
                 user_input: message,
                 ai_action: 'reprioritize',
