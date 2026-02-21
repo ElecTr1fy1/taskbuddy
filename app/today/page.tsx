@@ -347,32 +347,122 @@ export default function TaskBuddyV7() {
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-            <div style={{ minWidth: 36, height: 24, borderRadius: 6, background: (score(t) >= 81 ? c.ok : score(t) >= 61 ? c.acc : score(t) >= 31 ? c.warn : c.danger) + '18', border: '1px solid ' + (score(t) >= 81 ? c.ok : score(t) >= 61 ? c.acc : score(t) >= 31 ? c.warn : c.danger), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: score(t) >= 81 ? c.ok : score(t) >= 61 Ë˜XØÈˆØÛÜ™J
-HHÌHÈËØ\›ˆˆË™[™Ù\ˆ_OÜØÛÜ™J
-_OÙ]‚ˆÈ[[Øš[H	‰ˆÜ[ˆİ[O^ŞÈ›ÛÚ^™NˆL‹›ÛÙZYÚˆLÛÛÜˆË\Ü^Nˆ	Ù›^	Ë[YÛ’][\Îˆ	ØÙ[\‰ËØ\ˆ_OÛØÚÈÚ^™O^ÌLŸHÏˆÙ›]
-[YJ_OÜÜ[ŸBˆÚ]œ›Û”šYÚÚ^™O^ÌMHÛÛÜ^ØËœİXŸHİ[O^ŞÈ˜[œÙ›Ü›Nˆ\Ñ^È	Ü›İ]JLYÊIÈˆ	Û›Û™IË˜[œÚ][Ûˆ	İ˜[œÙ›Ü›HŒœÉÈ_HÏ‚ˆÙ]‚ˆÙ]‚ˆÚ\Ñ^	‰ˆ™[™\‘]Z[
-
-_BˆÙ]‚ˆ
-NÂˆNÂ‚ˆËÈ8¥ 8¥ 8¥ ”’QQ’S‘È8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ ˆÛÛœİ™[™\œšYYš[™ÈH
+            <div style={{ minWidth: 36, height: 24, borderRadius: 6, background: (score(t) >= 81 ? c.ok : score(t) >= 61 ? c.acc : score(t) >= 31 ? c.warn : c.danger) + '18', border: '1px solid ' + (score(t) >= 81 ? c.ok : score(t) >= 61 ? c.acc : score(t) >= 31 ? c.warn : c.danger), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: score(t) >= 81 ? c.ok : score(t) >= 61 ? c.acc : score(t) >= 31 ? c.warn : c.danger }}>{score(t)}</div>
+            {!mobile && <span style={{ fontSize: 12, fontWeight: 500, color: c.txt, display: 'flex', alignItems: 'center', gap: 4 }}><Clock size={12} /> {fmt(t.time)}</span>}
+            <ChevronRight size={14} color={c.sub} style={{ transform: isExp ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} />
+          </div>
+        </div>
+        {isExp && renderDetail(t)}
+      </div>
+    );
+  };
 
-HOˆÂˆÛÛœİİ\ˆH™]È]J
-K™Ù]İ\œÊ
-NÂˆÛÛœİÜ™Y][™ÈHİ\ˆLˆÈ	ÑÛÛÙ[Ü›š[™ÉÈˆİ\ˆMÈtvööBgFW&æööâr¢tvööBWfVæ–ærs°¢6öç7B†&E6ööâÒF6·2æf–ÇFW"‚‡B’ÓâBæFöæRbbBæFVFÆ–æUG—RÓÓÒv†&BrbbF—5VçF–ÄGVR‡B’ÓÒçVÆÂbbF—5VçF–ÄGVR‡B’ÃÒ"bbF—5VçF–ÄGVR‡B’ãÒ“°¢6öç7B†&D÷fW&GVRÒF6·2æf–ÇFW"‚‡B’ÓâBæFöæRbbBæFVFÆ–æUG—RÓÓÒv†&BrbbF—5VçF–ÄGVR‡B’ÓÒçVÆÂbbF—5VçF–ÄGVR‡B’Â“°¢6öç7BæVvÆV7FVBÒ6G2æf–ÇFW"‚†6B’ÓâFöæRç6öÖR‚‡B’ÓâBæ6BÓÓÒ6B’“°¢6öç7B7DFöæRÒF6·2æÆVæwF‚âòÖF‚ç&÷VæB‚†FöæRæÆVæwF‚òF6·2æÆVæwF‚’¢’¢°¢6öç7B"Ò‚Â6—&2Ò"¢ÖF‚å’¢"Âöfg6WBÒ6—&2Ò‡7DFöæRò’¢6—&3°¢–b‚'&–Vf–æt÷Vâ’&WGW&âÆ'WGFöâöä6Æ–6³×²‚’Óâ6WD'&–Vf–æt÷Vâ‡G'VR—Ò7G–ÆS×·²&6¶w&÷VæC¢2æ'&–Vd&rÂ&÷&FW#¢s‚6öÆ–Br²2æ&G"Â&÷&FW%&F—W3¢‚ÂFF–æs¢sg‚'‚rÂ6öÆ÷#¢2æ62ÂföçE6—¦S¢"Â7W'6÷#¢wö–çFW"rÂÖ&v–ä&÷GFöÓ¢"ÂF—7Æ“¢vfÆW‚rÂÆ–vä—FV×3¢v6VçFW"rÂv¢b×ÓãÅ7&¶ÆW26—¦S×³'ÒóâF–Ç’'&–Vf–æsÂö'WGFöãã°¢&WGW&â€¢ÆF—b7G–ÆS×·²&6¶w&÷VæC¢2æ'&–Vd&rÂ&÷&FW#¢s‚6öÆ–Br²2æ&G"Â&÷&FW%&F—W3¢"ÂFF–æs¢Öö&–ÆRòB¢#ÂÖ&v–ä&÷GFöÓ¢#BÂ÷6—F–öã¢w&VÆF—fRr×Óà¢Æ'WGFöâöä6Æ–6³×²‚’Óâ6WD'&–Vf–æt÷Vâ†fÇ6R—Ò7G–ÆS×·²÷6—F–öã¢v'6öÇWFRrÂF÷¢‚Â&–v‡C¢‚Â&6¶w&÷VæC¢wG&ç7&VçBrÂ&÷&FW#¢væöæRrÂ6öÆ÷#¢2ç7V"Â7W'6÷#¢wö–çFW"r×ÓãÅ‚6—¦S×³GÒóãÂö'WGFöãà¢ÆF—b7G–ÆS×·²F—7Æ“¢vfÆW‚rÂÆ–vä—FV×3¢v6VçFW"rÂv¢BÂÖ&v–ä&÷GFöÓ¢×Óà¢Ç7frv–GFƒ×³CGÒ†V–v‡C×³CGÒ7G–ÆS×·²G&ç6f÷&Ó¢w&÷FFR‚Ó“FVr’r×ÓãÆ6—&6ÆR7ƒ×³#'Ò7“×³#'Ò#×·'Òf–ÆÃÒ'G&ç7&VçB"7G&ö¶S×¶2æ&G'Ò7G&ö¶Uv–GFƒ×³7ÒóãÆ6—&6ÆR7ƒ×³#'Ò7“×³#'Ò#×·'Òf–ÆÃÒ'G&ç7&VçB"7G&ö¶S×¶2æ67Ò7G&ö¶Uv–GFƒ×³7Ò7G&ö¶TF6†'&“×¶6—&7Ò7G&ö¶TF6†öfg6WC×¶öfg6WGÒ7G&ö¶TÆ–æV6Ò'&÷VæB"óãÂ÷7fsà¢ÆF—cãÆF—b7G–ÆS×·²föçE6—¦S¢bÂföçEvV–v‡C¢cÂ6öÆ÷#¢2çG‡B×Óç¶w&VWF–æwÒÂFæ–VÃÂöF—cãÆF—b7G–ÆS×·²föçE6—¦S¢"Â6öÆ÷#¢2ç7V"×Óç¶7F—fRæÆVæwF‡ÒF6·2Fòfö7W2öâFöF“ÂöF—cãÂöF—cà¢ÂöF—cà¢ÆF—b7G–ÆS×·²F—7Æ“¢vfÆW‚rÂfÆW„F—&V7F–öã¢v6öÇVÖârÂv¢b×Óà¢¶†&D÷fW&GVRæÖ‚‡B’ÓâÆF—b¶W“×·Bæ–GÒ7G–ÆS×·²föçE6—¦S¢"Â6öÆ÷#¢2æFævW"ÂF—7Æ“¢vfÆW‚rÂÆ–vä—FV×3¢vfÆW‚×7F'BrÂv¢b×ÓãÄÆW'EG&–ævÆR6—¦S×³7Ò7G–ÆS×·²fÆW…6‡&–æ³¢ÂÖ&v–åF÷¢×ÒóãÇ7ããÇ7G&öæsç·BçF—FÆWÓÂ÷7G&öæsâ—2÷fW&GVR(	B†&BFVFÆ–æRãÂ÷7ããÂöF—câ—Ğ¢¶†&E6ööâæÖ‚‡B’ÓâÆF—b¶W“×·Bæ–GÒ7G–ÆS×·²föçE6—¦S¢"Â6öÆ÷#¢2çv&âÂF—7Æ“¢vfÆW‚rÂÆ–vä—FV×3¢vfÆW‚×7F'BrÂv¢b×ÓãÄÆW'EG&–ævÆR6—¦S×³7Ò7G–ÆS×·²fÆW…6‡&–æ³¢ÂÖ&v–åF÷¢×ÒóãÇ7ããÇ7G&öæsç·BçF—FÆWÓÂ÷7G&öæsâGVR¶F—5VçF–ÄGVR‡B’ÓÓÒòwFöF’r¢wFöÖ÷'&÷rwÒ(	B†&BFVFÆ–æRãÂ÷7ããÂöF—câ—Ğ¢¶FöæRæÆVæwF‚âbbÆF—b7G–ÆS×·²föçE6—¦S¢"Â6öÆ÷#¢2æö²×Óå–÷R6ö×ÆWFVB¶FöæRæÆVæwF‡ÒF6·2F†—2vVV²ãÂöF—cçĞ¢¶æVvÆV7FVBæÆVæwF‚âbbÆF—b7G–ÆS×·²föçE6—¦S¢"Â6öÆ÷#¢2ç7V"×ÓäæòÇ7G&öæsç¶æVvÆV7FVE³×ÓÂ÷7G&öæsâF6·26ö×ÆWFVB&V6VçFÇ’(	B6öç6–FW"'·F6·2æf–æB‚‡B’ÓâBæFöæRbbBæ6BÓÓÒæVvÆV7FVE³Ò“òçF—FÆRÇÂvöæRwÒ"FöF’ãÂöF—cçĞ¢ÂöF—cà¢ÆF—b7G–ÆS×·²Ö&v–åF÷¢BÂ&÷&FW%F÷¢s‚6öÆ–Br²2æ&G"ÂFF–æuF÷¢"×Óà¢ÆF—b7G–ÆS×·²F—7Æ“¢vfÆW‚rÂv¢bÂÖ&v–ä&÷GFöÓ¢‚ÂfÆW…w&¢ww&r×Óà¢¶•7VvvW7F–öç2æÖ‚‡2’ÓâÆ'WGFöâ¶W“×·7Òöä6Æ–6³×²‚’Óâ6VæD×6r‡2—Ò7G–ÆS×·²FF–æs¢sG‚‚rÂ&÷&FW%&F—W3¢#Â&÷&FW#¢s‚6öÆ–Br²2æ&G"Â&6¶w&÷VæC¢2æ6&BÂ6öÆ÷#¢2ç7V"ÂföçE6—¦S¢Â7W'6÷#¢wö–çFW"r×Óç·7ÓÂö'WGFöãâ—Ğ¢ÂöF—cà¢ÆF—b7G–ÆS×·²F—7Æ“¢vfÆW‚rÂv¢‚ÂÆ–vä—FV×3¢v6VçFW"r×Óà¢Å7&¶ÆW26—¦S×³GÒ6öÆ÷#×¶2æ67Òóà¢Æ–çWBfÇVS×¶”–çWGÒöä6†ævS×²†R’Óâ6WD”–çWB†RçF&vWBçfÇVR—Òöä¶W”F÷vã×²†R’Óâ²–b†Ræ¶W’ÓÓÒtVçFW"r’6VæD×6r†”–çWB“²×ÒÆ6V†öÆFW#Ò$6²–÷W"’6†–Vböb7Ffbâââ"7G–ÆS×·²fÆWƒ¢Â&6¶w&÷VæC¢2æ6&BÂ&÷&FW#¢s‚6öÆ–Br²2æ&G"Â&÷&FW%&F—W3¢‚ÂFF–æs¢s‡‚'‚rÂ6öÆ÷#¢2çG‡BÂföçE6—¦S¢"Â÷WFÆ–æS¢væöæRr×Òóà¢¶”–çWBçG&–Ò‚’bbÆ'WGFöâöä6Æ–6³×²‚’Óâ6VæD×6r†”–çWB—Ò7G–ÆS×·²&6¶w&÷VæC¢2æ62Â&÷&FW#¢væöæRrÂ6öÆ÷#¢r6ffbrÂ&÷&FW%&F—W3¢‚ÂFF–æs¢sg‚'‚rÂföçE6—¦S¢"ÂföçEvV–v‡C¢cÂ7W'6÷#¢wö–çFW"r×Óå6VæCÂö'WGFöãçĞ¢ÂöF—cà¢ÂöF—cà¢ÂöF—cà¢“°¢Ó° ¢6öç7B6V7F–öä†VBÒ†Æ&VÂÂ6÷VçB’ÓâÆF—b7G–ÆS×·²föçE6—¦S¢ÂföçEvV–v‡C¢cÂ6öÆ÷#¢2ç7V"ÂFW‡EG&ç6f÷&Ó¢wWW&66RrÂÆWGFW%76–æs¢ã‚ÂÖ&v–ä&÷GFöÓ¢‚ÂÖ&v–åF÷¢bÂF—7Æ“¢vfÆW‚rÂÆ–vä—FV×3¢v6VçFW"rÂv¢‚×Óç¶Æ&VÇÒÇ7â7G–ÆS×·²föçE6—¦S¢ÂföçEvV–v‡C¢C×Óâ‡¶6÷VçGÒ“Â÷7ããÂöF—cã° ¢òò)H)H)H’$Ud”UräTÂ)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)H)HˆÛÛœİ™[™\ZT™]šY]ÈH
+  // â”€â”€â”€ BRIEFING â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const renderBriefing = () => {
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+    const hardSoon = tasks.filter((t) => !t.done && t.deadlineType === 'hard' && daysUntilDue(t) !== null && daysUntilDue(t) <= 2 && daysUntilDue(t) >= 0);
+    const hardOverdue = tasks.filter((t) => !t.done && t.deadlineType === 'hard' && daysUntilDue(t) !== null && daysUntilDue(t) < 0);
+    const neglected = cats.filter((cat) => !done.some((t) => t.cat === cat));
+    const pctDone = tasks.length > 0 ? Math.round((done.length / tasks.length) * 100) : 0;
+    const r = 18, circ = 2 * Math.PI * r, offset = circ - (pctDone / 100) * circ;
+    if (!briefingOpen) return <button onClick={() => setBriefingOpen(true)} style={{ background: c.briefBg, border: '1px solid ' + c.bdr, borderRadius: 8, padding: '6px 12px', color: c.acc, fontSize: 12, cursor: 'pointer', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}><Sparkles size={12} /> Daily briefing</button>;
+    return (
+      <div style={{ background: c.briefBg, border: '1px solid ' + c.bdr, borderRadius: 12, padding: mobile ? 14 : 20, marginBottom: 24, position: 'relative' }}>
+        <button onClick={() => setBriefingOpen(false)} style={{ position: 'absolute', top: 8, right: 8, background: 'transparent', border: 'none', color: c.sub, cursor: 'pointer' }}><X size={14} /></button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 10 }}>
+          <svg width={44} height={44} style={{ transform: 'rotate(-90deg)' }}><circle cx={22} cy={22} r={r} fill="transparent" stroke={c.bdr} strokeWidth={3} /><circle cx={22} cy={22} r={r} fill="transparent" stroke={c.acc} strokeWidth={3} strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round" /></svg>
+          <div><div style={{ fontSize: 16, fontWeight: 600, color: c.txt }}>{greeting}, Daniel</div><div style={{ fontSize: 12, color: c.sub }}>{active.length} tasks to focus on today</div></div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {hardOverdue.map((t) => <div key={t.id} style={{ fontSize: 12, color: c.danger, display: 'flex', alignItems: 'flex-start', gap: 6 }}><AlertTriangle size={13} style={{ flexShrink: 0, marginTop: 1 }} /><span><strong>{t.title}</strong> is overdue â€” hard deadline.</span></div>)}
+          {hardSoon.map((t) => <div key={t.id} style={{ fontSize: 12, color: c.warn, display: 'flex', alignItems: 'flex-start', gap: 6 }}><AlertTriangle size={13} style={{ flexShrink: 0, marginTop: 1 }} /><span><strong>{t.title}</strong> due {daysUntilDue(t) === 0 ? 'today' : 'tomorrow'} â€” hard deadline.</span></div>)}
+          {done.length > 0 && <div style={{ fontSize: 12, color: c.ok }}>You completed {done.length} tasks this week.</div>}
+          {neglected.length > 0 && <div style={{ fontSize: 12, color: c.sub }}>No <strong>{neglected[0]}</strong> tasks completed recently â€” consider "{tasks.find((t) => !t.done && t.cat === neglected[0])?.title || 'one'}" today.</div>}
+        </div>
+        <div style={{ marginTop: 14, borderTop: '1px solid ' + c.bdr, paddingTop: 12 }}>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+            {aiSuggestions.map((s) => <button key={s} onClick={() => sendMsg(s)} style={{ padding: '4px 10px', borderRadius: 20, border: '1px solid ' + c.bdr, background: c.card, color: c.sub, fontSize: 11, cursor: 'pointer' }}>{s}</button>)}
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <Sparkles size={14} color={c.acc} />
+            <input value={aiInput} onChange={(e) => setAiInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') sendMsg(aiInput); }} placeholder="Ask your AI chief of staff..." style={{ flex: 1, background: c.card, border: '1px solid ' + c.bdr, borderRadius: 8, padding: '8px 12px', color: c.txt, fontSize: 12, outline: 'none' }} />
+            {aiInput.trim() && <button onClick={() => sendMsg(aiInput)} style={{ background: c.acc, border: 'none', color: '#fff', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Send</button>}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
-HOˆÂˆYˆ
-RT™]šY]ÈOOH	ÛØY[™ÉÊH™]\›ˆ
-ˆ]ˆİ[O^ŞÈ\Ü^Nˆ	Ù›^	Ë›^\™Xİ[Ûˆ	ØÛÛ[[‰Ë[YÛ’][\Îˆ	ØÙ[\‰Ë\İYPÛÛ[ˆ	ØÙ[\‰ËZYÚˆ	ÌL	IËØ\ˆMˆ_O‚ˆ]ˆİ[O^ŞÈ[š[X][Ûˆ	Ü[ÙHK\È[™š[š]IÈ_Oœ˜Z[ˆÚ^™O^ÍHÛÛÜ^ØË˜XØßHÏÙ]‚ˆ]ˆİ[O^ŞÈ›ÛÚ^™NˆMK›ÛÙZYÚˆŒÛÛÜˆË_ORHY\[˜[\Ú\ÏÙ]‚ˆ]ˆİ[O^ŞÈ›ÛÚ^™NˆLËÛÛÜˆËœİX‹[š[X][Ûˆ	Ù˜YTÛYH\ÈX\ÙIÈ_HÙ^O^ÛØY[™Ó\ÙßO×™±½…‘¥¹5Íôğ½‘¥Øø(€€€€€€€€€€ñ‘¥ØÍÑå±”õíìİ¥‘Ñ è€ÄÈÀ°¡•¥¡Ğè€Ì°‰…­É½Õ¹èŒ¹‰‘È°‰½É‘•ÉI…‘¥ÕÌè€È°½Ù•É™±½Üè€¡¥‘‘•¸œõôøñ‘¥ØÍÑå±”õíìİ¥‘Ñ è€œØÀ”œ°¡•¥¡Ğè€œÄÀÀ”œ°‰…­É½Õ¹èŒ¹…Œ°‰½É‘•ÉI…‘¥ÕÌè€È°…¹¥µ…Ñ¥½¸è€±½…‘¥¹œ€ÉÌ•…Í”¥¹™¥¹¥Ñ”œõô€¼øğ½‘¥Øø(€€€€€€ğ½‘¥Øø(€€€€¤ì(€€€¥˜€ …É•Ù¥•İ…Ñ„¤É•ÑÕÉ¸¹Õ±°ì(€€€½¹ÍĞÑ…‰Ì€ômì¥è€ÁÉ¥½É¥Ñäœ°±…‰•°è€AÉ¥½É¥Ñä=É‘•Èœ°¥½¸èQ…É•Ğô°ì¥è€¥¹Í¥¡ÑÌœ°±…‰•°è€%¹Í¥¡ÑÌœ°¥½¸èi…Àô°ì¥è€Á±…¸œ°±…‰•°è€…¥±äA±…¸œ°¥½¸è±½¬õtì(€€€É•ÑÕÉ¸€ (€€€€€€ñ‘¥ØÍÑå±”õíì‘¥ÍÁ±…äè€™±•àœ°™±•á¥É•Ñ¥½¸è€½±Õµ¸œ°¡•¥¡Ğè€œÄÀÀ”œõôø(€€€€€€€€ñ‘¥ØÍÑå±”õíì‘¥ÍÁ±…äè€™±•àœ°…±¥¹%Ñ•µÌè€•¹Ñ•Èœ°…Àè€à°µ…É¥¹	½ÑÑ½´è€ÄÈõôø(€€€€€€€€€€ñ‰ÕÑÑ½¸½¹±¥¬õì ¤€ôøÍ•Ñ¥I•Ù¥•Ü¡¹Õ±°¥ôÍÑå±”õíì‰…­É½Õ¹è€ÑÉ…¹ÍÁ…É•¹Ğœ°‰½É‘•Èè€¹½¹”œ°½±½ÈèŒ¹ÍÕˆ°ÕÉÍ½Èè€Á½¥¹Ñ•Èœ°‘¥ÍÁ±…äè€™±•àœ°…±¥¹%Ñ•µÌè€•¹Ñ•Èœ°…Àè€Ğ°™½¹ÑM¥é”è€ÄÈõôøñ¡•ÙÉ½¹1•™ĞÍ¥é”õìÄÑô€¼ø	…¬ğ½‰ÕÑÑ½¸ø(€€€€€€€€€€ñ‘¥ØÍÑå±”õíì™±•àè€Äõô€¼ø(€€€€€€€€€€ñ	É…¥¸Í¥é”õìÄÙô½±½ÈõíŒ¹…ô€¼ø(€€€€€€€€€€ñÍÁ…¸ÍÑå±”õíì™½¹ÑM¥é”è€ÄĞ°™½¹Ñ]•¥¡Ğè€ØÀÀ°½±½ÈèŒ¹ÑáĞõôù$I•Ù¥•İğ€ğ½ÍÁ…¸ø(€€€€€€€€€€ñÍÁ…¸ÍÑå±”õíì™½¹ÑM¥é”è€ä°½±½ÈèŒ¹…Œ°‰…­É½Õ¹èŒ¹…Œ€¬€œÄàœ°Á…‘‘¥¹œè€œÅÁà€ÕÁàœ°‰½É‘•ÉI…‘¥ÕÌè€Ğ°™½¹Ñ]•¥¡Ğè€ØÀÀõôù=ÁÕÌ€Ğ¸Øğ½ÍÁ…¸ø(€€€€€€€€ğ½‘¥Øø(€€€€€€€€ñ‘¥ØÍÑå±”õíì‘¥ÍÁ±…äè€™±•àœ°…Àè€Ğ°µ…É¥¹	½ÑÑ½´è€ÄÈ°‰…­É½Õ¹èŒ¹…É°‰½É‘•ÉI…‘¥ÕÌè€à°Á…‘‘¥¹œè€Ğ°‰½É‘•Èè€œÅÁàÍ½±¥€œ€¬Œ¹‰‘Èõôø(€€€€€€€€€íÑ…‰Ì¹µ…À ¡Ñ…ˆ¤€ôø€ñ‰ÕÑÑ½¸­•äõíÑ…ˆ¹¥‘ô½¹±¥¬õì ¤€ôøÍ•ÑI•Ù¥•İQ…ˆ¡Ñ…ˆ¹¥¥ôÍÑå±”õíì™±•àè€Ä°‘¥ÍÁ±…äè€™±•àœ°…±¥¹%Ñ•µÌè€•¹Ñ•Èœ°©ÕÍÑ¥™å½¹Ñ•¹Ğè€•¹Ñ•Èœ°…Àè€Ğ°Á…‘‘¥¹œè€œİÁà€Àœ°‰½É‘•ÉI…‘¥ÕÌè€Ø°‰½É‘•Èè€¹½¹”œ°‰…­É½Õ¹èÉ•Ù¥•İQ…ˆ€ôôôÑ…ˆ¹¥€üŒ¹…Œ€¬€œÄàœ€è€ÑÉ…¹ÍÁ…É•¹Ğœ°½±½ÈèÉ•Ù¥•İQ…ˆ€ôôôÑ…ˆ¹¥€üŒ¹…Œ€èŒ¹ÍÕˆ°™½¹ÑM¥é”è€ÄÄ°™½¹Ñ]•¥¡Ğè€ÔÀÀ°ÕÉÍ½Èè€Á½¥¹Ñ•ÈœõôøñÑ…ˆ¹¥½¸Í¥é”õìÄÉô€¼øíÑ…ˆ¹±…‰•±ôğ½‰ÕÑÑ½¸ø¥ô(€€€€€€€€ğ½‘¥Øø(€€€€€€€€ñ‘¥ØÍÑå±”õíì™±•àè€Ä°½Ù•É™±½İdè€…ÕÑ¼œõôø(€€€€€€€€€ìÉ•Ù¥•İQ…ˆ€ôôô€ÁÉ¥½É¥Ñäœ€˜˜€ (€€€€€€€€€€€€ñ‘¥Øø(€€€€€€€€€€€€€íÉ•Ù¥•İ…Ñ„¹Í½ÉÑ•¹µ…À ¡Ğ°¤¤€ôøì(€€€€€€€€€€€€€€€½¹ÍĞ½É¥M½É”€ôÍ½É”¡Ğ¤°…¥M½É”€ôÉ•Ù¥•İ…Ñ„¹…¥M½É•ÍmĞ¹¥‘tì(€€€€€€€€€€€€€€€½¹ÍĞ‘¥™˜€ô…¥M½É”€´½É¥M½É”ì(€€€€€€€€€€€€€€€É•ÑÕÉ¸€ (€€€€€€€€€€€€€€€€€€ñ‘¥Ø­•äõíĞ¹¥‘ôÍÑå±”õíì‘¥ÍÁ±…äè€™±•àœ°…Àè€ÄÀ°Á…‘‘¥¹œè€œÄÁÁà€ÄÉÁàœ°‰½É‘•ÉI…‘¥ÕÌè€à°‰½É‘•Èè€œÅÁàÍ½±¥€œ€¬Œ¹‰‘È°‰…­É½Õ¹è¤€ôôô€À€üŒ¹‘½9½Ü€èŒ¹…É°µ…É¥¹	½ÑÑ½´è€Øõôø(€€€€€€€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíìİ¥‘Ñ è€ÈĞ°¡•¥¡Ğè€ÈĞ°‰½É‘•ÉI…‘¥ÕÌè€œÔÀ”œ°‰…­É½Õ¹è¤€ôôô€À€üŒ¹…Œ€èŒ¹‰‘È°½±½Èè¤€ôôô€À€ü€œ™™˜œ€èŒ¹ÍÕˆ°‘¥ÍÁ±…äè€™±•àœ°…±¥¹%Ñ•µÌè€•¹Ñ•Èœ°©ÕÍÑ¥™å½¹Ñ•¹Ğè€•¹Ñ•Èœ°™½¹ÑM¥é”è€ÄÄ°™½¹Ñ]•¥¡Ğè€ÜÀÀ°™±•áM¡É¥¹¬è€Àõôùí¤€¬€Åôğ½‘¥Øø(€€€€€€€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíì™±•àè€Ä°µ¥¹]¥‘Ñ è€Àõôø(€€€€€€€€€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíì™½¹ÑM¥é”è€ÄÌ°™½¹Ñ]•¥¡Ğè€ÔÀÀ°½±½ÈèŒ¹ÑáĞ°µ…É¥¹	½ÑÑ½´è€ÌõôùíĞ¹Ñ¥Ñ±•ôğ½‘¥Øø(€€€€€€€€€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíì™½¹ÑM¥é”è€ÄÄ°½±½ÈèŒ¹ÍÕˆ°™½¹ÑMÑå±”è€¥Ñ…±¥Œœ°±¥¹•!•¥¡Ğè€Ä¸Ğ°µ…É¥¹	½ÑÑ½´è€ĞõôùíÉ•Ù¥•İ…Ñ„¹Õ¹‘•ÉÍÑ…¹‘¥¹mĞ¹¥‘uôğ½‘¥Øø(€€€€€€€€€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíì‘¥ÍÁ±…äè€™±•àœ°…±¥¹%Ñ•µÌè€•¹Ñ•Èœ°…Àè€àõôø(€€€€€€€€€€€€€€€€€€€€€€€€ñÍÁ…¸ÍÑå±”õíì™½¹ÑM¥é”è€ÄÀ°½±½Èè…Ñ½±½ÉÍmĞ¹…Ñt°‰…­É½Õ¹è…Ñ½±½ÉÍmĞ¹…Ñt€¬€œÄàœ°Á…‘‘¥¹œè€œÅÁà€ÙÁàœ°‰½É‘•ÉI…‘¥ÕÌè€ĞõôùíĞ¹…Ñôğ½ÍÁ…¸ø(€€€€€€€€€€€€€€€€€€€€€€€í‘¥™˜€„ôô€À€˜˜€ñÍÁ…¸ÍÑå±”õíì™½¹ÑM¥é”è€ÄÀ°™½¹Ñ]•¥¡Ğè€ØÀÀ°½±½Èè‘¥™˜€ø€À€üŒ¹½¬€èŒ¹‘…¹•Èõôùí‘¥™˜€ø€À€ü€ŸŠDœ€è€ŸŠLôí½É¥M½É•ôƒŠHí…¥M½É•ôğ½ÍÁ…¸ùô(€€€€€€€€€€€€€€€€€€€€€€€€ñÍÁ…¸ÍÑå±”õíì™½¹ÑM¥é”è€ÄÀ°½±½ÈèŒ¹ÍÕˆõôùí™µĞ¡Ğ¹Ñ¥µ”¥ôğ½ÍÁ…¸ø(€€€€€€€€€€€€€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€€€€€€€¤ì(€€€€€€€€€€€€€ô¥ô(€€€€€€€€€€€€€€ñ‰ÕÑÑ½¸½¹±¥¬õí…ÁÁ±å¥=É‘•ÉôÍÑå±”õíìİ¥‘Ñ è€œÄÀÀ”œ°Á…‘‘¥¹œè€œÄÁÁà€Àœ°‰½É‘•ÉI…‘¥ÕÌè€à°‰½É‘•Èè€¹½¹”œ°‰…­É½Õ¹èŒ¹…Œ°½±½Èè€œ™™˜œ°™½¹ÑM¥é”è€ÄÌ°™½¹Ñ]•¥¡Ğè€ØÀÀ°ÕÉÍ½Èè€Á½¥¹Ñ•Èœ°µ…É¥¹Q½Àè€àõôùÁÁ±ä$=É‘•Èğ½‰ÕÑÑ½¸ø(€€€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€¥ô(€€€€€€€€€ìÉ•Ù¥•İQ…ˆ€ôôô€¥¹Í¥¡ÑÌœ€˜˜€ (€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíì‘¥ÍÁ±…äè€™±•àœ°™±•á¥É•Ñ¥½¸è€½±Õµ¸œ°…Àè€àõôø(€€€€€€€€€€€€€íÉ•Ù¥•İ…Ñ„¹¥¹Í¥¡ÑÌ¹µ…À ¡¥¹Ì°¤¤€ôø€ (€€€€€€€€€€€€€€€€ñ‘¥Ø­•äõí¥ôÍÑå±”õíìÁ…‘‘¥¹œè€ÄĞ°‰½É‘•ÉI…‘¥ÕÌè€ÄÀ°‰½É‘•Èè€œÅÁàÍ½±¥€œ€¬Œ¹‰‘È°‰…­É½Õ¹èŒ¹…Éõôø(€€€€€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíì‘¥ÍÁ±…äè€™±•àœ°…±¥¹%Ñ•µÌè€•¹Ñ•Èœ°…Àè€à°µ…É¥¹	½ÑÑ½´è€ØõôøñÍÁ…¸ÍÑå±”õíì™½¹ÑM¥é”è€ÄØõôùí¥¹Ì¹•µ½©¥ôğ½ÍÁ…¸øñÍÁ…¸ÍÑå±”õíì™½¹ÑM¥é”è€ÄÌ°™½¹Ñ]•¥¡Ğè€ØÀÀ°½±½ÈèŒ¹ÑáĞõôùí¥¹Ì¹Ñ¥Ñ±•ôğ½ÍÁ…¸øğ½‘¥Øø(€€€€€€€€€€€€€€€€€€ñ‘¥ØÍÑå±”õíì™½¹ÑM¥é”è€ÄÈ°½±½ÈèŒ¹ÍÕˆ°±¥¹•!•¥¡Ğè€Ä¸Øõôùí¥¹Ì¹‰½‘åôğ½‘¥Øø(€€€€€€€€€€€€€€€€ğ½‘¥Øø(€€€€€€€€€€€€€€)¦s}
+  const sectionHead = (label, count) => <div style={{ fontSize: 11, fontWeight: 600, color: c.sub, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8, marginTop: 16, display: 'flex', alignItems: 'center', gap: 8 }}>{label} <span style={{ fontSize: 10, fontWeight: 400 }}>({count})</span></div>;
+
+  // â”€â”€â”€ AI REVIEW PANEL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const renderAiReview = () => {
+    if (aiReview === 'loading') return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 16 }}>
+        <div style={{ animation: 'pulse 1.5s infinite' }}><Brain size={40} color={c.acc} /></div>
+        <div style={{ fontSize: 15, fontWeight: 600, color: c.txt }}>AI Deep Analysis</div>
+        <div style={{ fontSize: 13, color: c.sub, animation: 'fadeSlide 0.5s ease' }} key={loadingMsg}>{loadingMsg}</div>
+        <div style={{ width: 120, height: 3, background: c.bdr, borderRadius: 2, overflow: 'hidden' }}><div style={{ width: '60%', height: '100%', background: c.acc, borderRadius: 2, animation: 'loading 2s ease infinite' }} /></div>
+      </div>
+    );
+    if (!reviewData) return null;
+    const tabs = [{ id: 'priority', label: 'Priority Order', icon: Target }, { id: 'insights', label: 'Insights', icon: Zap }, { id: 'plan', label: 'Daily Plan', icon: Clock }];
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+          <button onClick={() => setAiReview(null)} style={{ background: 'transparent', border: 'none', color: c.sub, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}><ChevronLeft size={14} /> Back</button>
+          <div style={{ flex: 1 }} />
+          <Brain size={16} color={c.acc} />
+          <span style={{ fontSize: 14, fontWeight: 600, color: c.txt }}>AI Review</span>
+          <span style={{ fontSize: 9, color: c.acc, background: c.acc + '18', padding: '1px 5px', borderRadius: 4, fontWeight: 600 }}>Opus 4.6</span>
+        </div>
+        <div style={{ display: 'flex', gap: 4, marginBottom: 12, background: c.card, borderRadius: 8, padding: 4, border: '1px solid ' + c.bdr }}>
+          {tabs.map((tab) => <button key={tab.id} onClick={() => setReviewTab(tab.id)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '7px 0', borderRadius: 6, border: 'none', background: reviewTab === tab.id ? c.acc + '18' : 'transparent', color: reviewTab === tab.id ? c.acc : c.sub, fontSize: 11, fontWeight: 500, cursor: 'pointer' }}><tab.icon size={12} /> {tab.label}</button>)}
+        </div>
+        <div style={{ flex: 1, overflowY: 'auto' }}>
+          {reviewTab === 'priority' && (
+            <div>
+              {reviewData.sorted.map((t, i) => {
+                const origScore = score(t), aiScore = reviewData.aiScores[t.id];
+                const diff = aiScore - origScore;
+                return (
+                  <div key={t.id} style={{ display: 'flex', gap: 10, padding: '10px 12px', borderRadius: 8, border: '1px solid ' + c.bdr, background: i === 0 ? c.doNow : c.card, marginBottom: 6 }}>
+                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: i === 0 ? c.acc : c.bdr, color: i === 0 ? '#fff' : c.sub, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 500, color: c.txt, marginBottom: 3 }}>{t.title}</div>
+                      <div style={{ fontSize: 11, color: c.sub, fontStyle: 'italic', lineHeight: 1.4, marginBottom: 4 }}>{reviewData.understanding[t.id]}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 10, color: catColors[t.cat], background: catColors[t.cat] + '18', padding: '1px 6px', borderRadius: 4 }}>{t.cat}</span>
+                        {diff !== 0 && <span style={{ fontSize: 10, fontWeight: 600, color: diff > 0 ? c.ok : c.danger }}>{diff > 0 ? 'â†‘' : 'â†“'} {origScore} â†’ {aiScore}</span>}
+                        <span style={{ fontSize: 10, color: c.sub }}>{fmt(t.time)}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              <button onClick={applyAiOrder} style={{ width: '100%', padding: '10px 0', borderRadius: 8, border: 'none', background: c.acc, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', marginTop: 8 }}>Apply AI Order</button>
             </div>
           )}
-          { reviewTab === 'plan' && (
+          {reviewTab === 'insights' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {reviewData.insights.map((ins, i) => (
+                <div key={i} style={{ padding: 14, borderRadius: 10, border: '1px solid ' + c.bdr, background: c.card }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}><span style={{ fontSize: 16 }}>{ins.emoji}</span><span style={{ fontSize: 13, fontWeight: 600, color: c.txt }}>{ins.title}</span></div>
+                  <div style={{ fontSize: 12, color: c.sub, lineHeight: 1.6 }}>{ins.body}</div>
+                </div>
+              ))}
+            </div>
+          )}
+          {reviewTab === 'plan' && (
             <div>
               <div style={{ fontSize: 12, color: c.sub, marginBottom: 12 }}>Your AI-optimized schedule for today:</div>
               {reviewData.plan.map((p, i) => (
                 <div key={i} style={{ display: 'flex', gap: 12, marginBottom: 4 }}>
-                  <div style={{ width: 60, fontSize: 12, fontWeight: 600, color: c.acc, textAlign: 'right', flexShrink: 0, paddingTop: 10 }}>{{p.time}</div>
-                  <div style={{ width: 2, background: c.bdr, flexShrink: 0, position: 'relative' }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: i === 0 ? c.acc : c.bdr, position: 'absolute', top: 12, left: -3 }} /></diw>
+                  <div style={{ width: 60, fontSize: 12, fontWeight: 600, color: c.acc, textAlign: 'right', flexShrink: 0, paddingTop: 10 }}>{p.time}</div>
+                  <div style={{ width: 2, background: c.bdr, flexShrink: 0, position: 'relative' }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: i === 0 ? c.acc : c.bdr, position: 'absolute', top: 12, left: -3 }} /></div>
                   <div style={{ flex: 1, padding: '8px 12px', borderRadius: 8, background: c.card, border: '1px solid ' + c.bdr, marginBottom: 4 }}>
-                    <div style={{ fontSize: 13, fontWeight: 500, color: c.txt }}>{{.p.task.title}</div>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: c.txt }}>{p.task.title}</div>
                     <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
                       <span style={{ fontSize: 10, color: catColors[p.task.cat], background: catColors[p.task.cat] + '18', padding: '1px 6px', borderRadius: 4 }}>{p.task.cat}</span>
                       <span style={{ fontSize: 10, color: c.sub }}>{fmt(p.duration)}</span>
@@ -380,15 +470,58 @@ HOˆÂˆYˆ
                     </div>
                   </div>
                 </div>
-              
-os9%
+              ))}
               <button onClick={applyAiOrder} style={{ width: '100%', padding: '10px 0', borderRadius: 8, border: 'none', background: c.acc, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', marginTop: 12 }}>Apply This Plan</button>
             </div>
           )}
         </div>
       </div>
-  
-  )$VRŠRŠR AèQ=dƒŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠR ¢6öç7B&VæFW%FöF’Ò‚’Óâ€¢ÆF—b7G–ÆS×·²F—7Æ“¢vfÆW‚rÂfÆW„F—&V7F–öã¢v6öÇVÖârÂ†V–v‡C¢sRr×Óà¢ÆF—b7G–ÆS×·²fÆWƒ¢Â÷fW&fÆ÷u“¢vWFòrÂFF–æs¢sG‚r×Óà¢·&VæFW$'&–Vf–ær‚—Ğ¢ÆF—b7G–ÆS×·²F—7Æ“¢vfÆW‚rÂfÆW…w&¢ww&rÂv¢bÂÖ&v–ä&÷GFöÓ¢b×Óà¢¶6†—FVg2æÖ‚†6‚’ÓâÆ'WGFöâ¶W“×¶6‚æ¶W—Òöä6Æ–6³×²‚’Óâ6WD7F—fT7G‚†7F—fT7G‚ÓÓÒ6‚æ¶W’òçVÆÂ¢6‚æ¶W—Ò7G–ÆS×·²FF–æs¢sW‚‚rÂ&÷&FW%&F—W3¢#Â&÷&FW#¢s‚6öÆ–Br²†7F—fT7G‚ÓÓÒ6‚æ¶W’ò2æ62¢2æ&G"’Â&6¶w&÷VæC¢7F—fT7G‚ÓÓÒ6‚æ¶W’ò2æ62²s‚r¢wG&ç7&VçBrÂ6öÆ÷#¢7F—fT7G‚ÓÓÒ6‚æ¶W’ò2æ62¢2ç7V"ÂföçE6—¦S¢Â7W'6÷#¢wö–çFW"r×Óç¶6‚æ–6öçÒ¶6‚æÆ&VÇÓÂö'WGFöãâ—Ğ¢ÂöF—cà¢·F÷F6²bbÆF—b7G–ÆS×·²&6¶w&÷VæC¢2æFôæ÷rÂ&÷&FW#¢s'‚6öÆ–Br²2æ62Â&÷&FW%&F—W3¢"ÂFF–æs¢s'‚G‚rÂÖ&v–ä&÷GFöÓ¢#B×ÓãÆF—b7G–ÆS×·²föçE6—¦S¢"ÂföçEvV–v‡C¢sÂ6öÆ÷#¢2æ62ÂFW‡EG&ç6f÷&Ó¢wWW&66RrÂÆWGFW%76–æs¢ã"ÂÖ&v–ä&÷GFöÓ¢ÂF—7Æ“¢vfÆW‚rÂÆ–vä—FV×3¢v6VçFW"rÂv¢b×ÓãÅ¦6—¦S×³GÒ6öÆ÷#×¶2æ67ÒóâFòæ÷sÂöF—cç·&VæFW%F6²‡F÷F6²Â²Æ&vS¢G'VRÒ—ÓÂöF—cçĞ¢·WæW‡BæÆVæwF‚âbbÆF—b7G–ÆS×·²Ö&v–ä&÷GFöÓ¢#B×Óç·6V7F–öä†VB‚uWæW‡BrÂWæW‡BæÆVæwF‚—×·WæW‡BæÖ‚‡B’Óâ&VæFW%F6²‡BÂ²G&s¢G'VRÒ’—ÓÂöF—cçĞ¢¶ÆFW"æÆVæwF‚âbbÆF—b7G–ÆS×·²Ö&v–ä&÷GFöÓ¢#BÂ÷6—G“¢ãcR×Óç·6V7F–öä†VB‚tÆFW"rÂÆFW"æÆVæwF‚—×¶ÆFW"æÖ‚‡B’Óâ&VæFW%F6²‡BÂ²G&s¢G'VRÂF–Ó¢G'VRÒ’—ÓÂöF—cçĞ¢¶FöæRæÆVæwF‚âbbÃà¢Æ'WGFöâöä6Æ–6³×²‚’Óâ6WE6†÷tFöæR‚6†÷tFöæR—Ò7G–ÆS×·²F—7Æ“¢vfÆW‚rÂÆ–vä—FV×3¢v6VçFW"rÂv¢bÂ&6¶w&÷VæC¢wG&ç7&VçBrÂ&÷&FW#¢væöæRrÂ6öÆ÷#¢2ç7V"ÂföçE6—¦S¢ÂföçEvV–v‡C¢cÂFW‡EG&ç6f÷&Ó¢wWW&66RrÂÆWGFW%76–æs¢ã‚ÂÖ&v–åF÷¢bÂÖ&v–ä&÷GFöÓ¢‚Â7W'6÷#¢wö–çFW"r×Óç·6†÷tFöæRòÄ6†Wg&öäF÷vâ6—¦S×³7Òóâ¢Ä6†Wg&öå&–v‡B6—¦S×³7ÒóçÒFöæR‡¶FöæRæÆVæwF‡Ò“Âö'WGFöãà¢·6†÷tFöæRbbFöæRæÖ‚‡B’ÓâÆF—b¶W“×·Bæ–GÒ7G–ÆS×·²F—7Æ“¢vfÆW‚rÂÆ–vä—FV×3¢v6VçFW"rÂv¢ÂFF–æs¢s‡‚G‚rÂ&÷&FW%&F—W3¢‚Â&6¶w&÷VæC¢2æ6&BÂ&÷&FW#¢s‚6öÆ–Br²2æ&G"ÂÖ&v–ä&÷GFöÓ¢bÂ÷6—G“¢ãR×ÓãÄ6†V6²6—¦S×³GÒ6öÆ÷#×¶2æö·ÒóãÇ7â7G–ÆS×·²föçE6—¦S¢2Â6öÆ÷#¢2ç7V"ÂFW‡DFV6÷&F–öã¢vÆ–æR×F‡&÷Vv‚r×Óç·BçF—FÆWÓÂ÷7ããÂöF—câ—Ğ¢ÂóçĞ¢²7F—fRæÆVæwF‚ÓÓÒbbÆF—b7G–ÆS×·²FW‡DÆ–vã¢v6VçFW"rÂFF–æs¢CÂ6öÆ÷#¢2ç7V"ÂföçE6—¦S¢B×ÓäÆÂ6Vv‡BWÂöF—cçĞ¢ÂöF—cà¢ÆF—b7G–ÆS×·²FF–æs¢s‡‚rÂ&÷&FW%F÷¢s‚6öÆ–Br²2æ&G"ÂF—7Æ“¢vfÆW‚rÂv¢‚ÂÆ–vä—FV×3¢v6VçFW"r×Óà¢ÅÇW26—¦S×³gÒ6öÆ÷#×¶2ç7V'Òóà¢Æ–çWBfÇVS×·V–6´FGÒöä6†ævS×²†R’Óâ6WEV–6´FB†RçF&vWBçfÇVR—Òöä¶W”F÷vã×²†R’Óâ²–b†Ræ¶W’ÓÓÒtVçFW"r’FEF6²‡V–6´FB“²×ÒÆ6V†öÆFW#ÒtFBF6²âââ‚$6ÆÂ&ö"FöÖ÷'&÷r†&BVÒ"’r7G–ÆS×·²fÆWƒ¢Â&6¶w&÷VæC¢wG&ç7&VçBrÂ&÷&FW#¢væöæRrÂ6öÆ÷#¢2çG‡BÂföçE6—¦S¢2Â÷WFÆ–æS¢væöæRr×Òóà¢·V–6´FBbbÆ'WGFöâöä6Æ–6³×²‚’ÓâFEF6²‡V–6´FB—Ò7G–ÆS×·²&6¶w&÷VæC¢2æ62Â&÷&FW#¢væöæRrÂ6öÆ÷#¢r6ffbrÂ&÷&FW%&F—W3¢bÂFF–æs¢sG‚‚rÂföçE6—¦S¢"Â7W'6÷#¢wö–çFW"r×ÓäFCÂö'WGFöãçĞ¢ÂöF—cà¢ ¢ ò¼te: CGT‘Q%S%0PGE: ALL TASKS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€(€½¹ÍĞÉ•¹‘•É±±Q…Í­Ì€ô€ ¤€ôø€ì(€€€½¹ÍĞ™¥±Ñ•É•€ôÑ…Í­Ì¹™¥±Ñ•È ¡Ğ¤€ôø€…Ğ¹‘½¹”¤¹™¥±Ñ•È ¡Ğ¤€ôø™¥±Ñ•É…Ğ€ôôô€±°œñğĞ¹…Ğ€ôôô™¥±Ñ•É…Ğ¤¹™¥±Ñ•È ¡Ğ¤€ôø€…Í•…É¡DñğĞ¹Ñ¥Ñ±”¹Ñ½1½İ•É…Í” ¤¹¥¹±Õ‘•Ì¡Í•…É¡D¹Ñ½1½İ•É…Í” ¤¤¤¹Í½ÉĞ ¡„°ˆ¤€ôøÍ½É”¡ˆ¤€´Í½É”¡„¤¤ì(€€€½¹ÍĞ¡¥ €ô™¥±Ñ•É•¹™¥±Ñ•È ¡Ğ¤€ôøÍ½É”¡Ğ¤€øô€ÜÔ¤°µ•€ô™¥±Ñ•É•¹™¥±Ñ•È ¡Ğ¤€ôøÍ½É”¡Ğ¤€øô€ÔÀ€˜˜Í½É”¡Ğ¤€ğ€ÜÔ¤°±½Ü€ô™¥±Ñ•É•¹™¥±Ñ•È ¡Ğ¤€ôøÍ½É”¡Ğ¤€ğ€ÔÀ¤ì(€€€É•ÑÕÉ¸€ (€€€€€€ñ‘¥ØÍÑå±”õíì½Ù•É™±½İdè€…ÕÑ¼œ°¡•¥¡Ğè€œÄÀÀ”œ°Á…‘‘¥¹œè€œÀ€ÑÁàœõôø(€€€€€€€€ñ‘¥ØÍÑå±”õíì‘¥ÍÁ±…äè€™±•àœ°…Àè€à°µ…É¥¹	½ÑÑ½´è€ÄÈõôøñ‘¥ØÍÑå±”õíì™±•àè€Ä°‘¥ÍÁ±…äè€™±•àœ°…±¥¹%Ñ•µÌè€•¹Ñ•Èœ°…Àè€à°‰…­É½Õ¹èŒ¹…É°‰½É‘•Èè€œÅÁàÍ½±¥€œ€¬Œ¹‰‘È°‰½É‘•ÉI…‘¥ÕÌè€à°Á…‘‘¥¹œè€œÙÁà€ÄÁÁàœõôøñM•…É Í¥é”õìÄÑô½±½ÈõíŒ¹ÍÕ‰ô€¼øñ¥¹ÁÕĞÙ…±Õ”õíÍ•…É¡Eô½¹¡…¹”õì¡”¤€ôøÍ•ÑM•…É¡D¡”¹Ñ…É•Ğ¹Ù…±Õ”¥ôÁ±…•¡½±‘•Èô‰M•…É Ñ…Í­Ì¸¸¸ˆÍÑå±”õíì™±•àè€Ä°‰…­É½Õ¹è€ÑÉ…¹ÍÁ…É•¹Ğœ°‰½É‘•Èè€¹½¹”œ°½±½ÈèŒ¹ÑáĞ°™½¹ÑM¥é”è€ÄÌ°½ÕÑ±¥¹”è€¹½¹”œõô€¼ùííÍ•…É¡D€˜˜€ñ‰ÕÑÑ½¸½¹±¥¬õì ¤€ôøÍ•ÑM•…É¡D œœ¥ôÍÑå±”õíì‰…­É½Õ¹è€ÑÉ…¹ÍÁ…É•¹Ğœ°‰½É‘•Èè€¹½¹”œ°½±½ÈèŒ¹ÍÕˆ°ÕÉÍ½Èè€Á½¥¹Ñ•Èœ°Á…‘‘¥¹œè€Àõôøñ`Í¥é”õìÄÍô€¼øğ½‰ÕÑÑ½¸ùõõôğ½‘¥Øøğ½‘¥Øø((€€€€€€€€ñ‘¥ØÍÑå±”õíì‘¥ÍÁ±…äè€™±•àœ°…Àè€Ø°µ…É¥¹	½ÑÑ½´è€ÄØ°™±•á]É…Àè€İÉ…Àœõôø(€€€€€€€€€íl±°œ°€¸¸¹…ÑÍt¹µ…À ¡…Ğ¤€ôø€ñ‰ÕÑÑ½¸­•äõí…Ñô½¹±¥¬õì ¤€ôøÍ•Ñ¥±Ñ•É…Ğ¡…Ğ¥ôÍÑå±”õíìÁ…‘‘¥¹œè€œÑÁà€ÄÁÁàœ°‰½É‘•ÉI…‘¥ÕÌè€Ø°‰½É‘•Èè€œÅÁàÍ½±¥€œ€¬€¡™¥±Ñ•É…Ğ€ôôô…Ğ€üŒ¹…Œ€èŒ¹‰‘È¤°‰…­É½Õ¹è™¥±Ñ•É…Ğ€ôôô…Ğ€üŒ¹…Œ€¬€œÄàœ€è€ÑÉ…¹ÍÁ…É•¹Ğœ°½±½Èè™¥±Ñ•É…Ğ€ôôô…Ğ€üŒ¹…Œ€èŒ¹ÍÕˆ°™½¹ÑM¥é”è€ÄÄ°ÕÉÍ½Èè€Á½¥¹Ñ•Èœõôùí…Ğ€„ôô€±°œ€˜˜€ñÍÁ…¸ÍÑå±”õíì‘¥ÍÁ±…äè€¥¹±¥¹”µ‰±½¬œ°İ¥‘Ñ è€à°¡•¥¡Ğè€à°‰½É‘•ÉI…‘¥ÕÌè€œÔÀ”œ°‰…­É½Õ¹è…Ñ½±½ÉÍm…Ñt°µ…É¥¹I¥¡Ğè€Ğõô€¼ùõí…Ñôğ½‰ÕÑÑ½¸ø¥ô(€€€€€€€€ğ½‘¥Øø(€€€€€€€íímì±…‰•°è€!¥ AÉ¥½É¥Ñäœ°¥Ñ•µÌè¡¥¨°½±½ÈèŒ¹‘…¹•Èô°ì±…‰•°è€5•‘¥Õ´œ°¥Ñ•µÌèµ•°½±½ÈèŒ¹İ…É¸ô°ì±…‰•°è€1½İ•Èœ°¥Ñ•µÌè±½Ü°½±½ÈèŒ¹ÍÕˆõt¹µ…À ¡œ¤€ôøœ¹¥Ñ•µÌ¹±•¹Ñ €ø€À€˜˜€ñ‘¥Ø­•äõíœ¹±…‰•±ôøñ‘¥ØÍÑå±”õíì™½¹ÑM¥é”è€ÄÄ°™½¹Ñ]•¥¡Ğè€ØÀÀ°½±½Èèœ¹½±½È°Ñ•áÑQÉ…¹Í™½É´è€ÕÁÁ•É…Í”œ°±•ÑÑ•ÉMÁ…¥¹œè€À¸à°µ…É¥¹	½ÑÑ½´è€à°µ…É¥¹Q½Àè€ÄÈ°‘¥ÍÁ±…äè€™±•àœ°…±¥¹%Ñ•µÌè€•¹Ñ•Èœ°…Àè€ØõôøñÍÁ…¸ÍÑå±”õíìİ¥‘Ñ è€Ø°¡•¥¡Ğè€Ø°‰½É‘•ÉI…‘¥ÕÌè€œÔÀ”œ°‰…­É½Õ¹èœ¹½±½Èõô€¼øíœ¹±…‰•±ô€¡íœ¹¥Ñ•µÌ¹±•¹Ñ¡ô¤ğ½‘¥Øùííœ¹¥Ñ•µÌ¹µ…À ¡Ğ¤€ôøÉ•¹‘•ÉQ…Í¬¡Ğ°ì‘É…œèÑÉÕ”ô¤¥ôğ½‘¥Øùô(€€€€€€€ô(€€€€€€€í™¥±Ñ•É•¹±•¹Ñ €ôôô€À€˜˜€ñ‘¥ØÍÑå±”õíìÑ•áÑ±¥¸è€•¹Ñ•Èœ°Á…‘‘¥¹œè€ĞÀ°½±½ÈèŒ¹ÍÕˆõôù9¼Ñ…Í­Ìµ…Ñ ™¥±Ñ•ÉÌ¸ğ½‘¥Øùô(€€€€€€ğ½‘¥Øø(€€€€¤ì(€ôì((€€¼¼ƒŠRŠRŠR AèIRE-P€T’ÒU•ò¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥   const renderReview = () => {
+    );
+  };
+
+  // â”€â”€â”€ PAGE: TODAY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const renderToday = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 4px' }}>
+        {renderBriefing()}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
+          {chipDefs.map((ch) => <button key={ch.key} onClick={() => setActiveCtx(activeCtx === ch.key ? null : ch.key)} style={{ padding: '5px 10px', borderRadius: 20, border: '1px solid ' + (activeCtx === ch.key ? c.acc : c.bdr), background: activeCtx === ch.key ? c.acc + '18' : 'transparent', color: activeCtx === ch.key ? c.acc : c.sub, fontSize: 11, cursor: 'pointer' }}>{ch.icon} {ch.label}</button>)}
+        </div>
+        {topTask && <div style={{ background: c.doNow, border: '2px solid ' + c.acc, borderRadius: 12, padding: '12px 14px', marginBottom: 24 }}><div style={{ fontSize: 12, fontWeight: 700, color: c.acc, textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}><Zap size={14} color={c.acc} /> Do Now</div>{renderTask(topTask, { large: true })}</div>}
+        {upNext.length > 0 && <div style={{ marginBottom: 24 }}>{sectionHead('Up Next', upNext.length)}{upNext.map((t) => renderTask(t, { drag: true }))}</div>}
+        {later.length > 0 && <div style={{ marginBottom: 24, opacity: 0.65 }}>{sectionHead('Later', later.length)}{later.map((t) => renderTask(t, { drag: true, dim: true }))}</div>}
+        {done.length > 0 && <>
+          <button onClick={() => setShowDone(!showDone)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', color: c.sub, fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8, marginTop: 16, marginBottom: 8, cursor: 'pointer' }}>{showDone ? <ChevronDown size={13} /> : <ChevronRight size={13} />} Done ({done.length})</button>
+          {showDone && done.map((t) => <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px', borderRadius: 8, background: c.card, border: '1px solid ' + c.bdr, marginBottom: 6, opacity: 0.5 }}><Check size={14} color={c.ok} /><span style={{ fontSize: 13, color: c.sub, textDecoration: 'line-through' }}>{t.title}</span></div>)}
+        </>}
+        {active.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: c.sub, fontSize: 14 }}>All caught up!</div>}
+      </div>
+      <div style={{ padding: '8px 0', borderTop: '1px solid ' + c.bdr, display: 'flex', gap: 8, alignItems: 'center' }}>
+        <Plus size={16} color={c.sub} />
+        <input value={quickAdd} onChange={(e) => setQuickAdd(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') addTask(quickAdd); }} placeholder='Add task... ("Call Bob tomorrow !hard 15m")' style={{ flex: 1, background: 'transparent', border: 'none', color: c.txt, fontSize: 13, outline: 'none' }} />
+        {quickAdd && <button onClick={() => addTask(quickAdd)} style={{ background: c.acc, border: 'none', color: '#fff', borderRadius: 6, padding: '4px 10px', fontSize: 12, cursor: 'pointer' }}>Add</button>}
+      </div>
+    </div>
+  );
+
+  // â”€â”€â”€ PAGE: ALL TASKS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const renderAllTasks = () => {
+    const filtered = tasks.filter((t) => !t.done).filter((t) => filterCat === 'All' || t.cat === filterCat).filter((t) => !searchQ || t.title.toLowerCase().includes(searchQ.toLowerCase())).sort((a, b) => score(b) - score(a));
+    const high = filtered.filter((t) => score(t) >= 75), med = filtered.filter((t) => score(t) >= 50 && score(t) < 75), low = filtered.filter((t) => score(t) < 50);
+    return (
+      <div style={{ overflowY: 'auto', height: '100%', padding: '0 4px' }}>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}><div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, background: c.card, border: '1px solid ' + c.bdr, borderRadius: 8, padding: '6px 10px' }}><Search size={14} color={c.sub} /><input value={searchQ} onChange={(e) => setSearchQ(e.target.value)} placeholder="Search tasks..." style={{ flex: 1, background: 'transparent', border: 'none', color: c.txt, fontSize: 13, outline: 'none' }} />{searchQ && <button onClick={() => setSearchQ('')} style={{ background: 'transparent', border: 'none', color: c.sub, cursor: 'pointer', padding: 0 }}><X size={13} /></button>}</div></div>
+        <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
+          {['All', ...cats].map((cat) => <button key={cat} onClick={() => setFilterCat(cat)} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid ' + (filterCat === cat ? c.acc : c.bdr), background: filterCat === cat ? c.acc + '18' : 'transparent', color: filterCat === cat ? c.acc : c.sub, fontSize: 11, cursor: 'pointer' }}>{cat !== 'All' && <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: catColors[cat], marginRight: 4 }} />}{cat}</button>)}
+        </div>
+        {[{ label: 'High Priority', items: high, color: c.danger }, { label: 'Medium', items: med, color: c.warn }, { label: 'Lower', items: low, color: c.sub }].map((g) => g.items.length > 0 && <div key={g.label}><div style={{ fontSize: 11, fontWeight: 600, color: g.color, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8, marginTop: 12, display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: g.color }} /> {g.label} ({g.items.length})</div>{g.items.map((t) => renderTask(t, { drag: true }))}</div>)}
+        {filtered.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: c.sub }}>No tasks match filters.</div>}
+      </div>
+    );
+  };
+
+  // â”€â”€â”€ PAGE: REVIEW â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const renderReview = () => {
     const cc = done.length, totalTime = done.reduce((s, t) => s + t.time, 0);
     const catCounts = cats.reduce((a, cat) => { a[cat] = done.filter((t) => t.cat === cat).length; return a; }, {});
     const maxCat = Math.max(...Object.values(catCounts), 1);
@@ -396,24 +529,139 @@ os9%
     return (
       <div style={{ overflowY: 'auto', height: '100%', padding: '0 4px' }}>
         <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
-          {[{ label: 'Completed', value: cc, icon: Check, color: c.ok }, { label: 'Time Saved', value: fmt(totalTime), icon: Clock, color: c.acc }, { label: 'Active', value: active.length, icon: Target, color: c.warn }].map((s) => <div key={s.label} style={{ flex: 1, background: c.card, border: '1px solid ' + c.bdr, borderRadius: 10, padding: '14px 12px', textAlign: 'center' }}><s.icon size={18} color={s.color} style={{ marginBottom: 6 }} /><div style={{ fontSize: 20, fontWeight: 700, color: c.txt }}>{s.value}</div><div style={{ fontSize: 11, color: c.sub }}>{s.label}</div></div>)_}
+          {[{ label: 'Completed', value: cc, icon: Check, color: c.ok }, { label: 'Time Saved', value: fmt(totalTime), icon: Clock, color: c.acc }, { label: 'Active', value: active.length, icon: Target, color: c.warn }].map((s) => <div key={s.label} style={{ flex: 1, background: c.card, border: '1px solid ' + c.bdr, borderRadius: 10, padding: '14px 12px', textAlign: 'center' }}><s.icon size={18} color={s.color} style={{ marginBottom: 6 }} /><div style={{ fontSize: 20, fontWeight: 700, color: c.txt }}>{s.value}</div><div style={{ fontSize: 11, color: c.sub }}>{s.label}</div></div>)}
         </div>
         <div style={{ background: c.card, border: '1px solid ' + c.bdr, borderRadius: 10, padding: 16, marginBottom: 16 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: c.txt, marginBottom: 12 }}>By Category</div>
           {cats.map((cat) => <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}><span style={{ fontSize: 12, color: c.txt, width: 70 }}>{cat}</span><div style={{ flex: 1, height: 8, background: c.bdr, borderRadius: 4, overflow: 'hidden' }}><div style={{ width: ((catCounts[cat] || 0) / maxCat) * 100 + '%', height: '100%', background: catColors[cat], borderRadius: 4 }} /></div><span style={{ fontSize: 12, color: c.sub, width: 20, textAlign: 'right' }}>{catCounts[cat] || 0}</span></div>)}
         </div>
-        {rolledOver.length > 0 && <div style={{ background: c.card, border: '1px solid ' + c.bdr, borderRadius: 10, padding: 16, marginBottom: 16 }}><div style={{ fontSize: 13, fontWeight: 600, color: c.txt, marginBottom: 10 }}>Rolled Over</div>{rolledOver.map((t) => <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0x, borderBottom: '1px solid ' + c.bdr }}><span style={{ fontSize: 12, color: c.txt }}>{t.title}</span><span style={{ fontSize: 11, color: t.age >= 10 ? c.danger : c.warn }}>{t.age}d old</span></div>)}</div>}
+        {rolledOver.length > 0 && <div style={{ background: c.card, border: '1px solid ' + c.bdr, borderRadius: 10, padding: 16, marginBottom: 16 }}><div style={{ fontSize: 13, fontWeight: 600, color: c.txt, marginBottom: 10 }}>Rolled Over</div>{rolledOver.map((t) => <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid ' + c.bdr }}><span style={{ fontSize: 12, color: c.txt }}>{t.title}</span><span style={{ fontSize: 11, color: t.age >= 10 ? c.danger : c.warn }}>{t.age}d old</span></div>)}</div>}
       </div>
-  
-  ( €¤ì(€€(€½¹ÍĞÍÑ…‰Ì€ômì¥è€½¹Ñ•áĞœ°±…‰•°è€5ä½¹Ñ•áĞœ°¥½¸èQ…É•Ğô°ì¥è€ÁÉ½™¥±”œ°±…‰•°è€AÉ½™¥±”œ°¥½¸èUÍ•Èô°ì¥è€ÁÉ•™Ìœ°±…‰•°è€AÉ•™•É•¹•Ìœ°¥½¸èM•ÑÑ¥¹Ìõtì(€½¹ÍĞÉ•¹‘•ÉM•ÑÑ¥¹Ì€ô€ ¤€ôø€ (€€€€ñ‘¥ØÍÑå±”õíì½Ù•É™±½İdè€…ÕÑ¼œ°¡•¥¡Ğè€œÄÀÀ”œ°Á…‘‘¥¹œè€œÀ€ÑÁàœõôø(€€€€€€ñ‘¥ØÍÑå±”õíì‘¥ÍÁ±…äè€™±•àœ°…Àè€Ğ°µ…É¥¹	½ÑÑ½´è€ÄØ°‰…­É½Õ¹èŒ¹…É°‰½É‘•ÉI…‘¥ÕÌè€à°Á…‘‘¥¹œè€Ğ°‰½É‘•Èè€œÅÁàÍ½±¥€œ€¬Œ¹‰‘Èõôø(€€€€€€€íÍÑ…‰Ì¹µ…À ¡Ñ…ˆ¤€ôø€ñ‰ÕÑÑ½¸­•äõíÑ…ˆ¹¥‘ô½¹±¥¬õì ¤€ôøÍ•ÑM•ÑÑ¥¹ÍQ…ˆ¡Ñ…ˆ¹¥¥ôÍÑå±”õíì™±•àè€Ä°‘¥ÍÁ±…äè€™±•àœ°…±¥¹%Ñ•µÌè€•¹Ñ•Èœ°©ÕÍÑ¥™å½¹Ñ•¹Ğè€•¹Ñ•Èœ°…Àè€Ø°Á…‘‘¥¹œè€œáÁà€Àœ°‰½É‘•ÉI…‘¥ÕÌè€Ø°‰½É‘•Èè€¹½¹”œ°‰…­É½Õ¹èÍ•ÑÑ¥¹ÍQ…ˆ€ôôôÑ…ˆ¹¥€üŒ¹…Œ€¬€œÄàœ€è€ÑÉ…¹ÍÁ…É•¹Ğœ°½±½ÈèÍ•ÑÑ¥¹ÍQ…ˆ€ôôôÑ…ˆ¹¥€üŒ¹…Œ€èŒ¹ÍÕˆ°™½¹ÑM¥é”è€ÄÈ°™½¹Ñ]•¥¡Ğè€ÔÀÀ°ÕÉÍ½Èè€Á½¥¹Ñ•ÈœõôøñÑ…ˆ¹¥½¸Í¥é”õìÄÑô€¼øíÑ…ˆ¹±…‰•±ôğ½‰ÕÑÑ½¸ø¥ô(€€€€€€ğ½‘¥Øø(€€€€€ìÍ•ÑÑ¥¹ÍQ…ˆ€ôôô€½¹Ñ•áĞœ€˜˜€ñ‘¥Øø(€€€€€€€ímì­•äè€±¥™•½…±Ìœ°±…‰•°è€1¥™”½…±Ìœ°Á è€1½¹œµÑ•É´±¥™”½…±Ìüœô°ì­•äè€ÕÉÉ•¹Ñ½ÕÌœ°±…‰•°è€ÕÉÉ•¹Ğ½ÕÌœ°Á è€]¡…Ğ…É”å½Ô™½ÕÍ•½¸üœô°ì­•äè€…‰½ÕÑ5”œ°±…‰•°è€‰½ÕĞ5”œ°Á è€]¡¼…É”å½Ôüœõt¹µ…À ¡˜¤€ôø€ñ‘¥Ø­•äõí˜¹­•åôÍÑå±”õíìµ…É¥¹	½ÑÑ½´è€ÄĞõôøñ±…‰•°ÍÑå±”õíì™½¹ÑM¥é”è€ÄÈ°™½¹Ñ]•¥¡Ğè€ØÀÀ°½±½ÈèŒ¹ÑáĞ°µ…É¥¹	½ÑÑ½´è€Ğ°‘¥ÍÁ±…äè€‰±½¬œõôùí˜¹±…‰•±ôğ½±…‰•°øñÑ•áÑ…É•„Ù…±Õ”õíÕÍ•ÉÑám˜¹­•åuô½¹¡…¹”õì¡”¤€ôøÍ•ÑUÍ•ÉÑà ¡À¤€ôø€¡ì€¸¸¹À°m˜¹­•åtè”¹Ñ…É•Ğ¹Ù…±Õ”ô¤¥ôÁ±…•¡½±‘•Èõí˜¹Á¡ôÍÑå±”õíìİ¥‘Ñ è€œÄÀÀ”œ°µ¥¹!•¥¡Ğè€ØÀ°Á…‘‘¥¹œè€ÄÀ°‰½É‘•ÉI…‘¥ÕÌè€à°‰½É‘•Èè€œÅÁàÍ½±¥€œ€¬Œ¹‰‘È°‰…­É½Õ¹èŒ¹…É°½±½ÈèŒ¹ÑáĞ°™½¹ÑM¥é”è€ÄÈ°É•Í¥é”è€Ù•ÉÑ¥…°œ°½ÕÑ±¥¹”è€¹½¹”œ°±¥¹•!•¥¡Ğè€Ä¸Ô°‰½áM¥é¥¹œè€‰½É‘•Èµ‰½àœõô€¼øğ½‘¥Øø¥ô(€€€€€€€€ñ‘¥ØÍÑå±”õíìµ…É¥¹	½ÑÑ½´è€ÄĞõôøñ±…‰•°ÍÑå±”õíì™½¹ÑM¥é”è€ÄÈ°™½¹Ñ]•¥¡Ğè€ØÀÀ°½±½ÈèŒ¹ÑáĞ°µ…É¥¹	½ÑÑ½´è€Ø°‘¥ÍÁ±…äè€‰±½¬œõôùAÉ¥½É¥Ñä…Ñ•½É¥•Ì€ ¬ÄÔ”‰½½ÍĞ¤ğ½±…‰•°øñ‘¥ØÍÑå±”õíì‘¥ÍÁ±…äè€™±•àœ°…Àè€Ø°™±•á]É…Àè€İÉ…Àœõôùí…ÑÌ¹µ…À ¡…Ğ¤€ôø€ñ‰ÕÑÑ½¸­•äõí…Ñô½¹±¥¬õì ¤€ôøÍ•ÑUÍ•ÉÑà ¡À¤€ôø€¡ì€¸¸¹À°‰½½ÍÑ…ÑÌèÀ¹‰½½ÍÑ…ÑÌ¹¥¹±Õ‘•Ì¡…Ğ¤€üÀ¹‰½½ÍÑ…ÑÌ¹™¥±Ñ•È ¡à¤€ôøà€„ôô…Ğ¤€èl¸¸¹À¹‰½½ÍÑ…ÑÌ°…Ñtô¤¥ôÍÑå±”õíìÁ…‘‘¥¹œè€œÑÁà€ÄÁÁàœ°‰½É‘•ÉI…‘¥ÕÌè€Ø°‰½É‘•Èè€œÅÁàÍ½±¥€œ€¬€¡ÕÍ•ÉÑà¹‰½½ÍÑ…ÑÌ¹¥¹±Õ‘•Ì¡…Ğ¤€ü…Ñ½±½ÉÍm…Ñt€èŒ¹‰‘È¤°‰…­É½Õ¹èÕÍ•ÉÑà¹‰½½ÍÑ…ÑÌ¹¥¹±Õ‘•Ì¡…Ğ¤€ü…Ñ½±½ÉÍm…Ñt€¬€œÄàœ€è€ÑÉ…¹ÍÁ…É•¹Ğœ°½±½ÈèÕÍ•ÉÑà¹‰½½ÍÑ…ÑÌ¹¥¹±Õ‘•Ì¡…Ğ¤€ü…Ñ½±½ÉÍm…Ñt€èŒ¹ÍÕˆ°™½¹ÑM¥é”è€ÄÄ°ÕÉÍ½Èè€Á½¥¹Ñ•Èœõôùí…Ñôğ½‰ÕÑÑ½¸ø¥ôğ½‘¥Øøğ½‘¥Øø(€€€€€€€€ñ‰ÕÑÑ½¸½¹±¥¬õì ¤€ôøìÍ•ÑÑáM…Ù•¡ÑÉÕ”¤ìÍ•ÑQ¥µ•½ÕĞ  ¤€ôøÍ•ÑÑáM…Ù•¡™…±Í”¤°€ÈÀÀÀ¤ìõôÍÑå±”õíì‰…­É½Õ¹èŒ¹…Œ°‰½É‘•Èè€¹½¹”œ°½±½Èè€œ™™˜œ°Á…‘‘¥¹œè€œáÁà€ÈÁÁàœ°‰½É‘•ÉI…‘¥ÕÌè€à°™½¹ÑM¥é”è€ÄÌ°™½¹Ñ]•¥¡Ğè€ØÀÀ°ÕÉÍ½Èè€Á½¥¹Ñ•ÈœõôùíÑáM…Ù•€ü€M…Ù•„œ€è€M…Ù”½¹Ñ•áĞôğ½‰ÕÑÑ½¸ø(€€€€€€ğ½‘¥Øùô(€€€€€íÍ•ÑÑ¥¹ÍQ…ˆ€ôôô€ÁÉ½™¥±”œ€˜˜€ñ‘¥Øùímì°è€9…µ”œ°Øè€…¹¥•°œô°ì°è€½µÁ…¹¥•Ìœ°Øè€Q…¹…½È)”{YÌœ°€¬½Ñ¡•ÉÌœô°ì°è€µ…¥°œ°Øè€‘…¹¥•±µÑ…¹…½É©•İ•±Éä¹½´œõt¹µ…À ¡˜¤€ôø€ñ‘¥Ø­•äõí˜¹±ôÍÑå±”õíìµ…É¥¹	½ÑÑ½´è€ÄĞõôøñ±…‰•°ÍÑå±”õíì™½¹ÑM¥é”è€ÄÈ°™½¹Ñ]•¥¡Ğè€ØÀÀ°½±½ÈèŒ¹ÑáĞ°µ…É¥¹	½ÑÑ½´è€Ğ°‘¥ÍÁ±…äè€‰±½¬œõôùí˜¹±ôğ½±…‰•°øñ‘¥ØÍÑå±”õíìÁ…‘‘¥¹œè€œáÁà€ÄÁÁàœ°‰½É‘•ÉI…‘¥ÕÌè€à°‰½É‘•Èè€œÅÁàÍ½±¥€œ€¬Œ¹‰‘È°‰…­É½Õ¹èŒ¹…É°½±½ÈèŒ¹ÍÕˆ°™½¹ÑM¥é”è€ÄÌõôùí˜¹Ùôğ½‘¥Øøğ½‘¥Øø¥ôğ½‘¥Øùô(€€€€€íÍ•ÑÑ¥¹ÍQ…ˆ€ôôô€ÁÉ•™Ìœ€˜˜€ñ‘¥Øø(€€€€€€€€ñ‘¥ØÍÑå±”õíì‘¥ÍÁ±…äè€™±•àœ°©ÕÍÑ¥™å½¹Ñ•¹Ğè€ÍÁ…”µ‰•Ñİ••¸œ°…±¥¹%Ñ•µÌè€•¹Ñ•Èœ°Á…‘‘¥¹œè€œÄÁÁà€Àœ°‰½É‘•É	½ÑÑ½´è€œÅÁàÍ½±¥€œ€¬Œ¹‰‘È°µ…É¥¹	½ÑÑ½´è€ÄÈõôøñ‘¥Øøñ‘¥ØÍÑå±”õíì™½¹ÑM¥é”è€ÄÌ°™½¹Ñ]•¥¡Ğè€ÔÀÀ°½±½ÈèŒ¹ÑáĞõôùQ¡•µ”ğ½‘¥Øøğ½‘¥Øøñ‘¥ØÍÑå±”õíì‘¥ÍÁ±…äè€™±•àœ°…Àè€ØõôùímìÙ…°è€±¥¡Ğœ°±‰°è€1¥¡Ğœô°ìÙ…°è€İ…É´œ°±‰°è€]…É´œô°ìÙ…°è€‘…É¬œ°±‰°è€…É¬œõt¹µ…À ¡Ğ¤€ôø€ñ‰ÕÑÑ½¸­•äõíĞ¹Ù…±ô½¹±¥¬õì ¤€ôøÍ•Ñ…É¬¡Ğ¹Ù…°¥ôÍÑå±”õíìÁ…‘‘¥¹œè€œÑÁà€ÄÁÁàœ°‰½É‘•ÉI…‘¥ÕÌè€Ø°‰½É‘•Èè€œÅÁàÍ½±¥€œ€¬€¡‘…É¬€ôôôĞ¹Ù…°€üŒ¹…Œ€èŒ¹‰‘È¤°‰…­É½Õ¹è‘…É¬€ôôôĞ¹Ù…°€üŒ¹…Œ€¬€œÄàœ€è€ÑÉ…¹ÍÁ…É•¹Ğœ°½±½Èè‘…É¬€ôôôĞ¹Ù…°€üŒ¹…Œ€èŒ¹ÍÕˆ°™½¹ÑM¥é”è€ÄÄ°ÕÉÍ½Èè€Á½¥¹Ñ•ÈœõôùíĞ¹±‰±ôğ½‰ÕÑÑ½¸ø¥ôğ½‘¥Øøğ½‘¥Øø(€€€€€€€€ñ‘¥ØÍÑå±”õíìÁ…‘‘¥¹œè€œÄÁÁà€Àœ°‰½É‘•É	½ÑÑ½´è€œÅÁàÍ½±¥€œ€¬Œ¹‰‘È°µ…É¥¹	½ÑÑ½´è€ÄÈõôøñ‘¥ØÍÑå±”õíì™½¹ÑM¥é”è€ÄÌ°™½¹Ñ]•¥¡Ğè€ÔÀÀ°½±½ÈèŒ¹ÑáĞõôù$5½‘•°ğ½‘¥Øøñ‘¥ØÍÑå±”õíì™½¹ÑM¥é”è€ÄÄ°½±½ÈèŒ¹ÍÕˆõôù±…Õ‘”=ÁÕÌ€Ğ¸Øğ½‘¥Øøğ½‘¥Øø(€€€€€€€€ñ‘¥ØÍÑå±”õíìÁ…‘‘¥¹œè€œÄÁÁà€Àœõôøñ‘¥ØÍÑå±”õíì™½¹ÑM¥é”è€ÄÌ°™½¹Ñ]•¥¡Ğè€ÔÀÀ°½±½ÈèŒ¹ÑáĞõôùM½É¥¹œğ½‘¥Øøñ‘¥ØÍÑå±”õíì™½¹ÑM¥é”è€ÄÄ°½±½ÈèŒ¹ÍÕˆ°±¥¹•!•¥¡Ğè€Ä¸Ôõôù	…Í”™½ÉµÕ±„€¬€ÄÔ”…Ñ•½Éä‰½½ÍĞ€¬¡…É‘•…‘±¥¹”½Ù•ÉÉ¥‘”ğ½‘¥Øøğ½‘¥Øø(€€€€€€ğ½‘¥Øùô(€€€€ğ½‘¥Øø(€€(€€<¦öÆ÷#Ò"6ffb"óçÓÂöF—cãÇ7â7G–ÆS×·²föçE6—¦S¢"Â6öÆ÷#¢2æFöæRò2ç7V"¢2çG‡BÂFW‡DFV6÷&F–öã¢2æFöæRòvÆ–æR×F‡&÷Vv‚r¢væöæRr×Óç·2çF—FÆWÓÂ÷7ããÂöF—câ—Ğ¢ÆF—b7G–ÆS×·²F—7Æ“¢vfÆW‚rÂv¢bÂFF–æs¢sg‚‚rÂ&÷&FW%F÷¢s‚6öÆ–Br²2æ&G"×ÓãÆ–çWBfÇVS×·7V$–çWGÒöä6†ævS×²†R’Óâ6WE7V$–çWB†RçF&vWBçfÇVR—Òöä¶W”F÷vã×²†R’Óâ²–b†Ræ¶W’ÓÓÒtVçFW"r’²Rç7F÷&÷vF–öâ‚“²FE7V'F6²‡Bæ–B“²Ò×Òöä6Æ–6³×²†R’ÓâRç7F÷&÷vF–öâ‚—ÒÆ6V†öÆFW#Ò$FB7V'F6²âââ"7G–ÆS×·²fÆWƒ¢Â&6¶w&÷VæC¢wG&ç7&VçBrÂ&÷&FW#¢væöæRrÂ6öÆ÷#¢2çG‡BÂföçE6—¦S¢"Â÷WFÆ–æS¢væöæRr×ÒóãÆ'WGFöâöä6Æ–6³×²†R’Óâ²Rç7F÷&÷vF–öâ‚“²FE7V'F6²‡Bæ–B“²×Ò7G–ÆS×·²&6¶w&÷VæC¢wG&ç7&VçBrÂ&÷&FW#¢væöæRrÂ6öÆ÷#¢2æ62Â7W'6÷#¢wö–çFW"rÂFF–æs¢×ÓãÅÇW26—¦S×³GÒóãÂö'WGFöããÂöF—cà¢ÂöF—cà¢ÂöF—cà¢—Ğ¢ÆF—b7G–ÆS×·²F—7Æ“¢vfÆW‚rÂv¢‚ÂÖ&v–ä&÷GFöÓ¢"×Óà¢µ·²Ã¢t–×7BrÂc¢Bæ–×7BÒÂ²Ã¢uW&vVæ7’rÂc¢BçW&vVæ7’ÒÂ²Ã¢tVff÷'BrÂc¢BæVff÷'BÒÂ²Ã¢u66÷&RrÂc¢66÷&R‡B’ÕÒæÖ‚†"’ÓâÆF—b¶W“×¶"æÇÒ7G–ÆS×·²fÆWƒ¢ÂFW‡DÆ–vã¢v6VçFW"rÂFF–æs¢sg‚rÂ&÷&FW%&F—W3¢bÂ&6¶w&÷VæC¢2æ&rÂ&÷&FW#¢s‚6öÆ–Br²2æ&G"×ÓãÆF—b7G–ÆS×·²föçE6—¦S¢Â6öÆ÷#¢2ç7V"ÂÖ&v–ä&÷GFöÓ¢"×Óç¶"æÇÓÂöF—cãÆF—b7G–ÆS×·²föçE6—¦S¢BÂföçEvV–v‡C¢sÂ6öÆ÷#¢"æÂÓÓÒu66÷&Rrò2æ62¢2çG‡B×Óç¶"çgÓÂöF—cãÂöF—câ—Ğ¢ÂöF—cà¢Æ'WGFöâöä6Æ–6³×²†R’Óâ²Rç7F÷&÷vF–öâ‚“²FVÆWFUF6²‡Bæ–B“²×Ò7G–ÆS×·²F—7Æ“¢vfÆW‚rÂÆ–vä—FV×3¢v6VçFW"rÂv¢bÂ&6¶w&÷VæC¢wG&ç7&VçBrÂ&÷&FW#¢væöæRrÂ6öÆ÷#¢2æFævW"ÂföçE6—¦S¢"Â7W'6÷#¢wö–çFW"rÂFF–æs¢sG‚r×ÓãÅG&6ƒ"6—¦S×³7ÒóâFVÆWFRF6³Âö'WGFöãà¢ÂöF—cà¢ ùMÈÈ›ÛÚ^™NˆL‹ÛÛÜˆËœİX‹ÚYˆŒ_OØØ]OÜÜ[]ˆİ[O^ŞÈ›^ˆKZYÚˆ˜XÚÙÜ›İ[™ˆË˜™‹›Ü™\”˜Y]\Îˆİ™\™›İÎˆ	ÚY[‰È_O]ˆİ[O^ŞÈÚYˆ
+    );
+  };
 
-Ø]Ûİ[ÖØØ]H
-HÈX^Ø]
-H
-ˆL
-È	ÉIËZYÚˆ	ÌL	IË˜XÚÙÜ›İ[™ˆØ]ÛÛÜœÖØØ]K›Ü™\”˜Y]\Îˆ_HÏÙ]Ü[ˆİ[O^ŞÈ›ÛÚ^™NˆL‹ÛÛÜˆËœİX‹ÚYˆŒ^[YÛˆ	ÜšYÚ	È_OØØ]Ûİ[ÖØØ]HOÜÜ[Ù]Š_BˆÙ]‚ˆÜ›ÛYİ™\‹›[™İˆ	‰ˆ]ˆİ[O^ŞÈ˜XÚÙÜ›İ[™ˆË˜Ø\™›Ü™\ˆ	Ì\ÛÛY	È
-ÈË˜™‹›Ü™\”˜Y]\ÎˆLY[™ÎˆM‹X\™Ú[›İÛNˆMˆ_O]ˆİ[O^ŞÈ›ÛÚ^™NˆLË›ÛÙZYÚˆŒÛÛÜˆËX\™Ú[›İÛNˆL_O”›ÛYİ™\Ù]Ü›ÛYİ™\‹›X\
+  // â”€â”€â”€ PAGE: ARCHIVE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const renderArchive = () => (
+    <div style={{ overflowY: 'auto', height: '100%', padding: '0 4px' }}>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+        {[{ label: 'Completed', value: done.length }, { label: 'Time Saved', value: fmt(done.reduce((s, t) => s + t.time, 0)) }, { label: 'Remaining', value: active.length }].map((s) => <div key={s.label} style={{ flex: 1, background: c.card, border: '1px solid ' + c.bdr, borderRadius: 10, padding: 14, textAlign: 'center' }}><div style={{ fontSize: 20, fontWeight: 700, color: c.txt }}>{s.value}</div><div style={{ fontSize: 11, color: c.sub }}>{s.label}</div></div>)}
+      </div>
+      {done.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: c.sub }}>No completed tasks yet.</div>}
+      {done.map((t) => <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 8, background: c.card, border: '1px solid ' + c.bdr, marginBottom: 6, opacity: 0.6 }}><Check size={14} color={c.ok} /><span style={{ fontSize: 13, color: c.sub, textDecoration: 'line-through', flex: 1 }}>{t.title}</span><span style={{ fontSize: 10, color: catColors[t.cat], background: catColors[t.cat] + '18', padding: '1px 6px', borderRadius: 4 }}>{t.cat}</span></div>)}
+    </div>
+  );
 
-
-HOˆ]ˆÙ^O^İšYHİ[O^ŞÈ\Ü^Nˆ	Ù›^	Ë\İYPÛÛ[ˆ	ÜÜXÙKX™]ÙY[‰ËY[™Îˆ	Î	Ë›Ü™\›İÛNˆ	Ì\ÛÛY	È
-ÈË˜™ˆ_OÜ[ˆİ[O^ŞÈ›ÛÚ^™NˆL‹ÛÛÜˆË_Oİ]_OÜÜ[Ü[ˆİ[O^ŞÈ›ÛÚ^™NˆLKÛÛÜˆ˜YÙHHLÈË™[™Ù\ˆˆËØ\›ˆ_Oİ˜YÙ_YÛÜÜ[Ù]Š_OÙ]ŸBˆÙ]‚ˆˆØ0óÃ/ŞØXÚO×ØXÚNˆ›Ë\İÜ™KÙ[XİÚ\˜Xİ\œË›ËXØXÚBˆØXÚKPÛÛ›Ûˆ›Ë\İÜ™KÙ[XİXÚ\˜Xİ\œË›ËXØXÚBˆØXÚKXÛØÚÎˆ›Ûˆ[OÈÑÑÑŒ‘QŒŒÑÍÎQMÌÌŒÍÑŒBMBFÆr²föçE6—¦S¢"Â6öÆ÷#¢2ç7V"Âv–GFƒ¢c×Óç¶6GÓÂ÷7ããÆF—b7G–ÆS×·²fÆWƒ¢Â†V–v‡C¢‚Â&6¶w&÷VæC¢2æ&G"Â&÷&FW%&F—W3¢BÂ÷fW&fÆ÷s¢v†–FFVâr×ÓãÆF—b7G–ÆS×·²v–GFƒ¢‚†6D6÷VçG5¶6EÒÇÂ’òÖ„6B’¢²rRrÂ†V–v‡C¢sRrÂ&6¶w&÷VæC¢6D6öÆ÷'5¶6EÒÂ&÷&FW%&F—W3¢B×ÒóãÂöF—cãÇ7â7G–ÆS×·²föçE6—¦S¢"Â6öÆ÷#¢2ç7V"Âv–GFƒ¢#ÂFW‡DÆ–vã¢w&–v‡Br×Óç¶6D6÷VçG5¶6EÒÇÂÓÂ÷7ããÂöF—câ—Ğ¢ÂöF—cà¢·&öÆÆVD÷fW"æÆVæwF‚âbbÆF—b7G–ÆS×·²&6¶w&÷VæC¢2æ6&BÂ&÷&FW#¢s‚6öÆ–Br²2æ&G"Â&÷&FW%&F—W3¢ÂFF–æs¢bÂÖ&v–ä&÷GFöÓ¢b×ÓãÆF—b7G–ÆS×·²föçE6—¦S¢2ÂföçEvV–v‡C¢cÂ6öÆ÷#¢2çG‡BÂÖ&v–ä&÷GFöÓ¢×Óå&öÆÆVB÷fW#ÂöF—cç·&öÆÆVD÷fW"æÖ‚‡B’ÓâÆF—b¶W“×·Bæ–GÒ7G–ÆS×·²F—7Æ“¢vfÆW‚rÂ§W7F–g”6öçFVçC¢w76RÖ&WGvVVârÂFF–æs¢s‡‚rÂ&÷&FW$&÷GFöÓ¢s‚6öÆ–Br²2æ&G"×ÓãÇ7â7G–ÆS×·²föçE6—¦S¢"Â6öÆ÷#¢2çG‡B×Óç·BçF—FÆWÓÂ÷7ããÇ7â7G–ÆS×·²föçE6—¦S¢Â6öÆ÷#¢BævRãÒò2æFævW"¢2çv&â×Óç·BævWÖBöÆCÂ÷7ããÂöF—câ—ÓÂöF—cçĞ¢ÂöF—cà¢ ¢ö<ğË÷„66†SõÅ„66†S¢æò×7F÷&RÂ6VÆV7B6†&7FW'2ÂæòÖ66†P¢„66†RÔ6öçG&öÃ¢æò×7F÷&RÂ6VÆV7BÖ6†&7FW'2ÂæòÖ66†P¢„66†RÖ6Æö6³¢æöâFÆSò4D4tc$Tc#4C#ƒƒ#„3s„#Tc„ScC33#3tD#P“P‘±„Üì™½¹ÑM¥é”è€ÄÈ°½±½ÈèŒ¹ÍÕˆ°İ¥‘Ñ è€ØÀõôùí…Ñôğ½ÍÁ…¸øñ‘¥ØÍÑå±”õíì™±•àè€Ä°¡•¥¡Ğè€à°‰…­É½Õ¹èŒ¹‰‘È°‰½É‘•ÉI…‘¥ÕÌè€Ğ°½Ù•É™±½Üè€¡¥‘‘•¸œõôøñ‘¥ØÍÑå±”õíìİ¥‘Ñ è€ ¡…Ñ½Õ¹ÑÍm…Ñtñğ€À¤€¼µ…á…Ğ¤€¨€ÄÀÀ€¬€œ”œ°¡•¥¡Ğè€œÄÀÀ”œ°‰…­É½Õ¹è…Ñ½±½ÉÍm…Ñt°‰½É‘•ÉI…‘¥ÕÌè€Ğõô€¼øğ½‘¥ØøñÍÁ…¸ÍÑå±”õíì™½¹ÑM¥é”è€ÄÈ°½±½ÈèŒ¹ÍÕˆ°İ¥‘Ñ è€ÈÀ°Ñ•áÑ±¥¸è€É¥¡Ğœõôùí…Ñ½Õ¹ÑÍm…Ñtñğ€Áôğ½ÍÁ…¸øğ½‘¥Øø¥ô(€€€€€€€€ğ½‘¥Øø(€€€€€€€íÉ½±±•‘=Ù•È¹±•¹Ñ €ø€À€˜˜€ñ‘¥ØÍÑå±”õíì‰…­É½Õ¹èŒ¹…É°‰½É‘•Èè€œÅÁàÍ½±¥€œ€¬Œ¹‰‘È°‰½É‘•ÉI…‘¥ÕÌè€ÄÀ°Á…‘‘¥¹œè€ÄØ°µ…É¥¹	½ÑÑ½´è€ÄØõôøñ‘¥ØÍÑå±”õíì™½¹ÑM¥é”è€ÄÌ°™½¹Ñ]•¥¡Ğè€ØÀÀ°½±½ÈèŒ¹ÑáĞ°µ…É¥¹	½ÑÑ½´è€ÄÀõôùI½±±•=Ù•Èğ½‘¥ØùíÉ½±±•‘=Ù•È¹µ…À ¡Ğ¤€ôø€ñ‘¥Ø­•äõíĞ¹¥‘ôÍÑå±”õíì‘¥ÍÁ±…äè€™±•àœ°©ÕÍÑ¥™å½¹Ñ•¹Ğè€ÍÁ…”µ‰•Ñİ••¸œ°Á…‘‘¥¹œè€œáÁà€Àœ°‰½É‘•É	½ÑÑ½´è€œÅÁàÍ½±¥€œ€¬Œ¹‰‘ÈõôøñÍÁ…¸ÍÑå±”õíì™½¹ÑM¥é”è€ÄÈ°½±½ÈèŒ¹ÑáĞõôùíĞ¹Ñ¥Ñ±•ôğ½ÍÁ…¸øñÍÁ…¸ÍÑå±”õíì™½¹ÑM¥é”è€ÄÄ°½±½ÈèĞ¹…”€øô€ÄÀ€üŒ¹‘…¹•È€èŒ¹İ…É¸õôùíĞ¹…•õ½±ğ½ÍÁ…¸øğ½‘¥Øø¥ôğ½‘¥Øùô(€€€€€€ğ½‘¥Øø(€€(€=ƒ@2ıá…¡”ıqa…¡”è¹¼µÍÑ½É”°Í•±•Ğ¡…É…Ñ•ÉÌ°¹¼µ…¡”(€a…¡”µ½¹ÑÉ½°è¹¼µÍÑ½É”°Í•±•Ğµ¡…É…Ñ•ÉÌ°¹¼µ…¡”(€a…¡”µ±½¬è9½¸Q…±”üÉÈÍÈààÈáÜáÕáØĞÌÌÈÌİÀÔ$Ô
+  // â”€â”€â”€ PAGE: SETTINGS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const stabs = [{ id: 'context', label: 'My Context', icon: Target }, { id: 'profile', label: 'Profile', icon: User }, { id: 'prefs', label: 'Preferences', icon: Settings }];
+  const renderSettings = () => (
+    <div style={{ overflowY: 'auto', height: '100%', padding: '0 4px' }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: c.card, borderRadius: 8, padding: 4, border: '1px solid ' + c.bdr }}>
+        {stabs.map((tab) => <button key={tab.id} onClick={() => setSettingsTab(tab.id)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 0', borderRadius: 6, border: 'none', background: settingsTab === tab.id ? c.acc + '18' : 'transparent', color: settingsTab === tab.id ? c.acc : c.sub, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}><tab.icon size={14} /> {tab.label}</button>)}
+      </div>
+      {settingsTab === 'context' && <div>
+        {[{ key: 'lifeGoals', label: 'Life Goals', ph: 'Long-term life goals?' }, { key: 'currentFocus', label: 'Current Focus', ph: 'What are you focused on?' }, { key: 'aboutMe', label: 'About Me', ph: 'Who are you?' }].map((f) => <div key={f.key} style={{ marginBottom: 14 }}><label style={{ fontSize: 12, fontWeight: 600, color: c.txt, marginBottom: 4, display: 'block' }}>{f.label}</label><textarea value={userCtx[f.key]} onChange={(e) => setUserCtx((p) => ({ ...p, [f.key]: e.target.value }))} placeholder={f.ph} style={{ width: '100%', minHeight: 60, padding: 10, borderRadius: 8, border: '1px solid ' + c.bdr, background: c.card, color: c.txt, fontSize: 12, resize: 'vertical', outline: 'none', lineHeight: 1.5, boxSizing: 'border-box' }} /></div>)}
+        <div style={{ marginBottom: 14 }}><label style={{ fontSize: 12, fontWeight: 600, color: c.txt, marginBottom: 6, display: 'block' }}>Priority Categories (+15% boost)</label><div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{cats.map((cat) => <button key={cat} onClick={() => setUserCtx((p) => ({ ...p, boostCats: p.boostCats.includes(cat) ? p.boostCats.filter((x) => x !== cat) : [...p.boostCats, cat] }))} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid ' + (userCtx.boostCats.includes(cat) ? catColors[cat] : c.bdr), background: userCtx.boostCats.includes(cat) ? catColors[cat] + '18' : 'transparent', color: userCtx.boostCats.includes(cat) ? catColors[cat] : c.sub, fontSize: 11, cursor: 'pointer' }}>{cat}</button>)}</div></div>
+        <button onClick={() => { setCtxSaved(true); setTimeout(() => setCtxSaved(false), 2000); }} style={{ background: c.acc, border: 'none', color: '#fff', padding: '8px 20px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{ctxSaved ? 'Saved!' : 'Save Context'}</button>
+      </div>}
+      {settingsTab === 'profile' && <div>{[{ l: 'Name', v: 'Daniel' }, { l: 'Companies', v: 'Tanaor Jewelry, + others' }, { l: 'Email', v: 'danielm@tanaorjewelry.com' }].map((f) => <div key={f.l} style={{ marginBottom: 14 }}><label style={{ fontSize: 12, fontWeight: 600, color: c.txt, marginBottom: 4, display: 'block' }}>{f.l}</label><div style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid ' + c.bdr, background: c.card, color: c.sub, fontSize: 13 }}>{f.v}</div></div>)}</div>}
+      {settingsTab === 'prefs' && <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid ' + c.bdr, marginBottom: 12 }}><div><div style={{ fontSize: 13, fontWeight: 500, color: c.txt }}>Theme</div></div><div style={{ display: 'flex', gap: 6 }}>{[{ val: 'light', lbl: 'Light' }, { val: 'warm', lbl: 'Warm' }, { val: 'dark', lbl: 'Dark' }].map((t) => <button key={t.val} onClick={() => setDark(t.val)} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid ' + (dark === t.val ? c.acc : c.bdr), background: dark === t.val ? c.acc + '18' : 'transparent', color: dark === t.val ? c.acc : c.sub, fontSize: 11, cursor: 'pointer' }}>{t.lbl}</button>)}</div></div>
+        <div style={{ padding: '10px 0', borderBottom: '1px solid ' + c.bdr, marginBottom: 12 }}><div style={{ fontSize: 13, fontWeight: 500, color: c.txt }}>AI Model</div><div style={{ fontSize: 11, color: c.sub }}>Claude Opus 4.6</div></div>
+        <div style={{ padding: '10px 0' }}><div style={{ fontSize: 13, fontWeight: 500, color: c.txt }}>Scoring</div><div style={{ fontSize: 11, color: c.sub, lineHeight: 1.5 }}>Base formula + 15% category boost + hard deadline override</div></div>
+      </div>}
+    </div>
+  );
+
+  // â”€â”€â”€ ROUTING â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const pages = { today: renderToday, all: renderAllTasks, review: renderReview, archive: renderArchive, settings: renderSettings };
+  const pageLabel = { today: 'Today', all: 'All Tasks', review: 'Weekly Review', archive: 'Archive', settings: 'Settings' };
+
+  // â”€â”€â”€ MAIN RENDER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  if (authLoading) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#0F1117', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 32, height: 32, border: '3px solid #7C8CF8', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
+  if (!user) return null;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: mobile ? 'column' : 'row', height: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', background: c.bg, color: c.txt, overflow: 'hidden' }}>
+      {/* â”€â”€ Sidebar (desktop) / Bottom Nav (mobile) â”€â”€ */}
+      {!mobile && (
+        <div style={{ width: 56, background: c.side, borderRight: '1px solid ' + c.bdr, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 12, flexShrink: 0 }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: c.acc, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}><Sparkles size={18} color="#fff" /></div>
+          {navItems.map((n) => <button key={n.id} onClick={() => { setPage(n.id); setAiReview(null); }} title={n.label} style={{ width: 40, height: 40, borderRadius: 8, border: 'none', background: page === n.id ? (dark === 'dark' ? '#1C2129' : '#EBEEF1') : 'transparent', color: page === n.id ? c.acc : c.sub, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', marginBottom: 4 }}><n.icon size={20} /></button>)}
+          <div style={{ marginTop: 'auto', marginBottom: 10 }}><button onClick={() => setDark(dark === 'light' ? 'warm' : dark === 'warm' ? 'dark' : 'light')} style={{ width: 40, height: 40, borderRadius: 8, border: 'none', background: 'transparent', color: c.sub, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>{dark === 'dark' ? <Sun size={18} /> : dark === 'warm' ? <Moon size={18} /> : <Sun size={18} />}</button></div>
+        </div>
+      )}
+
+      {/* â”€â”€ Main â”€â”€ */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, paddingBottom: mobile ? 56 : 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: mobile ? '8px 12px' : '10px 20px', borderBottom: '1px solid ' + c.bdr, flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: mobile ? 15 : 16, fontWeight: 700, color: c.txt }}>{aiReview ? 'AI Review' : pageLabel[page]}</span>
+            {!aiReview && <span style={{ fontSize: 12, color: c.sub, background: c.bdr + '60', padding: '2px 8px', borderRadius: 10 }}>{active.length}</span>}
+          </div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button onClick={() => setDark(dark === 'light' ? 'warm' : dark === 'warm' ? 'dark' : 'light')} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 8, border: '1px solid ' + c.bdr, background: 'transparent', color: c.sub, fontSize: 12, cursor: 'pointer' }}>{dark === 'dark' ? <Sun size={13} /> : dark === 'warm' ? <Moon size={13} /> : <Sun size={13} />} {dark === 'light' ? 'Light' : dark === 'warm' ? 'Warm' : 'Dark'}</button>
+            <button onClick={runAiReview} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 8, border: 'none', background: c.acc, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}><Brain size={13} /> AI Review</button>
+            <button onClick={() => setAiOpen(!aiOpen)} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 8, border: '1px solid ' + (aiOpen ? c.acc : c.bdr), background: aiOpen ? c.acc + '15' : 'transparent', color: aiOpen ? c.acc : c.sub, fontSize: 12, cursor: 'pointer' }}><Sparkles size={13} /> AI</button>
+          </div>
+        </div>
+        <div style={{ flex: 1, padding: mobile ? '12px' : '20px 24px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          {aiReview ? renderAiReview() : pages[page]()}
+        </div>
+      </div>
+
+      {/* â”€â”€ AI Panel â”€â”€ */}
+      {aiOpen && (
+        <div style={mobile ? { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: c.bg, zIndex: 50, display: 'flex', flexDirection: 'column' } : { width: 280, borderLeft: '1px solid ' + c.bdr, background: c.side, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+          <div style={{ padding: '10px 14px', borderBottom: '1px solid ' + c.bdr, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Sparkles size={14} color={c.acc} /><span style={{ fontSize: 13, fontWeight: 600, color: c.txt }}>AI Assistant</span><span style={{ fontSize: 9, color: c.acc, background: c.acc + '18', padding: '1px 5px', borderRadius: 4, fontWeight: 600 }}>Opus 4.6</span></div>
+            <button onClick={() => setAiOpen(false)} style={{ background: 'transparent', border: 'none', color: c.sub, cursor: 'pointer' }}><X size={14} /></button>
+          </div>
+          <div style={{ flex: 1, overflowY: 'auto', padding: 12 }}>
+            {msgs.length === 0 && <div style={{ textAlign: 'center', padding: '20px 10px' }}><Sparkles size={24} color={c.acc} style={{ marginBottom: 8 }} /><div style={{ fontSize: 13, fontWeight: 600, color: c.txt, marginBottom: 4 }}>Hi Daniel!</div><div style={{ fontSize: 12, color: c.sub, marginBottom: 16, lineHeight: 1.5 }}>Ask me anything about your tasks.</div><div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>{aiSuggestions.map((s) => <button key={s} onClick={() => sendMsg(s)} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid ' + c.bdr, background: c.card, color: c.txt, fontSize: 12, cursor: 'pointer', textAlign: 'left' }}>{s}</button>)}</div></div>}
+            {msgs.map((m, i) => <div key={i} style={{ marginBottom: 10, display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start' }}><div style={{ maxWidth: '88%', padding: '8px 12px', borderRadius: 10, background: m.role === 'user' ? c.acc : c.card, color: m.role === 'user' ? '#fff' : c.txt, fontSize: 12, lineHeight: 1.5, border: m.role === 'ai' ? '1px solid ' + c.bdr : 'none', whiteSpace: 'pre-wrap' }}>{m.text}</div></div>)}
+          </div>
+          {recording && <div style={{ padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 8, borderTop: '1px solid ' + c.bdr }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#F85149', animation: 'blink 1s infinite' }} /><span style={{ fontSize: 12, color: c.danger }}>Listening...</span></div>}
+          <div style={{ padding: '8px 12px', borderTop: '1px solid ' + c.bdr, display: 'flex', gap: 6 }}>
+            <button onClick={() => setRecording(!recording)} style={{ width: 32, height: 32, borderRadius: '50%', border: '1px solid ' + (recording ? c.danger : c.bdr), background: recording ? c.danger + '18' : 'transparent', color: recording ? c.danger : c.sub, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}><Mic size={14} /></button>
+            <input value={aiInput} onChange={(e) => setAiInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') sendMsg(aiInput); }} placeholder="Ask anything..." style={{ flex: 1, background: c.card, border: '1px solid ' + c.bdr, borderRadius: 8, padding: '6px 10px', color: c.txt, fontSize: 12, outline: 'none' }} />
+            <button onClick={() => sendMsg(aiInput)} disabled={!aiInput.trim()} style={{ width: 32, height: 32, borderRadius: '50%', border: 'none', background: aiInput.trim() ? c.acc : c.bdr, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: aiInput.trim() ? 'pointer' : 'default', flexShrink: 0 }}><Send size={14} /></button>
+          </div>
+        </div>
+      )}
+
+      {/* â”€â”€ Mobile Bottom Nav â”€â”€ */}
+      {mobile && (
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, height: 56, background: c.side, borderTop: '1px solid ' + c.bdr, display: 'flex', alignItems: 'center', justifyContent: 'space-around', zIndex: 40 }}>
+          {navItems.map((n) => <button key={n.id} onClick={() => { setPage(n.id); setAiReview(null); }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: 'transparent', border: 'none', color: page === n.id ? c.acc : c.sub, cursor: 'pointer', padding: '4px 0' }}><n.icon size={20} /><span style={{ fontSize: 9 }}>{n.label}</span></button>)}
+        </div>
+      )}
+
+      <style>{`
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        @keyframes cp0 { to { transform: translate(20px, -25px) scale(0); opacity: 0; } }
+        @keyframes cp1 { to { transform: translate(-18px, -20px) scale(0); opacity: 0; } }
+        @keyframes cp2 { to { transform: translate(25px, 10px) scale(0); opacity: 0; } }
+        @keyframes cp3 { to { transform: translate(-5px, 28px) scale(0); opacity: 0; } }
+        @keyframes cp4 { to { transform: translate(15px, -30px) scale(0); opacity: 0; } }
+        @keyframes cp5 { to { transform: translate(-22px, 5px) scale(0); opacity: 0; } }
+        @keyframes cp6 { to { transform: translate(10px, 22px) scale(0); opacity: 0; } }
+        @keyframes cp7 { to { transform: translate(-15px, -18px) scale(0); opacity: 0; } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        @keyframes fadeSlide { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.7; } }
+        @keyframes loading { 0% { width: 0%; } 50% { width: 80%; } 100% { width: 100%; } }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.3); border-radius: 10px; }
+      `}</style>
+    </div>
+  );
+}
