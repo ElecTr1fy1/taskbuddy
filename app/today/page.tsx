@@ -298,7 +298,7 @@ export default function TaskBuddyV7() {
   // â”€â”€â”€ RENDER: DETAIL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const renderDetail = (t) => (
     <div style={{ padding: '12px 16px 16px', borderTop: '1px solid ' + c.bdr, background: c.card2 }}>
-      {t.aiReason && <div style={{ display: 'flex', gap: 8, marginBottom: 12, padding: '8px 10px', bo2derRadius: 6, background: c.briefBg }}><Sparkles size={14} color={c.acc} style={{ flexShrink: 0, marginTop: 2 }} /><span style={{ fontSize: 12, color: c.sub, fontStyle: 'italic', lineHeight: 1.5 }}>{t.aiReason}</span></div>}
+      {t.aiReason && <div style={{ display: 'flex', gap: 8, marginBottom: 12, padding: '8px 10px', borderRadius: 6, background: c.briefBg }}><Sparkles size={14} color={c.acc} style={{ flexShrink: 0, marginTop: 2 }} /><span style={{ fontSize: 12, color: c.sub, fontStyle: 'italic', lineHeight: 1.5 }}>{t.aiReason}</span></div>}
       {t.notes && <div style={{ fontSize: 12, color: c.txt, marginBottom: 10, lineHeight: 1.5 }}>{t.notes}</div>}
       {t.link && <a href={t.link} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: c.acc, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 12 }}><ExternalLink size={12} /> {t.link.replace(/https?:\/\/(www\.)?/, '').split('/')[0]}</a>}
       {t.dueDate && <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12, fontSize: 12, color: t.deadlineType === 'hard' ? c.danger : c.sub }}><Calendar size={12} /> Due {fmtDate(t.dueDate)} {t.deadlineType === 'hard' && <span style={{ background: c.danger, color: '#fff', padding: '1px 6px', borderRadius: 4, fontSize: 10, fontWeight: 600 }}>HARD</span>}{t.deadlineType === 'soft' && <span style={{ background: c.bdr, color: c.sub, padding: '1px 6px', borderRadius: 4, fontSize: 10 }}>soft</span>}</div>}
@@ -597,62 +597,51 @@ export default function TaskBuddyV7() {
         </div>
       </div>
 
-      {/* â”€â”ˆ AI Panel â”€â”€ */}
+      {/* â”€â”€ AI Panel â”€â”€ */}
       {aiOpen && (
-        <div style={mobile ? { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: c.bg, zIndex: 50, display: 'flex', flexDirection: 'column' } : { width: 2808›Ü™\“Yˆ	Ì\ÛÛY	È
-ÈË˜™‹˜XÚÙÜ›İ[™ˆËœÚYK\Ü^Nˆ	Ù›^	Ë›^\™Xİ[Ûˆ	ØÛÛ[[‰Ë›^Úš[šÎˆ_O‚ˆ]ˆİ[O^ŞÈY[™Îˆ	ÌLM	Ë›Ü™\›İÛNˆ	Ì\ÛÛY	È
-ÈË˜™‹\Ü^Nˆ	Ù›^	Ë[YÛ’][\Îˆ	ØÙ[\‰Ë\İYPÛÛ[ˆ	ÜÜXÙKX™]ÙY[‰È_O‚ˆ]ˆİ[O^ŞÈ\Ü^Nˆ	Ù›^	Ë[YÛ’][\Îˆ	ØÙ[\‰ËØ\ˆ_OÜ\šÛ\ÈÚ^™O^ÌMHÛÛÜ^ØË˜XØßHÏÜ[ˆİ[O^ŞÈ›ÛÚ^™NˆLË›ÛÙZYÚˆŒÛÛÜˆË_ORH\ÜÚ\İ[ÜÜ[Ü[ˆİ[O^ŞÈ›ÛÚ^™NˆKÛÛÜˆË˜XØË˜XÚÙÜ›İ[™ˆË˜XØÈ
-È	ÌN	ËY[™Îˆ	Ì\\	Ë›Ü™\”˜Y]\Îˆ›ÛÙZYÚˆŒ_O“Ü\ÈÜÜ[Ù]‚ˆ]ÛˆÛÛXÚÏ^Ê
-HOˆÙ]ZSÜ[Š˜[ÙJ_Hİ[O^ŞÈ˜XÚÙÜ›İ[™ˆ	İ˜[œÜ\™[	Ë›Ü™\ˆ	Û›Û™IËÛÛÜˆËœİX‹İ\œÛÜˆ	ÜÚ[\‰È_OÚ^™O^ÌMHÏØ]Û‚ˆÙ]‚ˆ]ˆİ[O^ŞÈ›^ˆKİ™\™›İÖNˆ	Ø]]ÉËY[™ÎˆLˆ_O‚ˆÛ\ÙÜË›[™İOOH	‰ˆ]ˆİ[O^ŞÈ^[YÛˆ	ØÙ[\‰ËY[™Îˆ	ÌŒL	È_OÜ\šÛ\ÈÚ^™O^ÌHÛÛÜ^ØË˜XØßHİ[O^ŞÈX\™Ú[›İÛNˆ_HÏ]ˆİ[O^ŞÈ›ÛÚ^™NˆLË›ÛÙZYÚˆŒÛÛÜˆËX\™Ú[›İÛNˆ_O’H[šY[OÙ]]ˆİ[O^ŞÈ›ÛÚ^™NˆL‹ÛÛÜˆËœİX‹X\™Ú[›İÛNˆM‹[™RZYÚˆKH_O\ÚÈYH[][™ÈX›İ][İ\ˆ\ÚÜËÙ]]ˆİ[O^ŞÈ\Ü^Nˆ	Ù›^	Ë›^\™Xİ[Ûˆ	ØÛÛ[[‰ËØ\ˆˆ_OØZTİYÙÙ\İ[ÛœË›X\
+        <div style={mobile ? { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: c.bg, zIndex: 50, display: 'flex', flexDirection: 'column' } : { width: 280, borderLeft: '1px solid ' + c.bdr, background: c.side, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+          <div style={{ padding: '10px 14px', borderBottom: '1px solid ' + c.bdr, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Sparkles size={14} color={c.acc} /><span style={{ fontSize: 13, fontWeight: 600, color: c.txt }}>AI Assistant</span><span style={{ fontSize: 9, color: c.acc, background: c.acc + '18', padding: '1px 5px', borderRadius: 4, fontWeight: 600 }}>Opus 4.6</span></div>
+            <button onClick={() => setAiOpen(false)} style={{ background: 'transparent', border: 'none', color: c.sub, cursor: 'pointer' }}><X size={14} /></button>
+          </div>
+          <div style={{ flex: 1, overflowY: 'auto', padding: 12 }}>
+            {msgs.length === 0 && <div style={{ textAlign: 'center', padding: '20px 10px' }}><Sparkles size={24} color={c.acc} style={{ marginBottom: 8 }} /><div style={{ fontSize: 13, fontWeight: 600, color: c.txt, marginBottom: 4 }}>Hi Daniel!</div><div style={{ fontSize: 12, color: c.sub, marginBottom: 16, lineHeight: 1.5 }}>Ask me anything about your tasks.</div><div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>{aiSuggestions.map((s) => <button key={s} onClick={() => sendMsg(s)} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid ' + c.bdr, background: c.card, color: c.txt, fontSize: 12, cursor: 'pointer', textAlign: 'left' }}>{s}</button>)}</div></div>}
+            {msgs.map((m, i) => <div key={i} style={{ marginBottom: 10, display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start' }}><div style={{ maxWidth: '88%', padding: '8px 12px', borderRadius: 10, background: m.role === 'user' ? c.acc : c.card, color: m.role === 'user' ? '#fff' : c.txt, fontSize: 12, lineHeight: 1.5, border: m.role === 'ai' ? '1px solid ' + c.bdr : 'none', whiteSpace: 'pre-wrap' }}>{m.text}</div></div>)}
+          </div>
+          {recording && <div style={{ padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 8, borderTop: '1px solid ' + c.bdr }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#F85149', animation: 'blink 1s infinite' }} /><span style={{ fontSize: 12, color: c.danger }}>Listening...</span></div>}
+          <div style={{ padding: '8px 12px', borderTop: '1px solid ' + c.bdr, display: 'flex', gap: 6 }}>
+            <button onClick={() => setRecording(!recording)} style={{ width: 32, height: 32, borderRadius: '50%', border: '1px solid ' + (recording ? c.danger : c.bdr), background: recording ? c.danger + '18' : 'transparent', color: recording ? c.danger : c.sub, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}><Mic size={14} /></button>
+            <input value={aiInput} onChange={(e) => setAiInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') sendMsg(aiInput); }} placeholder="Ask anything..." style={{ flex: 1, background: c.card, border: '1px solid ' + c.bdr, borderRadius: 8, padding: '6px 10px', color: c.txt, fontSize: 12, outline: 'none' }} />
+            <button onClick={() => sendMsg(aiInput)} disabled={!aiInput.trim()} style={{ width: 32, height: 32, borderRadius: '50%', border: 'none', background: aiInput.trim() ? c.acc : c.bdr, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: aiInput.trim() ? 'pointer' : 'default', flexShrink: 0 }}><Send size={14} /></button>
+          </div>
+        </div>
+      )}
 
-ÊHOˆ]ÛˆÙ^O^ÜßHÛÛXÚÏ^Ê
-HOˆÙ[™\ÙÊÊ_Hİ[O^ŞÈY[™Îˆ	ÎLœ	Ë›Ü™\”˜Y]\Îˆ›Ü™\ˆ	Ì\ÛÛY	È
-ÈË˜™‹˜XÚÙÜ›İ[™ˆË˜Ø\™ÛÛÜˆË›ÛÚ^™NˆL‹İ\œÛÜˆ	ÜÚ[\‰Ë^[YÛˆ	ÛY	È_OÜßOØ]ÛŠ_OÙ]Ù]ŸBˆÛ\ÙÜË›X\
+      {/* â”€â”€ Mobile Bottom Nav â”€â”€ */}
+      {mobile && (
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, height: 56, background: c.side, borderTop: '1px solid ' + c.bdr, display: 'flex', alignItems: 'center', justifyContent: 'space-around', zIndex: 40 }}>
+          {navItems.map((n) => <button key={n.id} onClick={() => { setPage(n.id); setAiReview(null); }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: 'transparent', border: 'none', color: page === n.id ? c.acc : c.sub, cursor: 'pointer', padding: '4px 0' }}><n.icon size={20} /><span style={{ fontSize: 9 }}>{n.label}</span></button>)}
+        </div>
+      )}
 
-KJHOˆ]ˆÙ^O^Ú_Hİ[O^ŞÈX\™Ú[›İÛNˆL\Ü^Nˆ	Ù›^	Ë\İYPÛÛ[ˆKœ›ÛHOOH	İ\Ù\‰ÈÈ	Ù›^Y[™	Èˆ	Ù›^\İ\	È_O]ˆİ[O^ŞÈX^ÚYˆ	Î	IËY[™Îˆ	ÎLœ	Ë›Ü™\”˜Y]\ÎˆL˜XÚÙÜ›İ[™ˆKœ›ÛHOOH	İ\Ù\‰ÈÈË˜XØÈˆË˜Ø\™ÛÛÜˆKœ›ÛHOOH	İ\Ù\‰ÈÈ	ÈÙ™™‰ÈˆË›ÛÚ^™NˆL‹[™RZYÚˆKK›Ü™\ˆKœ›ÛHOOH	ØZIÈÈ	Ì\ÛÛY	È
-ÈË˜™ˆˆ	Û›Û™IËÚ]TÜXÙNˆ	Ü™K]Ü˜\	È_OÛK^OÙ]Ù]Š_BˆÙ]‚ˆÜ™XÛÜ™[™È	‰ˆ]ˆİ[O^ŞÈY[™Îˆ	ÎM	Ë\Ü^Nˆ	Ù›^	Ë[YÛ’][\Îˆ	ØÙ[\‰ËØ\ˆ›Ü™\•Üˆ	Ì\ÛÛY	È
-ÈË˜™ˆ_O]ˆİ[O^ŞÈÚYˆZYÚˆ›Ü™\”˜Y]\Îˆ	ÍL	IË˜XÚÙÜ›İ[™ˆ	ÈÑLMIË[š[X][Ûˆ	Ø›[šÈ\È[™š[š]IÈ_HÏÜ[ˆİ[O^ŞÈ›ÛÚ^™NˆL‹ÛÛÜˆË™[™Ù\ˆ_O“\İ[š[™Ë‹‹ÜÜ[Ù]ŸBˆ]ˆİ[O^ŞÈY[™Îˆ	ÎLœ	Ë›Ü™\•Üˆ	Ì\ÛÛY	È
-ÈË˜™‹\Ü^Nˆ	Ù›^	ËØ\ˆˆ_O‚ˆ]ÛˆÛÛXÚÏ^Ê
-HOˆÙ]™XÛÜ™[™Ê\™XÛÜ™[™Ê_Hİ[O^ŞÈÚYˆÌ‹ZYÚˆÌ‹›Ü™\”˜Y]\Îˆ	ÍL	IË›Ü™\ˆ	Ì\ÛÛY	È
-È
-™XÛÜ™[™ÈÈË™[™Ù\ˆˆË˜™ŠK˜XÚÙÜ›İ[™ˆ™XÛÜ™[™ÈÈË™[™Ù\ˆ
-È	ÌN	Èˆ	İ˜[œÜ\™[	ËÛÛÜˆ™XÛÜ™[™ÈÈË™[™Ù\ˆˆËœİX‹\Ü^Nˆ	Ù›^	Ë[YÛ’][\Îˆ	ØÙ[\‰Ë\İYPÛÛ[ˆ	ØÙ[\‰Ëİ\œÛÜˆ	ÜÚ[\‰Ë›^Úš[šÎˆ_OZXÈÚ^™O^ÌMHÏØ]Û‚ˆ[œ]˜[YO^ØZR[œ]HÛÚ[™ÙO^ÊJHOˆÙ]ZR[œ]
-K\™Ù]˜[YJ_HÛ’Ù^QİÛ^ÊJHOˆÈYˆ
-KšÙ^HOOH	Ñ[\‰ÊHÙ[™\ÙÊZR[œ]
-NÈ_HXÙZÛ\H\ÚÈ[][™Ë‹‹ˆˆİ[O^ŞÈ›^ˆK˜XÚÙÜ›İ[™ˆË˜Ø\™›Ü™\ˆ	Ì\ÛÛY	È
-ÈË˜™‹›Ü™\”˜Y]\ÎˆY[™Îˆ	ÍœL	ËÛÛÜˆË›ÛÚ^™NˆL‹İ][™Nˆ	Û›Û™IÈ_HÏ‚ˆ]ÛˆÛÛXÚÏ^Ê
-HOˆÙ[™\ÙÊZR[œ]
-_H\ØX›Y^ÈXZR[œ]š[J
-_Hİ[O^ŞÈÚYˆÌ‹ZYÚˆÌ‹›Ü™\”˜Y]\Îˆ	ÍL	IË›Ü™\ˆ	Û›Û™IË˜XÚÙÜ›İ[™ˆZR[œ]š[J
-HÈË˜XØÈˆË˜™‹ÛÛÜˆ	ÈÙ™™‰Ë\Ü^Nˆ	Ù›^	Ë[YÛ’][\Îˆ	ØÙ[\‰Ë\İYPÛÛ[ˆ	ØÙ[\‰Ëİ\œÛÜˆZR[œ]š[J
-HÈ	ÜÚ[\‰Èˆ	ÙY˜][	Ë›^Úš[šÎˆ_OÙ[™Ú^™O^ÌMHÏØ]Û‚ˆÙ]‚ˆÙ]‚ˆ
-_B‚ˆËÊˆ8¥ 8¥ [Øš[H›İÛH˜]ˆ8¥ 8¥ 
-‹ßBˆÛ[Øš[H	‰ˆ
-ˆ]ˆİ[O^ŞÈÜÚ][Ûˆ	Ùš^Y	Ë›İÛNˆYˆšYÚˆZYÚˆM‹˜XÚÙÜ›İ[™ˆËœÚYK›Ü™\•Üˆ	Ì\ÛÛY	È
-ÈË˜™‹\Ü^Nˆ	Ù›^	Ë[YÛ’][\Îˆ	ØÙ[\‰Ë\İYPÛÛ[ˆ	ÜÜXÙKX\›İ[™	Ë’[™^ˆ_O‚ˆÛ˜]’][\Ë›X\
-
-ŠHOˆ]ÛˆÙ^O^Û‹šYHÛÛXÚÏ^Ê
-HOˆÈÙ]YÙJ‹šY
-NÈÙ]ZT™]šY]Ê[
-NÈ_Hİ[O^ŞÈ\Ü^Nˆ	Ù›^	Ë›^\™Xİ[Ûˆ	ØÛÛ[[‰Ë[YÛ’][\Îˆ	ØÙ[\‰ËØ\ˆ‹˜XÚÙÜ›İ[™ˆ	İ˜[œÜ\™[	Ë›Ü™\ˆ	Û›Û™IËÛÛÜˆYÙHOOH‹šYÈË˜XØÈˆËœİX‹İ\œÛÜˆ	ÜÚ[\‰ËY[™Îˆ	Í	È_O‹šXÛÛˆÚ^™O^ÌŒHÏÜ[ˆİ[O^ŞÈ›ÛÚ^™NˆH_OÛ‹›X™[OÜÜ[Ø]ÛŠ_BˆÙ]‚ˆ
-_B‚ˆİ[OØˆ
-ˆÈ›Ş\Ú^š[™Îˆ›Ü™\‹X›ŞÈX\™Ú[ˆÈY[™ÎˆÈBˆÙ^Yœ˜[Y\ÈÜÈÈÈ˜[œÙ›Ü›Nˆ˜[œÛ]JŒL\
-HØØ[J
-NÈÜXÚ]NˆÈHBˆÙ^Yœ˜[Y\ÈÜHÈÈÈ˜[œÙ›Ü›Nˆ˜[œÛ]JLNLŒ
-HØØ[J
-NÈÜXÚ]NˆÈHBˆÙ^Yœ˜[Y\ÈÜˆÈÈÈ˜[œÙ›Ü›Nˆ˜[œÛ]J\L
-HØØ[J
-NÈÜXÚ]NˆÈHBˆÙ^Yœ˜[Y\ÈÜÈÈÈÈ˜[œÙ›Ü›Nˆ˜[œÛ]JM\
-HØØ[J
-NÈÜXÚ]NˆÈHBˆÙ^Yœ˜[Y\ÈÜÈÈÈ˜[œÙ›Ü›Nˆ˜[œÛ]JM\LÌ
-HØØ[J
-NÈÜXÚ]NˆÈHBˆÙ^Yœ˜[Y\ÈÜHÈÈÈ˜[œÙ›Ü›Nˆ˜[œÛ]JLŒœ\
-HØØ[J
-NÈÜXÚ]NˆÈHBˆÙ^Yœ˜[Y\ÈÜˆÈÈÈ˜[œÙ›Ü›Nˆ˜[œÛ]JLŒœ
-HØØ[J
-NÈÜXÚ]NˆÈHBˆÙ^Yœ˜[Y\ÈÜÈÈÈÈ˜[œÙ›Ü›Nˆ˜[œÛ]JLM\LN
-HØØ[J
-NÈÜXÚ]NˆÈHBˆÙ^Yœ˜[Y\È›[šÈÈ	KL	HÈÜXÚ]NˆNÈHL	HÈÜXÚ]NˆÈHBˆÙ^Yœ˜[Y\È˜YTÛYHÈœ›ÛHÈÜXÚ]NˆÈ˜[œÙ›Ü›Nˆ˜[œÛ]VJœ
-NÈHÈÈÜXÚ]NˆNÈ˜[œÙ›Ü›Nˆ˜[œÛ]VJ
-NÈHBˆÙ^Yœ˜[Y\È[ÙHÈ	KL	HÈ˜[œÙ›Ü›NˆØØ[JJNÈÜXÚ]NˆNÈHL	HÈ˜[œÙ›Ü›NˆØØ[JKŒJNÈÜXÚ]NˆÎÈHBˆÙ^Yœ˜[Y\ÈØY[™ÈÈ	HÈÚYˆ	NÈHL	HÈÚYˆ	NÈHL	HÈÚYˆL	NÈHBˆ‹]ÙXšÚ]\ØÜ›Û˜\ˆÈÚYˆ\ÈBˆ‹]ÙXšÚ]\ØÜ›Û˜\‹]˜XÚÈÈ˜XÚÙÜ›İ[™ˆ˜[œÜ\™[ÈBˆ‹]ÙXšÚ]\ØÜ›Û˜\‹][XˆÈ˜XÚÙÜ›İ[™ˆ™Ø˜JLLLŒÊNÈ›Ü™\‹\˜Y]\ÎˆLÈBˆOÜİ[O‚ˆÙ]‚ˆ
-NÂŸB
+      <style>{`
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        @keyframes cp0 { to { transform: translate(20px, -25px) scale(0); opacity: 0; } }
+        @keyframes cp1 { to { transform: translate(-18px, -20px) scale(0); opacity: 0; } }
+        @keyframes cp2 { to { transform: translate(25px, 10px) scale(0); opacity: 0; } }
+        @keyframes cp3 { to { transform: translate(-5px, 28px) scale(0); opacity: 0; } }
+        @keyframes cp4 { to { transform: translate(15px, -30px) scale(0); opacity: 0; } }
+        @keyframes cp5 { to { transform: translate(-22px, 5px) scale(0); opacity: 0; } }
+        @keyframes cp6 { to { transform: translate(10px, 22px) scale(0); opacity: 0; } }
+        @keyframes cp7 { to { transform: translate(-15px, -18px) scale(0); opacity: 0; } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        @keyframes fadeSlide { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.7; } }
+        @keyframes loading { 0% { width: 0%; } 50% { width: 80%; } 100% { width: 100%; } }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.3); border-radius: 10px; }
+      `}</style>
+    </div>
+  );
+}
