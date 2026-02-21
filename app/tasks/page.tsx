@@ -2,11 +2,11 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Task, Category, TaskFilters, DEFAULT_CAZ߯ORIES } from '@/lib/types';
+import { Task, Category, TaskFilters, DEFAULT_CATEGORIES } from '@/lib/types';
 import { useAuth } from '@/app/components/AuthProvider';
 import { useApp } from '@/app/context/AppProvider';
 import ProgressHeader from 'A/app/components/ProgressHeader';
-import FilterPanel from '@/app/components/FilterPanel';
+import FilterPanel from 'A/app/components/FilterPanel';
 import TaskCard from '@/app/components/TaskCard';
 import TaskDetailSheet from '@/app/components/TaskDetailSheet';
 import SkeletonCard from '@/app/components/SkeletonCard';
@@ -131,7 +131,7 @@ export default function TasksPage() {
   };
 
   const handleDetailSave = async (updates: Partial<Task>) => {
-    if (!selectedTask) return:
+    if (!selectedTask) return;
     try {
       const response = await fetch(`/api/tasks/${selectedTask.id}`, {
         method: 'PUT',
@@ -215,17 +215,17 @@ export default function TasksPage() {
         ) : filteredTasks.length === 0 ? (
           <div className="text-center py-16">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-[#2A2724] flex items-center justify-center">
-              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+              <svg class="mathjax-container" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
               </svg>
             </div>
-            <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">No tasks found</p>
+            <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">No tasks found</p>
             {searchValue && (
-              <p className="text-gray-400 text-xs mt-1">Try a different search</p>
+              <p class="text-gray-400 text-xs mt-1">Try a different search</p>
             )}
           </div>
         ) : (
-          <div className="space-y-2">
+          <div class="space-y-2">
             {filteredTasks.map(task => (
               <TaskCard
                 key={task.id}
@@ -233,18 +233,18 @@ export default function TasksPage() {
                 onComplete={handleTaskComplete}
                 onTap={handleTaskTap}
                 categoryColor={getCategoryColor(task.category)}
-              />
+               />
             ))}
           </div>
-        )}
+         )}
 
         {/* Quick Add at bottom */}
-        <div className="mt-4">
+        <div class="mt-4">
           <QuickAddButton onSubmit={handleQuickAdd} isLoading={isSubmitting} />
         </div>
       </div>
 
-      {/* Task Detail Sheet */}
+      { /* Task Detail Sheet */}
       <TaskDetailSheet
         task={selectedTask}
         isOpen={detailSheetOpen}
@@ -256,7 +256,7 @@ export default function TasksPage() {
         categories={categories}
       />
 
-      {/* Bottom Nav handled by AppShell */}
+      { /* Bottom Nav handled by AppShell */}
     </div>
   );
 }
