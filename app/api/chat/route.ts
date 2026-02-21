@@ -12,8 +12,8 @@ import {
   bulkUpdateStatus,
   logInteraction,
 } from '@/lib/supabase';
-import { prioritizeTasks } from 'A/lib/ai';
-import { Task } from 'A/lib/types';
+import { prioritizeTasks } from '@/lib/ai';
+import { Task } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
