@@ -95,6 +95,8 @@ export default function TaskBuddyV8() {
   const [reviewTab, setReviewTab] = useState('priority');
   const [reviewData, setReviewData] = useState(null);
   const [loadingMsg, setLoadingMsg] = useState('');
+  // V8.1: Left panel mode — 'chat' or 'review'
+  const [leftPanel, setLeftPanel] = useState('chat');
   // V8: Add Task modal state
   const [showAddModal, setShowAddModal] = useState(false);
   const [newTask, setNewTask] = useState({ title: '', description: '', cat: 'Business', time: 30, urgency: 5, impact: 5, confidence: 7, ease: 5, blocking: 5, delegatable: false, dueDate: '', deadlineType: 'soft' });
@@ -413,7 +415,7 @@ export default function TaskBuddyV8() {
     const scoreColor = scoreVal >= 81 ? c.ok : scoreVal >= 61 ? c.acc : scoreVal >= 31 ? c.warn : c.danger;
     return (
       <div key={t.id} draggable={drag} onDragStart={drag ? () => handleDragStart(t.id) : undefined} onDragOver={drag ? (e) => handleDragOver(e, t.id) : undefined} onDragLeave={drag ? handleDragLeave : undefined} onDrop={drag ? () => handleDrop(t.id) : undefined}
-        style={{ borderRadius: 12, border: large ? '2px solid ' + c.acc : '1px solid ' + c.bdr, background: large ? c.doNow : c.card, marginBottom: 8, opacity: (isCelebrating && celPhase === 'slideout') ? 0 : isDragging ? 0.4 : dim ? 0.6 : 1, cursor: drag ? 'grab' : 'default', transition: isCelebrating ? 'none' : 'opacity 0.3s ease, transform 0.3s ease', boxShadow: large ? '0 2px 12px rgba(124,140,248,0.12)' : '0 1px 3px rgba(0,0,0,0.06)', overflow: 'visible', animation: (isCelebrating && celPhase === 'slideout') ? 'taskSlideOut 0.8s ease forwards' : 'none', transform: isDragging ? 'scale(0.98)' : 'translateX(0)', borderTop: dragOverId === t.id && dragId !== t.id ? '3px solid ' + c.acc : 'none' }}>
+        style={{ borderRadius: 12, border: large ? 'none' : '1px solid ' + c.bdr, background: large ? 'transparent' : c.card, marginBottom: 8, opacity: (isCelebrating && celPhase === 'slideout') ? 0 : isDragging ? 0.4 : dim ? 0.6 : 1, cursor: drag ? 'grab' : 'default', transition: isCelebrating ? 'none' : 'opacity 0.3s ease, transform 0.3s ease', boxShadow: large ? 'none' : '0 1px 3px rgba(0,0,0,0.06)', overflow: 'visible', animation: (isCelebrating && celPhase === 'slideout') ? 'taskSlideOut 0.8s ease forwards' : 'none', transform: isDragging ? 'scale(0.98)' : 'translateX(0)', borderTop: dragOverId === t.id && dragId !== t.id ? '3px solid ' + c.acc : undefined }}>
         <div onClick={() => setExpanded(isExp ? null : t.id)} style={{ display: 'flex', alignItems: 'flex-start', gap: mobile ? 8 : 10, padding: large ? '14px 16px' : '12px 14px', cursor: 'pointer' }}>
           {drag && !mobile && <GripVertical size={14} color={c.sub} style={{ flexShrink: 0, opacity: 0.5, marginTop: 4 }} />}
           <div style={{ marginTop: 2 }}>{renderChk(t)}</div>
@@ -471,54 +473,64 @@ export default function TaskBuddyV8() {
           <span style={{ fontSize: 14, fontWeight: 600, color: c.txt }}>AI Review</span>
           <span style={{ fontSize: 9, color: c.acc, background: c.acc + '18', padding: '1px 5px', borderRadius: 4, fontWeight: 600 }}>Opus 4.6</span>
         </div>
-        <div style={{ display: 'flex', gap: 4, marginBottom: 12, background: c.card, borderRadius: 8, padding: 4, border: '1px solid ' + c.bdr }}>
-          {tabs.map((tab) => <button key={tab.id} onClick={() => setReviewTab(tab.id)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '7px 0', borderRadius: 6, border: 'none', background: reviewTab === tab.id ? c.acc + '18' : 'transparent', color: reviewTab === tab.id ? c.acc : c.sub, fontSize: 11, fontWeight: 500, cursor: 'pointer' }}><tab.icon size={12} /> {tab.label}</button>)}
-        </div>
-        <div style={{ flex: 1, overflowY: 'auto' }}>
-          {reviewTab === 'priority' && (
-            <div>
-              {reviewData.sorted.map((t, i) => {
-                const origScore = score(t), aiScore = reviewData.aiScores[t.id];
-                const diff = aiScore - origScore;
-                return (
-                  <div key={t.id} style={{ display: 'flex', gap: 10, padding: '10px 12px', borderRadius: 8, border: '1px solid ' + c.bdr, background: i === 0 ? c.doNow : c.card, marginBottom: 6 }}>
-                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: i === 0 ? c.acc : c.bdr, color: i === 0 ? '#fff' : c.sub, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 500, color: c.txt, marginBottom: 3 }}>{t.title}</div>
-                      <div style={{ fontSize: 11, color: c.sub, fontStyle: 'italic', lineHeight: 1.4, marginBottom: 4 }}>{reviewData.understanding[t.id]}</div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontSize: 10, color: catColors[t.cat], background: catColors[t.cat] + '18', padding: '1px 6px', borderRadius: 4 }}>{t.cat}</span>
-                        {diff !== 0 && <span style={{ fontSize: 10, fontWeight: 600, color: diff > 0 ? c.ok : c.danger }}>{diff > 0 ? '↑' : '↓'} {origScore} → {aiScore}</span>}
-                        <span style={{ fontSize: 10, color: c.sub }}>{fmt(t.time)}</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-              <button onClick={applyAiOrder} style={{ width: '100%', padding: '10px 0', borderRadius: 8, border: 'none', background: c.acc, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', marginTop: 8 }}>Apply AI Order</button>
+        <div style={{ display: 'flex', gap: 4, m4, display: 'block' }}>Est. Time (min)</label>
+              <input type="number" value={newTask.time} onChange={(e) => setNewTask(p => ({ ...p, time: parseInt(e.target.value) || 0 }))} style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid ' + c.bdr, background: c.bg, color: c.txt, fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
             </div>
-          )}
-          {reviewTab === 'insights' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {reviewData.insights.map((ins, i) => (
-                <div key={i} style={{ padding: 14, borderRadius: 10, border: '1px solid ' + c.bdr, background: c.card }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}><span style={{ fontSize: 16 }}>{ins.emoji}</span><span style={{ fontSize: 13, fontWeight: 600, color: c.txt }}>{ins.title}</span></div>
-                  <div style={{ fontSize: 12, color: c.sub, lineHeight: 1.6 }}>{ins.body}</div>
+          </div>
+
+          {/* Scoring sliders */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: c.txt, marginBottom: 10, display: 'block' }}>Scoring Dimensions</label>
+            {[
+              { key: 'urgency', label: 'Urgency' },
+              { key: 'impact', label: 'Impact' },
+              { key: 'confidence', label: 'Confidence' },
+              { key: 'ease', label: 'Ease' },
+              { key: 'blocking', label: 'Blocking Potential' },
+            ].map(dim => (
+              <div key={dim.key} style={{ marginBottom: 12 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <span style={{ fontSize: 11, color: c.sub }}>{dim.label}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: c.acc }}>{newTask[dim.key]}</span>
                 </div>
-              ))}
+                <input type="range" min="1" max="10" value={newTask[dim.key]} onChange={(e) => setNewTask(p => ({ ...p, [dim.key]: parseInt(e.target.value) }))} style={sliderStyle(newTask[dim.key])} />
+              </div>
+            ))}
+          </div>
+
+          {/* Due date + Delegatable row */}
+          <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: c.txt, marginBottom: 4, display: 'block' }}>Due Date (optional)</label>
+              <input type="date" value={newTask.dueDate} onChange={(e) => setNewTask(p => ({ ...p, dueDate: e.target.value }))} style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid ' + c.bdr, background: c.bg, color: c.txt, fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
             </div>
-          )}
-          {reviewTab === 'plan' && (
-            <div>
-              <div style={{ fontSize: 12, color: c.sub, marginBottom: 12 }}>Your AI-optimized schedule for today:</div>
-              {reviewData.plan.map((p, i) => (
-                <div key={i} style={{ display: 'flex', gap: 12, marginBottom: 4 }}>
-                  <div style={{ width: 60, fontSize: 12, fontWeight: 600, color: c.acc, textAlign: 'right', flexShrink: 0, paddingTop: 10 }}>{p.time}</div>
-                  <div style={{ width: 2, background: c.bdr, flexShrink: 0, position: 'relative' }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: i === 0 ? c.acc : c.bdr, position: 'absolute', top: 12, left: -3 }} /></div>
-                  <div style={{ flex: 1, padding: '8px 12px', borderRadius: 8, background: c.card, border: '1px solid ' + c.bdr, marginBottom: 4 }}>
-                    <div style={{ fontSize: 13, fontWeight: 500, color: c.txt }}>{p.task.title}</div>
-                    <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-                      <span style={{ fontSize: 10, color: catColors[p.task.cat], background: catColors[p.task.cat] + '18', padding: '1px 6px', borderRadius: 4 }}>{p.task.cat}</span>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+              <button onClick={() => setNewTask(p => ({ ...p, delegatable: !p.delegatable }))} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 8, border: '1px solid ' + (newTask.delegatable ? c.acc : c.bdr), background: newTask.delegatable ? c.acc + '15' : 'transparent', color: newTask.delegatable ? c.acc : c.sub, fontSize: 12, cursor: 'pointer' }}>
+                <div style={{ width: 16, height: 16, borderRadius: 4, border: '2px solid ' + (newTask.delegatable ? c.acc : c.bdr), background: newTask.delegatable ? c.acc : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{newTask.delegatable && <Check size={10} color="#fff" />}</div>
+                Can be delegated?
+              </button>
+            </div>
+          </div>
+
+          {/* Submit */}
+          <button onClick={addTaskFromModal} disabled={!newTask.title.trim()} style={{ width: '100%', padding: '12px 0', borderRadius: 10, border: 'none', background: newTask.title.trim() ? c.acc : c.bdr, color: '#fff', fontSize: 14, fontWeight: 600, cursor: newTask.title.trim() ? 'pointer' : 'default' }}>Add Task</button>
+        </div>
+      </div>
+    );
+  };
+
+  // ─── PAGE: FOCUS (V8: Task queue only — AI is in left panel) ──
+  const renderFocusQueue = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 16, fontWeight: 700, color: c.txt }}>Focus Session</span>
+          <span style={{ fontSize: 11, color: c.sub, background: c.bdr + '60', padding: '2px 8px', borderRadius: 10 }}>{active.length} tasks</span>
+        </div>
+        <button onClick={() => setShowAddModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8, border: 'none', background: c.acc, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}><Plus size={14} /> Add Task</button>
+      </div>
+      {/* Context chips */}
+      <div style={{ display: 'flex.cat}</span>
                       <span style={{ fontSize: 10, color: c.sub }}>{fmt(p.duration)}</span>
                       <span style={{ fontSize: 10, color: c.sub }}>{p.reason}</span>
                     </div>
@@ -670,6 +682,46 @@ export default function TaskBuddyV8() {
         )}
         {msgs.map((m, i) => <div key={i} style={{ marginBottom: 10, display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start' }}><div style={{ maxWidth: '88%', padding: '10px 14px', borderRadius: 12, background: m.role === 'user' ? c.acc : c.card, color: m.role === 'user' ? '#fff' : c.txt, fontSize: 12, lineHeight: 1.6, border: m.role === 'ai' ? '1px solid ' + c.bdr : 'none', whiteSpace: 'pre-wrap' }}>{m.text}</div></div>)}
       </div>
+      {recording && <div style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: 8 }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#F85149', animation: 'blink 1s infinite' }} />', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
+        {chipDefs.map((ch) => <button key={ch.key} onClick={() => setActiveCtx(activeCtx === ch.key ? null : ch.key)} style={{ padding: '5px 10px', borderRadius: 20, border: '1px solid ' + (activeCtx === ch.key ? c.acc : c.bdr), background: activeCtx === ch.key ? c.acc + '18' : 'transparent', color: activeCtx === ch.key ? c.acc : c.sub, fontSize: 11, cursor: 'pointer' }}>{ch.icon} {ch.label}</button>)}
+      </div>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 2px' }}>
+        {topTask && <div style={{ background: c.doNow, border: '2px solid ' + c.acc, borderRadius: 12, padding: '12px 14px', marginBottom: 20 }}><div style={{ fontSize: 11, fontWeight: 700, color: c.acc, textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}><Zap size={14} color={c.acc} /> Do Now</div>{renderTask(topTask, { large: true })}</div>}
+        {upNext.length > 0 && <div style={{ marginBottom: 20 }}>{sectionHead('Up Next', upNext.length)}{upNext.map((t) => renderTask(t, { drag: true }))}</div>}
+        {later.length > 0 && <div style={{ marginBottom: 20, opacity: 0.65 }}>{sectionHead('Later', later.length)}{later.map((t) => renderTask(t, { drag: true, dim: true }))}</div>}
+        {done.length > 0 && <>
+          <button onClick={() => setShowDone(!showDone)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', color: c.sub, fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8, marginTop: 16, marginBottom: 8, cursor: 'pointer' }}>{showDone ? <ChevronDown size={13} /> : <ChevronRight size={13} />} Done ({done.length})</button>
+          {showDone && done.map((t) => <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px', borderRadius: 8, background: c.card, border: '1px solid ' + c.bdr, marginBottom: 6, opacity: 0.5 }}><Check size={14} color={c.ok} /><span style={{ fontSize: 13, color: c.sub, textDecoration: 'line-through' }}>{t.title}</span></div>)}
+        </>}
+        {active.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: c.sub, fontSize: 14 }}>All caught up!</div>}
+      </div>
+    </div>
+  );
+
+  // ─── AI CHAT PANEL (V8: always visible on Focus page, left side) ──
+  const renderAiChat = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div style={{ padding: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <Brain size={18} color={c.acc} />
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: c.txt }}>AI Chief of Staff</div>
+          <div style={{ fontSize: 11, color: c.sub }}>Tell me your state, I'll plan your session</div>
+        </div>
+        <div style={{ marginLeft: 'auto' }}>
+          <span style={{ fontSize: 9, color: c.acc, background: c.acc + '18', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>Opus 4.6</span>
+        </div>
+      </div>
+      <div style={{ flex: 1, overflowY: 'auto', marginBottom: 12 }}>
+        {msgs.length === 0 && (
+          <div style={{ padding: '16px 4px' }}>
+            <div style={{ fontSize: 13, color: c.sub, marginBottom: 16, lineHeight: 1.6 }}>I can help you plan your focus session, reprioritize tasks, or give you a quick breakdown of what matters most right now.</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {aiSuggestions.map((s) => <button key={s} onClick={() => sendMsg(s)} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid ' + c.bdr, background: c.card, color: c.txt, fontSize: 12, cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>{s}</button>)}
+            </div>
+          </div>
+        )}
+        {msgs.map((m, i) => <div key={i} style={{ marginBottom: 10, display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start' }}><div style={{ maxWidth: '88%', padding: '10px 14px', borderRadius: 12, background: m.role === 'user' ? c.acc : c.card, color: m.role === 'user' ? '#fff' : c.txt, fontSize: 12, lineHeight: 1.6, border: m.role === 'ai' ? '1px solid ' + c.bdr : 'none', whiteSpace: 'pre-wrap' }}>{m.text}</div></div>)}
+      </div>
       {recording && <div style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: 8 }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#F85149', animation: 'blink 1s infinite' }} /><span style={{ fontSize: 12, color: c.danger }}>Recording... tap mic to stop</span></div>}
       <div style={{ borderTop: '1px solid ' + c.bdr, paddingTop: 12 }}>
         <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
@@ -683,22 +735,53 @@ export default function TaskBuddyV8() {
     </div>
   );
 
-  // ─── PAGE: FOCUS (V8: 2-panel layout) ─────────────────────
+  // ─── LEFT PANEL: Tabbed Chat / Review ──────────────────────
+  const renderLeftPanel = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Tab switcher */}
+      <div style={{ display: 'flex', gap: 2, marginBottom: 12, background: c.bg, borderRadius: 10, padding: 3, border: '1px solid ' + c.bdr }}>
+        <button onClick={() => setLeftPanel('chat')} style={{ flex: 1, padding: '8px 0', borderRadius: 8, border: 'none', background: leftPanel === 'chat' ? c.card : 'transparent', color: leftPanel === 'chat' ? c.txt : c.sub, fontSize: 12, fontWeight: leftPanel === 'chat' ? 600 : 400, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, boxShadow: leftPanel === 'chat' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none' }}><Sparkles size={13} /> Chat</button>
+        <button onClick={() => { setLeftPanel('review'); if (!aiReview && !reviewData) runAiReview(); }} style={{ flex: 1, padding: '8px 0', borderRadius: 8, border: 'none', background: leftPanel === 'review' ? c.card : 'transparent', color: leftPanel === 'review' ? c.acc : c.sub, fontSize: 12, fontWeight: leftPanel === 'review' ? 600 : 400, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, boxShadow: leftPanel === 'review' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none' }}><Brain size={13} /> Review</button>
+      </div>
+      {/* Panel content */}
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        {leftPanel === 'chat' ? renderAiChat() : renderAiReviewInline()}
+      </div>
+    </div>
+  );
+
+  // ─── AI Review rendered inline in left panel ──────────────
+  const renderAiReviewInline = () => {
+    if (aiReview === 'loading') return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 16 }}>
+        <div style={{ animation: 'pulse 1.5s infinite' }}><Brain size={40} color={c.acc} /></div>
+        <div style={{ fontSize: 15, fontWeight: 600, color: c.txt }}>AI Deep Analysis</div>
+        <div style={{ fontSize: 13, color: c.sub, animation: 'fadeSlide 0.5s ease' }} key={loadingMsg}>{loadingMsg}</div>
+        <div style={{ width: 120, height: 3, background: c.bdr, borderRadius: 2, overflow: 'hidden' }}><div style={{ width: '60%', height: '100%', background: c.acc, borderRadius: 2, animation: 'loading 2s ease infinite' }} /></div>
+      </div>
+    );
+    if (!reviewData) return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 12 }}>
+        <Brain size={32} cnAiReview} style={{ width: '100%', padding: '8px 0', borderRadius: 8, border: '1px solid ' + c.bdr, background: 'transparent', color: c.sub, fontSize: 11, cursor: 'pointer', marginTop: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}><Brain size={11} /> Re-run Review</button>
+        </div>
+      </div>
+    );
+  };
+
+  // ─── PAGE: FOCUS (V8.1: 2-panel with tabbed left panel) ───
   const renderToday = () => {
-    if (aiReview) return renderAiReview();
     if (mobile) {
-      // Mobile: stack vertically, toggle AI
       return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
           {renderFocusQueue()}
         </div>
       );
     }
-    // Desktop: side-by-side AI Chat (left) + Task Queue (right)
+    // Desktop: side-by-side tabbed panel (left) + Task Queue (right)
     return (
       <div style={{ display: 'flex', gap: 20, height: '100%' }}>
         <div style={{ width: '38%', minWidth: 280, background: c.card, borderRadius: 14, border: '1px solid ' + c.bdr, padding: 16, display: 'flex', flexDirection: 'column' }}>
-          {renderAiChat()}
+          {renderLeftPanel()}
         </div>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           {renderFocusQueue()}
@@ -849,8 +932,8 @@ export default function TaskBuddyV8() {
               <span>{n.label}</span>
             </button>
           ))}
-          {/* AI Review button in sidebar */}
-          <button onClick={runAiReview} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', border: 'none', background: 'transparent', color: c.sub, fontSize: 13, cursor: 'pointer', borderRadius: 8, margin: '2px 8px', textAlign: 'left' }}>
+          {/* AI Review button in sidebar — switches to review tab on Focus page */}
+          <button onClick={() => { setPage('today'); setLeftPanel('review'); if (!aiReview && !reviewData) runAiReview(); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', border: 'none', background: leftPanel === 'review' && page === 'today' ? c.acc + '15' : 'transparent', color: leftPanel === 'review' && page === 'today' ? c.acc : c.sub, fontSize: 13, fontWeight: leftPanel === 'review' && page === 'today' ? 600 : 400, cursor: 'pointer', borderRadius: 8, margin: '2px 8px', textAlign: 'left' }}>
             <Brain size={18} />
             <span>AI Review</span>
           </button>
@@ -869,11 +952,11 @@ export default function TaskBuddyV8() {
         {/* Header bar — simplified for V8 */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: mobile ? '8px 12px' : '10px 24px', borderBottom: '1px solid ' + c.bdr, flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: mobile ? 15 : 17, fontWeight: 700, color: c.txt }}>{aiReview && page === 'today' ? 'AI Review' : pageLabel[page]}</span>
-            {!aiReview && <span style={{ fontSize: 12, color: c.sub, background: c.bdr + '60', padding: '2px 8px', borderRadius: 10 }}>{active.length}</span>}
+            <span style={{ fontSize: mobile ? 15 : 17, fontWeight: 700, color: c.txt }}>{pageLabel[page]}</span>
+            <span style={{ fontSize: 12, color: c.sub, background: c.bdr + '60', padding: '2px 8px', borderRadius: 10 }}>{active.length}</span>
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
-            {mobile && <button onClick={runAiReview} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 8, border: 'none', background: c.acc, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}><Brain size={13} /> Review</button>}
+            {mobile && <button onClick={() => { runAiReview(); setAiReview('loading'); }} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 8, border: 'none', background: c.acc, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}><Brain size={13} /> Review</button>}
           </div>
         </div>
         <div style={{ flex: 1, padding: mobile ? '12px' : '20px 24px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
