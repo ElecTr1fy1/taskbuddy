@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Check, Sparkles, ChevronDown, ChevronRight, ChevronLeft, Mic, Send, Sun, Moon, LayoutDashboard, ListTodo, Archive, Settings, Search, X, GripVertical, Clock, User, Target, Plus, ExternalLink, Trash2, BarChart3, AlertTriangle, Calendar, Circle, Zap, Brain, Sliders, Tag } from 'lucide-react';
 
@@ -102,6 +102,19 @@ export default function TaskBuddyV8() {
   const [newTask, setNewTask] = useState({ title: '', description: '', cat: 'Business', time: 30, urgency: 5, impact: 5, confidence: 7, ease: 5, blocking: 5, delegatable: false, dueDate: '', deadlineType: 'soft' });
   // V8: All Tasks status filter
   const [statusFilter, setStatusFilter] = useState('todo');
+  // V8.3: Brain Dump + UX improvements
+  const [addMode, setAddMode] = useState('brainDump');
+  const [dumpText, setDumpText] = useState('');
+  const [parsedTasks, setParsedTasks] = useState([]);
+  const [reviewingDump, setReviewingDump] = useState(false);
+  const [dumpProcessing, setDumpProcessing] = useState(false);
+  const [selectedParsed, setSelectedParsed] = useState(new Set());
+  const [aiThinking, setAiThinking] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
+  const [undoTask, setUndoTask] = useState(null);
+  const chatEndRef = useRef(null);
+  const speechRef = useRef(null);
+  const dumpSpeechRef = useRef(null);
   const [userCtx, setUserCtx] = useState({
     lifeGoals: 'Build a portfolio of successful e-commerce brands. Achieve financial freedom by 35. Stay healthy and present for family.',
     currentFocus: 'Scaling Tanaor Jewelry, closing Series A funding round, maintaining work-life balance.',
@@ -116,6 +129,11 @@ export default function TaskBuddyV8() {
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, []);
+
+  // V8.3: Auto-scroll chat to bottom on new messages
+  useEffect(() => { if (chatEndRef.current) chatEndRef.current.scrollIntoView({ behavior: 'smooth' }); }, [msgs]);
+  // V8.3: Undo toast auto-dismiss
+  useEffect(() => { if (undoTask) { const t = setTimeout(() => setUndoTask(null), 5000); return () => clearTimeout(t); } }, [undoTask]);
 
   // ─── THEME ────────────────────────────────────────────────
   const themes = {
@@ -170,7 +188,8 @@ export default function TaskBuddyV8() {
   const playCompletionSound = () => { try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination); osc.frequency.setValueAtTime(800, ctx.currentTime); osc.frequency.setValueAtTime(1200, ctx.currentTime + 0.1); gain.gain.setValueAtTime(0.3, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3); osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.3); } catch(e) {} };
 
   // ─── ACTIONS ──────────────────────────────────────────────
-  const complete = (id) => { playCompletionSound(); setCelebrating(id); setCelPhase('confetti'); setTimeout(() => setCelPhase('slideout'), 600); setTimeout(() => { setTasks((p) => p.map((t) => (t.id === id ? { ...t, done: true, status: 'done' } : t))); setCelebrating(null); setCelPhase(null); }, 1400); };
+  const complete = (id) => { playCompletionSound(); setCelebrating(id); setCelPhase('confetti'); setTimeout(() => setCelPhase('slideout'), 600); setTimeout(() => { setTasks((p) => p.map((t) => (t.id === id ? { ...t, done: true, status: 'done' } : t))); setCelebrating(null); setCelPhase(null); setUndoTask(id); }, 1400); };
+  const undoComplete = (id) => { setTasks((p) => p.map((t) => (t.id === id ? { ...t, done: false, status: 'todo' } : t))); setUndoTask(null); };
 
   // ─── AI TASK INSIGHT ──────────────────────────────────────
   const getTaskInsight = (t) => {
@@ -251,6 +270,101 @@ export default function TaskBuddyV8() {
   const toggleSubtask = (taskId, subId) => { setTasks((p) => p.map((t) => t.id === taskId ? { ...t, subtasks: t.subtasks.map((s) => s.id === subId ? { ...s, done: !s.done } : s) } : t)); };
   const addSubtask = (taskId) => { if (!subInput.trim()) return; setTasks((p) => p.map((t) => t.id === taskId ? { ...t, subtasks: [...t.subtasks, { id: Date.now(), title: subInput.trim(), done: false }] } : t)); setSubInput(''); };
 
+  // ─── V8.3: BRAIN DUMP PARSER ─────────────────────────────
+  const parseBrainDump = (text) => {
+    if (!text.trim()) return [];
+    // Split by sentence endings, newlines, or semicolons
+    const sentences = text.split(/(?<=[.!?;])\s+|\n+/).map(s => s.trim()).filter(s => s.length > 5);
+    const parsed = sentences.map((sentence, i) => {
+      const lower = sentence.toLowerCase();
+      // Extract title: clean up, cap at reasonable length
+      let title = sentence.replace(/^(i need to|i have to|i should|i want to|i must|need to|have to|should|gotta|gonna|also|and|then|plus|oh and)\s+/i, '');
+      title = title.charAt(0).toUpperCase() + title.slice(1);
+      if (title.length > 80) title = title.slice(0, 77) + '...';
+      // Remove trailing period
+      title = title.replace(/[.!;]+$/, '').trim();
+      // Detect urgency
+      let urgency = 5;
+      if (/urgent|asap|today|right now|immediately|critical|deadline|overdue/i.test(lower)) urgency = 9;
+      else if (/soon|this week|important|priority|before friday|before monday/i.test(lower)) urgency = 7;
+      else if (/sometime|eventually|when i can|no rush|low priority/i.test(lower)) urgency = 3;
+      // Detect effort/time
+      let time = 30, effort = 5;
+      if (/quick|fast|5 min|10 min|simple|easy|just|small/i.test(lower)) { time = 15; effort = 2; }
+      else if (/research|build|create|develop|design|write.*report|prepare.*presentation/i.test(lower)) { time = 90; effort = 7; }
+      else if (/call|email|send|text|message|reply|respond|schedule/i.test(lower)) { time = 15; effort = 2; }
+      else if (/review|check|look at|read|go through/i.test(lower)) { time = 30; effort = 4; }
+      // Time override from explicit mentions
+      const minMatch = lower.match(/(\d+)\s*min/); if (minMatch) time = parseInt(minMatch[1]);
+      const hrMatch = lower.match(/(\d+)\s*h(?:our|r)/); if (hrMatch) time = parseInt(hrMatch[1]) * 60;
+      // Detect category
+      let cat = 'Work';
+      if (/investor|revenue|sales|marketing|ad|campaign|supplier|inventory|brand|shop|store|product|customer|order|shipment/i.test(lower)) cat = 'Business';
+      else if (/workout|gym|health|exercise|sleep|diet|run|walk|meditate|doctor|dentist/i.test(lower)) cat = 'Health';
+      else if (/family|friend|personal|hobby|read|book|trip|vacation|birthday|gift|netflix/i.test(lower)) cat = 'Personal';
+      // Detect impact
+      let impact = 5;
+      if (/investor|revenue|pitch|funding|critical|key|major|huge|game.?changer/i.test(lower)) impact = 9;
+      else if (/important|significant|strategic|growth/i.test(lower)) impact = 7;
+      else if (/small|minor|trivial|nice.?to.?have/i.test(lower)) impact = 3;
+      // Calculate score
+      const s = Math.min(100, Math.round(((impact * 4 + urgency * 3 + (10 - effort) * 1.5) / 8.5) * 10));
+      return { id: Date.now() + i, title, cat, impact, urgency, effort, time, age: 0, done: false, status: 'todo', notes: sentence !== title ? sentence : '', link: '', aiReason: 'Added via Brain Dump \u2014 AI will refine on next review.', dueDate: null, deadlineType: null, confidence: 7, subtasks: [], _score: s };
+    });
+    return parsed.sort((a, b) => b._score - a._score);
+  };
+  const addParsedTasks = () => {
+    const toAdd = parsedTasks.filter((_, i) => selectedParsed.has(i));
+    setTasks((prev) => [...prev, ...toAdd.map(t => { const { _score, ...task } = t; return task; })]);
+    setParsedTasks([]); setSelectedParsed(new Set()); setReviewingDump(false); setDumpText(''); setShowAddModal(false); setAddMode('brainDump');
+  };
+
+  // ─── V8.3: WEB SPEECH API ──────────────────────────────
+  const startSpeech = (target) => {
+    const SpeechRecognition = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition);
+    if (!SpeechRecognition) { alert('Speech recognition not supported in this browser. Try Chrome.'); return; }
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+    recognition.onresult = (event) => {
+      let final = '', interim = '';
+      for (let i = 0; i < event.results.length; i++) {
+        if (event.results[i].isFinal) final += event.results[i][0].transcript + ' ';
+        else interim += event.results[i][0].transcript;
+      }
+      if (target === 'chat') setAiInput(final + interim);
+      else setDumpText((prev) => { const base = prev.replace(/\[listening\.\.\.\]$/,'').trim(); return (base ? base + ' ' : '') + final + (interim ? interim : ''); });
+    };
+    recognition.onerror = () => { setRecording(false); };
+    recognition.onend = () => {
+      if (target === 'chat') { setRecording(false); }
+    };
+    recognition.start();
+    if (target === 'chat') speechRef.current = recognition;
+    else dumpSpeechRef.current = recognition;
+    setRecording(true);
+  };
+  const stopSpeech = (target) => {
+    if (target === 'chat' && speechRef.current) { speechRef.current.stop(); speechRef.current = null; }
+    else if (dumpSpeechRef.current) { dumpSpeechRef.current.stop(); dumpSpeechRef.current = null; }
+    setRecording(false);
+  };
+
+  // ─── V8.3: EDIT TASK ──────────────────────────────────────
+  const startEditTask = (t) => {
+    setEditingTask(t.id);
+    setNewTask({ title: t.title, description: t.notes || '', cat: t.cat, time: t.time, urgency: t.urgency, impact: t.impact, confidence: t.confidence || 7, ease: 10 - t.effort, blocking: Math.min(10, Math.round(t.impact * 0.6 + t.urgency * 0.4)), delegatable: t.effort <= 3, dueDate: t.dueDate || '', deadlineType: t.deadlineType || 'soft' });
+    setAddMode('manual');
+    setShowAddModal(true);
+  };
+  const saveEditTask = () => {
+    if (!newTask.title.trim() || !editingTask) return;
+    setTasks((prev) => prev.map((t) => t.id === editingTask ? { ...t, title: newTask.title.trim(), notes: newTask.description, cat: newTask.cat, time: newTask.time, urgency: newTask.urgency, impact: newTask.impact, effort: 10 - newTask.ease, confidence: newTask.confidence, dueDate: newTask.dueDate || null, deadlineType: newTask.dueDate ? newTask.deadlineType : null } : t));
+    setShowAddModal(false); setEditingTask(null);
+    setNewTask({ title: '', description: '', cat: 'Business', time: 30, urgency: 5, impact: 5, confidence: 7, ease: 5, blocking: 5, delegatable: false, dueDate: '', deadlineType: 'soft' });
+  };
+
   // ─── AI REVIEW ENGINE ─────────────────────────────────────
   const runAiReview = () => {
     setAiReview('loading'); setReviewTab('priority'); setLoadingMsg('Reading your goals...');
@@ -324,7 +438,7 @@ export default function TaskBuddyV8() {
     setPage('today');
   };
 
-  // ─── AI CHAT (with task reordering) ──────────────────────
+  // ─── AI CHAT (V8.3: with REAL task reordering) ──────────
   const detectIntent = (text) => {
     const t = text.toLowerCase();
     if (/low energy|tired|exhausted|burned out|lazy|sleepy|no energy|drained/i.test(t)) return 'lowEnergy';
@@ -334,25 +448,62 @@ export default function TaskBuddyV8() {
     if (/impactful|most important|highest priority|what matters|biggest impact|reprioritize|re-prioritize/i.test(t)) return 'impact';
     return null;
   };
+  // V8.3: Actually reorder tasks by intent (not just filter)
+  const reorderByIntent = (intent) => {
+    setTasks((prev) => {
+      const doneT = prev.filter((t) => t.done);
+      const activeT = prev.filter((t) => !t.done);
+      let sorted;
+      if (intent === 'lowEnergy') {
+        const match = activeT.filter((t) => t.effort <= 5).sort((a, b) => a.effort - b.effort);
+        const rest = activeT.filter((t) => t.effort > 5).sort((a, b) => score(b) - score(a));
+        sorted = [...match, ...rest];
+      } else if (intent === 'quickWins') {
+        const match = activeT.filter((t) => t.effort <= 3 && t.time <= 20).sort((a, b) => a.time - b.time);
+        const rest = activeT.filter((t) => !(t.effort <= 3 && t.time <= 20)).sort((a, b) => score(b) - score(a));
+        sorted = [...match, ...rest];
+      } else if (intent === 'deepFocus') {
+        const match = activeT.filter((t) => t.impact >= 7).sort((a, b) => b.impact - a.impact);
+        const rest = activeT.filter((t) => t.impact < 7).sort((a, b) => score(b) - score(a));
+        sorted = [...match, ...rest];
+      } else if (intent === '30min') {
+        const match = activeT.filter((t) => t.time <= 30).sort((a, b) => score(b) - score(a));
+        const rest = activeT.filter((t) => t.time > 30).sort((a, b) => score(b) - score(a));
+        sorted = [...match, ...rest];
+      } else {
+        sorted = activeT.sort((a, b) => score(b) - score(a));
+      }
+      return [...sorted, ...doneT];
+    });
+  };
+  const resetTaskOrder = () => {
+    setActiveCtx(null);
+    setTasks((prev) => {
+      const doneT = prev.filter((t) => t.done);
+      const activeT = prev.filter((t) => !t.done).sort((a, b) => score(b) - score(a));
+      return [...activeT, ...doneT];
+    });
+  };
   const generateAiResponse = (text, intent) => {
     const activeTasks = getActive();
     const top3 = activeTasks.slice(0, 3);
+    const totalActive = tasks.filter(t => !t.done).length;
     if (intent === 'lowEnergy') {
       const easy = activeTasks.filter(t => t.effort <= 5).sort((a, b) => a.effort - b.effort).slice(0, 3);
-      return '**Low energy mode activated** \u2014 I\'ve reordered your tasks to show easier wins first.\n\nHere\'s your adjusted lineup:\n' + easy.map((t, i) => (i + 1) + '. **' + t.title + '** (' + fmt(t.time) + ', effort: ' + t.effort + '/10)').join('\n') + '\n\nStart with the easiest one to build momentum. You\'ve got this!';
+      return '**Low energy mode activated** \u2014 I\'ve reordered your ' + totalActive + ' tasks to show easier wins first.\n\nHere\'s your adjusted lineup:\n' + easy.map((t, i) => (i + 1) + '. **' + t.title + '** (' + fmt(t.time) + ', effort: ' + t.effort + '/10)').join('\n') + '\n\nStart with the easiest one to build momentum. You\'ve got this!';
     }
     if (intent === 'quickWins') {
       const qw = activeTasks.filter(t => t.effort <= 3 && t.time <= 20).slice(0, 3);
       if (qw.length === 0) return 'No super-quick tasks available right now, but I\'ve sorted by easiest first. Look for tasks under 30 minutes.';
-      return '**Quick wins mode** \u2014 showing your fastest tasks first.\n\n' + qw.map((t, i) => (i + 1) + '. **' + t.title + '** (' + fmt(t.time) + ')').join('\n') + '\n\nKnock these out and build momentum!';
+      return '**Quick wins mode** \u2014 I\'ve moved your ' + qw.length + ' quickest tasks to the top.\n\n' + qw.map((t, i) => (i + 1) + '. **' + t.title + '** (' + fmt(t.time) + ')').join('\n') + '\n\nKnock these out and build momentum!';
     }
     if (intent === 'deepFocus') {
       const deep = activeTasks.filter(t => t.impact >= 7).slice(0, 3);
-      return '**Deep focus mode** \u2014 I\'ve prioritized your highest-impact work.\n\nYour deep work lineup:\n' + deep.map((t, i) => (i + 1) + '. **' + t.title + '** (impact: ' + t.impact + '/10, ' + fmt(t.time) + ')').join('\n') + '\n\nClose Slack, silence notifications, and go deep.';
+      return '**Deep focus mode** \u2014 I\'ve reordered to put your highest-impact work first.\n\nYour deep work lineup:\n' + deep.map((t, i) => (i + 1) + '. **' + t.title + '** (impact: ' + t.impact + '/10, ' + fmt(t.time) + ')').join('\n') + '\n\nClose Slack, silence notifications, and go deep.';
     }
     if (intent === '30min') {
       const short = activeTasks.filter(t => t.time <= 30).slice(0, 3);
-      return '**30-minute window** \u2014 showing tasks you can complete right now.\n\n' + short.map((t, i) => (i + 1) + '. **' + t.title + '** (' + fmt(t.time) + ', score: ' + score(t) + ')').join('\n') + '\n\nPick one and execute!';
+      return '**30-minute window** \u2014 I\'ve moved ' + short.length + ' short tasks to the top.\n\n' + short.map((t, i) => (i + 1) + '. **' + t.title + '** (' + fmt(t.time) + ', score: ' + score(t) + ')').join('\n') + '\n\nPick one and execute!';
     }
     if (intent === 'impact') {
       return '**Reprioritized by impact** \u2014 here\'s what moves the needle most:\n\n' + top3.map((t, i) => (i + 1) + '. **' + t.title + '** (score: ' + score(t) + '/100, ' + fmt(t.time) + ')').join('\n') + '\n\nFocus on #1 first \u2014 it has the highest combined priority score.';
@@ -363,12 +514,14 @@ export default function TaskBuddyV8() {
     if (!text.trim()) return;
     setMsgs((p) => [...p, { role: 'user', text }]);
     setAiInput('');
-    // Detect intent and reorder tasks
+    setAiThinking(true);
+    // V8.3: Detect intent and PERMANENTLY reorder tasks
     const intent = detectIntent(text);
     if (intent && intent !== 'impact') {
       setActiveCtx(intent);
+      reorderByIntent(intent);
     } else if (intent === 'impact') {
-      setActiveCtx(null); // Reset to default priority order
+      resetTaskOrder();
     }
     // Try API first, fall back to local AI
     try {
@@ -381,10 +534,10 @@ export default function TaskBuddyV8() {
       if (data.error) throw new Error(data.error);
       setMsgs((p) => [...p, { role: 'ai', text: data.response }]);
     } catch (err) {
-      // Smart local fallback with task awareness
       const response = generateAiResponse(text, intent);
       setMsgs((p) => [...p, { role: 'ai', text: response }]);
     }
+    setAiThinking(false);
   };
 
   // ─── DRAG ─────────────────────────────────────────────────
@@ -444,7 +597,10 @@ export default function TaskBuddyV8() {
         ))}
       </div>
       <button onClick={(e) => { e.stopPropagation(); sendTaskInsight(t); }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1px solid ' + c.acc + '40', background: c.acc + '10', color: c.acc, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginBottom: 10, width: '100%', justifyContent: 'center' }}><Sparkles size={14} /> Get AI tips & breakdown</button>
-      <button onClick={(e) => { e.stopPropagation(); deleteTask(t.id); }} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', color: c.danger, fontSize: 12, cursor: 'pointer', padding: '4px 0' }}><Trash2 size={13} /> Delete task</button>
+      <div style={{ display: 'flex', gap: 12 }}>
+        <button onClick={(e) => { e.stopPropagation(); startEditTask(t); }} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', color: c.acc, fontSize: 12, cursor: 'pointer', padding: '4px 0' }}><Sliders size={13} /> Edit task</button>
+        <button onClick={(e) => { e.stopPropagation(); deleteTask(t.id); }} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', color: c.danger, fontSize: 12, cursor: 'pointer', padding: '4px 0' }}><Trash2 size={13} /> Delete task</button>
+      </div>
     </div>
   );
 
@@ -579,7 +735,7 @@ export default function TaskBuddyV8() {
     );
   };
 
-  // ─── ADD TASK MODAL (V8: Lovable-inspired) ────────────────
+  // ─── ADD TASK MODAL (V8.3: Brain Dump default + Manual tab) ──
   const renderAddModal = () => {
     if (!showAddModal) return null;
     const sliderStyle = (val) => ({
@@ -587,79 +743,135 @@ export default function TaskBuddyV8() {
       background: `linear-gradient(to right, ${c.acc} ${val * 10}%, ${c.bdr} ${val * 10}%)`,
       outline: 'none', cursor: 'pointer',
     });
+    const closeModal = () => { setShowAddModal(false); setEditingTask(null); setReviewingDump(false); setParsedTasks([]); setDumpText(''); setAddMode('brainDump'); setNewTask({ title: '', description: '', cat: 'Business', time: 30, urgency: 5, impact: 5, confidence: 7, ease: 5, blocking: 5, delegatable: false, dueDate: '', deadlineType: 'soft' }); };
     return (
-      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={() => setShowAddModal(false)}>
-        <div onClick={(e) => e.stopPropagation()} style={{ background: c.card, borderRadius: 16, width: '100%', maxWidth: 480, maxHeight: '85vh', overflowY: 'auto', padding: 24, border: '1px solid ' + c.bdr, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: c.txt, margin: 0 }}>Add New Task</h2>
-            <button onClick={() => setShowAddModal(false)} style={{ background: 'transparent', border: 'none', color: c.sub, cursor: 'pointer' }}><X size={18} /></button>
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={closeModal}>
+        <div onClick={(e) => e.stopPropagation()} style={{ background: c.card, borderRadius: 16, width: '100%', maxWidth: 520, maxHeight: '88vh', overflowY: 'auto', padding: 24, border: '1px solid ' + c.bdr, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+          {/* Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: c.txt, margin: 0 }}>{editingTask ? 'Edit Task' : 'Add Tasks'}</h2>
+            <button onClick={closeModal} style={{ background: 'transparent', border: 'none', color: c.sub, cursor: 'pointer' }}><X size={18} /></button>
           </div>
 
-          {/* Title */}
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: c.txt, marginBottom: 4, display: 'block' }}>Title</label>
-            <input value={newTask.title} onChange={(e) => setNewTask(p => ({ ...p, title: e.target.value }))} placeholder="What needs to be done?" style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid ' + c.bdr, background: c.bg, color: c.txt, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
-          </div>
-
-          {/* Description */}
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: c.txt, marginBottom: 4, display: 'block' }}>Description</label>
-            <textarea value={newTask.description} onChange={(e) => setNewTask(p => ({ ...p, description: e.target.value }))} placeholder="Add details, notes, or context..." rows={3} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid ' + c.bdr, background: c.bg, color: c.txt, fontSize: 13, outline: 'none', resize: 'vertical', lineHeight: 1.5, fontFamily: 'inherit', boxSizing: 'border-box' }} />
-          </div>
-
-          {/* AI Auto-Score */}
-          <button onClick={aiAutoScore} disabled={!newTask.title.trim()} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 10, border: '1px solid ' + c.acc + '40', background: c.acc + '10', color: c.acc, fontSize: 13, fontWeight: 600, cursor: newTask.title.trim() ? 'pointer' : 'default', marginBottom: 20, width: '100%', justifyContent: 'center', opacity: newTask.title.trim() ? 1 : 0.5 }}><Sparkles size={16} /> AI Auto-Score</button>
-
-          {/* Category + Time row */}
-          <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
-            <div style={{ flex: 1 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: c.txt, marginBottom: 4, display: 'block' }}>Category</label>
-              <select value={newTask.cat} onChange={(e) => setNewTask(p => ({ ...p, cat: e.target.value }))} style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid ' + c.bdr, background: c.bg, color: c.txt, fontSize: 13, outline: 'none' }}>
-                {['Business', 'Work', 'Health', 'Personal'].map(cat => <option key={cat} value={cat}>{cat}</option>)}
-              </select>
+          {/* Tab switcher (only when not editing) */}
+          {!editingTask && (
+            <div style={{ display: 'flex', gap: 2, marginBottom: 20, background: c.bg, borderRadius: 10, padding: 3, border: '1px solid ' + c.bdr }}>
+              <button onClick={() => setAddMode('brainDump')} style={{ flex: 1, padding: '8px 0', borderRadius: 8, border: 'none', background: addMode === 'brainDump' ? c.card : 'transparent', color: addMode === 'brainDump' ? c.acc : c.sub, fontSize: 12, fontWeight: addMode === 'brainDump' ? 600 : 400, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, boxShadow: addMode === 'brainDump' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none' }}><Brain size={13} /> AI Brain Dump</button>
+              <button onClick={() => setAddMode('manual')} style={{ flex: 1, padding: '8px 0', borderRadius: 8, border: 'none', background: addMode === 'manual' ? c.card : 'transparent', color: addMode === 'manual' ? c.txt : c.sub, fontSize: 12, fontWeight: addMode === 'manual' ? 600 : 400, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, boxShadow: addMode === 'manual' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none' }}><Plus size={13} /> Manual</button>
             </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: c.txt, marginBottom: 4, display: 'block' }}>Est. Time (min)</label>
-              <input type="number" value={newTask.time} onChange={(e) => setNewTask(p => ({ ...p, time: parseInt(e.target.value) || 0 }))} style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid ' + c.bdr, background: c.bg, color: c.txt, fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
-            </div>
-          </div>
+          )}
 
-          {/* Scoring sliders */}
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: c.txt, marginBottom: 10, display: 'block' }}>Scoring Dimensions</label>
-            {[
-              { key: 'urgency', label: 'Urgency' },
-              { key: 'impact', label: 'Impact' },
-              { key: 'confidence', label: 'Confidence' },
-              { key: 'ease', label: 'Ease' },
-              { key: 'blocking', label: 'Blocking Potential' },
-            ].map(dim => (
-              <div key={dim.key} style={{ marginBottom: 12 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <span style={{ fontSize: 11, color: c.sub }}>{dim.label}</span>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: c.acc }}>{newTask[dim.key]}</span>
-                </div>
-                <input type="range" min="1" max="10" value={newTask[dim.key]} onChange={(e) => setNewTask(p => ({ ...p, [dim.key]: parseInt(e.target.value) }))} style={sliderStyle(newTask[dim.key])} />
+          {/* ── BRAIN DUMP TAB ── */}
+          {addMode === 'brainDump' && !editingTask && !reviewingDump && (
+            <div>
+              <div style={{ fontSize: 12, color: c.sub, marginBottom: 12, lineHeight: 1.6 }}>Dump everything on your mind \u2014 tasks, ideas, things you need to do. Speak freely or type it all out. AI will parse it into structured, ranked tasks.</div>
+              <textarea value={dumpText} onChange={(e) => setDumpText(e.target.value)} placeholder={"I need to call the supplier about Q2 inventory, it's urgent. Also review the Q1 numbers before Friday meeting. Should schedule the investor call sometime this week. Oh and I should probably work out tomorrow morning..."} rows={8} style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid ' + c.bdr, background: c.bg, color: c.txt, fontSize: 13, outline: 'none', resize: 'vertical', lineHeight: 1.7, fontFamily: 'inherit', boxSizing: 'border-box', minHeight: 160 }} />
+              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                <button onClick={() => { if (recording) stopSpeech('dump'); else startSpeech('dump'); }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 10, border: '1px solid ' + (recording ? c.danger : c.bdr), background: recording ? c.danger + '15' : c.card, color: recording ? c.danger : c.sub, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}><Mic size={14} /> {recording ? 'Stop Recording' : 'Voice Input'}</button>
+                <div style={{ flex: 1 }} />
+                <button onClick={() => { setDumpProcessing(true); setTimeout(() => { const parsed = parseBrainDump(dumpText); setParsedTasks(parsed); setSelectedParsed(new Set(parsed.map((_, i) => i))); setReviewingDump(true); setDumpProcessing(false); }, 800); }} disabled={dumpText.trim().length < 10 || dumpProcessing} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 10, border: 'none', background: dumpText.trim().length >= 10 ? c.acc : c.bdr, color: '#fff', fontSize: 13, fontWeight: 600, cursor: dumpText.trim().length >= 10 ? 'pointer' : 'default' }}><Sparkles size={14} /> {dumpProcessing ? 'Processing...' : 'Process with AI'}</button>
               </div>
-            ))}
-          </div>
-
-          {/* Due date + Delegatable row */}
-          <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
-            <div style={{ flex: 1 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: c.txt, marginBottom: 4, display: 'block' }}>Due Date (optional)</label>
-              <input type="date" value={newTask.dueDate} onChange={(e) => setNewTask(p => ({ ...p, dueDate: e.target.value }))} style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid ' + c.bdr, background: c.bg, color: c.txt, fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+              {recording && <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10 }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: c.danger, animation: 'blink 1s infinite' }} /><span style={{ fontSize: 12, color: c.danger }}>Listening... speak freely</span></div>}
             </div>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-              <button onClick={() => setNewTask(p => ({ ...p, delegatable: !p.delegatable }))} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 8, border: '1px solid ' + (newTask.delegatable ? c.acc : c.bdr), background: newTask.delegatable ? c.acc + '15' : 'transparent', color: newTask.delegatable ? c.acc : c.sub, fontSize: 12, cursor: 'pointer' }}>
-                <div style={{ width: 16, height: 16, borderRadius: 4, border: '2px solid ' + (newTask.delegatable ? c.acc : c.bdr), background: newTask.delegatable ? c.acc : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{newTask.delegatable && <Check size={10} color="#fff" />}</div>
-                Can be delegated?
-              </button>
-            </div>
-          </div>
+          )}
 
-          {/* Submit */}
-          <button onClick={addTaskFromModal} disabled={!newTask.title.trim()} style={{ width: '100%', padding: '12px 0', borderRadius: 10, border: 'none', background: newTask.title.trim() ? c.acc : c.bdr, color: '#fff', fontSize: 14, fontWeight: 600, cursor: newTask.title.trim() ? 'pointer' : 'default' }}>Add Task</button>
+          {/* ── BRAIN DUMP REVIEW ── */}
+          {addMode === 'brainDump' && !editingTask && reviewingDump && (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: c.txt }}>Parsed {parsedTasks.length} tasks</div>
+                <button onClick={() => { setReviewingDump(false); setParsedTasks([]); }} style={{ fontSize: 11, color: c.sub, background: 'transparent', border: 'none', cursor: 'pointer' }}>Back to edit</button>
+              </div>
+              <div style={{ fontSize: 11, color: c.sub, marginBottom: 12 }}>Review, edit, and select tasks to add. Click a title to edit it.</div>
+              <div style={{ maxHeight: 340, overflowY: 'auto' }}>
+                {parsedTasks.map((pt, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 8, padding: '10px 12px', borderRadius: 8, border: '1px solid ' + (selectedParsed.has(i) ? c.acc + '60' : c.bdr), background: selectedParsed.has(i) ? c.acc + '08' : c.card, marginBottom: 6, alignItems: 'flex-start' }}>
+                    <button onClick={() => setSelectedParsed(prev => { const n = new Set(prev); if (n.has(i)) n.delete(i); else n.add(i); return n; })} style={{ width: 20, height: 20, borderRadius: 4, border: '2px solid ' + (selectedParsed.has(i) ? c.acc : c.bdr), background: selectedParsed.has(i) ? c.acc : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, marginTop: 2 }}>{selectedParsed.has(i) && <Check size={11} color="#fff" />}</button>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <input value={pt.title} onChange={(e) => setParsedTasks(prev => prev.map((p, j) => j === i ? { ...p, title: e.target.value } : p))} style={{ width: '100%', background: 'transparent', border: 'none', color: c.txt, fontSize: 13, fontWeight: 500, outline: 'none', padding: 0 }} />
+                      <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+                        <span style={{ fontSize: 10, color: catColors[pt.cat], background: catColors[pt.cat] + '18', padding: '1px 6px', borderRadius: 4 }}>{pt.cat}</span>
+                        <span style={{ fontSize: 10, color: c.sub }}>{fmt(pt.time)}</span>
+                        <span style={{ fontSize: 10, color: c.sub }}>urgency: {pt.urgency}</span>
+                        <span style={{ fontSize: 10, color: c.sub }}>impact: {pt.impact}</span>
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: pt._score >= 60 ? c.ok : c.acc, flexShrink: 0 }}>{pt._score}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+                <button onClick={() => setSelectedParsed(selectedParsed.size === parsedTasks.length ? new Set() : new Set(parsedTasks.map((_, i) => i)))} style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid ' + c.bdr, background: 'transparent', color: c.sub, fontSize: 12, cursor: 'pointer' }}>{selectedParsed.size === parsedTasks.length ? 'Deselect All' : 'Select All'}</button>
+                <div style={{ flex: 1 }} />
+                <button onClick={addParsedTasks} disabled={selectedParsed.size === 0} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: selectedParsed.size > 0 ? c.acc : c.bdr, color: '#fff', fontSize: 13, fontWeight: 600, cursor: selectedParsed.size > 0 ? 'pointer' : 'default' }}>Add {selectedParsed.size} Task{selectedParsed.size !== 1 ? 's' : ''}</button>
+              </div>
+            </div>
+          )}
+
+          {/* ── MANUAL TAB (original form) ── */}
+          {(addMode === 'manual' || editingTask) && (
+            <div>
+              {/* Title */}
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: c.txt, marginBottom: 4, display: 'block' }}>Title</label>
+                <input value={newTask.title} onChange={(e) => setNewTask(p => ({ ...p, title: e.target.value }))} placeholder="What needs to be done?" style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid ' + c.bdr, background: c.bg, color: c.txt, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+              </div>
+              {/* Description */}
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: c.txt, marginBottom: 4, display: 'block' }}>Description</label>
+                <textarea value={newTask.description} onChange={(e) => setNewTask(p => ({ ...p, description: e.target.value }))} placeholder="Add details, notes, or context..." rows={3} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid ' + c.bdr, background: c.bg, color: c.txt, fontSize: 13, outline: 'none', resize: 'vertical', lineHeight: 1.5, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+              </div>
+              {/* AI Auto-Score */}
+              {!editingTask && <button onClick={aiAutoScore} disabled={!newTask.title.trim()} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 10, border: '1px solid ' + c.acc + '40', background: c.acc + '10', color: c.acc, fontSize: 13, fontWeight: 600, cursor: newTask.title.trim() ? 'pointer' : 'default', marginBottom: 20, width: '100%', justifyContent: 'center', opacity: newTask.title.trim() ? 1 : 0.5 }}><Sparkles size={16} /> AI Auto-Score</button>}
+              {/* Category + Time row */}
+              <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: c.txt, marginBottom: 4, display: 'block' }}>Category</label>
+                  <select value={newTask.cat} onChange={(e) => setNewTask(p => ({ ...p, cat: e.target.value }))} style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid ' + c.bdr, background: c.bg, color: c.txt, fontSize: 13, outline: 'none' }}>
+                    {['Business', 'Work', 'Health', 'Personal'].map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                  </select>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: c.txt, marginBottom: 4, display: 'block' }}>Est. Time (min)</label>
+                  <input type="number" value={newTask.time} onChange={(e) => setNewTask(p => ({ ...p, time: parseInt(e.target.value) || 0 }))} style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid ' + c.bdr, background: c.bg, color: c.txt, fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+                </div>
+              </div>
+              {/* Scoring sliders */}
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: c.txt, marginBottom: 10, display: 'block' }}>Scoring Dimensions</label>
+                {[
+                  { key: 'urgency', label: 'Urgency' },
+                  { key: 'impact', label: 'Impact' },
+                  { key: 'confidence', label: 'Confidence' },
+                  { key: 'ease', label: 'Ease' },
+                  { key: 'blocking', label: 'Blocking Potential' },
+                ].map(dim => (
+                  <div key={dim.key} style={{ marginBottom: 12 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span style={{ fontSize: 11, color: c.sub }}>{dim.label}</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: c.acc }}>{newTask[dim.key]}</span>
+                    </div>
+                    <input type="range" min="1" max="10" value={newTask[dim.key]} onChange={(e) => setNewTask(p => ({ ...p, [dim.key]: parseInt(e.target.value) }))} style={sliderStyle(newTask[dim.key])} />
+                  </div>
+                ))}
+              </div>
+              {/* Due date + Delegatable row */}
+              <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: c.txt, marginBottom: 4, display: 'block' }}>Due Date (optional)</label>
+                  <input type="date" value={newTask.dueDate} onChange={(e) => setNewTask(p => ({ ...p, dueDate: e.target.value }))} style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid ' + c.bdr, background: c.bg, color: c.txt, fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+                </div>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                  <button onClick={() => setNewTask(p => ({ ...p, delegatable: !p.delegatable }))} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 8, border: '1px solid ' + (newTask.delegatable ? c.acc : c.bdr), background: newTask.delegatable ? c.acc + '15' : 'transparent', color: newTask.delegatable ? c.acc : c.sub, fontSize: 12, cursor: 'pointer' }}>
+                    <div style={{ width: 16, height: 16, borderRadius: 4, border: '2px solid ' + (newTask.delegatable ? c.acc : c.bdr), background: newTask.delegatable ? c.acc : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{newTask.delegatable && <Check size={10} color="#fff" />}</div>
+                    Can be delegated?
+                  </button>
+                </div>
+              </div>
+              {/* Submit */}
+              <button onClick={editingTask ? saveEditTask : addTaskFromModal} disabled={!newTask.title.trim()} style={{ width: '100%', padding: '12px 0', borderRadius: 10, border: 'none', background: newTask.title.trim() ? c.acc : c.bdr, color: '#fff', fontSize: 14, fontWeight: 600, cursor: newTask.title.trim() ? 'pointer' : 'default' }}>{editingTask ? 'Save Changes' : 'Add Task'}</button>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -676,9 +888,16 @@ export default function TaskBuddyV8() {
         <button onClick={() => setShowAddModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8, border: 'none', background: c.acc, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}><Plus size={14} /> Add Task</button>
       </div>
       {/* Context chips */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
-        {chipDefs.map((ch) => <button key={ch.key} onClick={() => setActiveCtx(activeCtx === ch.key ? null : ch.key)} style={{ padding: '5px 10px', borderRadius: 20, border: '1px solid ' + (activeCtx === ch.key ? c.acc : c.bdr), background: activeCtx === ch.key ? c.acc + '18' : 'transparent', color: activeCtx === ch.key ? c.acc : c.sub, fontSize: 11, cursor: 'pointer' }}>{ch.icon} {ch.label}</button>)}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: activeCtx ? 8 : 16 }}>
+        {chipDefs.map((ch) => <button key={ch.key} onClick={() => { if (activeCtx === ch.key) resetTaskOrder(); else { setActiveCtx(ch.key); reorderByIntent(ch.key); } }} style={{ padding: '5px 10px', borderRadius: 20, border: '1px solid ' + (activeCtx === ch.key ? c.acc : c.bdr), background: activeCtx === ch.key ? c.acc + '18' : 'transparent', color: activeCtx === ch.key ? c.acc : c.sub, fontSize: 11, cursor: 'pointer' }}>{ch.icon} {ch.label}</button>)}
       </div>
+      {/* V8.3: Active filter banner */}
+      {activeCtx && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: 8, background: c.acc + '12', border: '1px solid ' + c.acc + '30', marginBottom: 16 }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: c.acc }}>Sorted for: {activeCtx === 'lowEnergy' ? 'Low Energy' : activeCtx === 'quickWins' ? 'Quick Wins' : activeCtx === 'deepFocus' ? 'Deep Focus' : activeCtx === '30min' ? '30 Min' : activeCtx}</span>
+          <button onClick={resetTaskOrder} style={{ fontSize: 11, color: c.acc, background: 'transparent', border: '1px solid ' + c.acc + '40', borderRadius: 6, padding: '3px 10px', cursor: 'pointer' }}>Reset Order</button>
+        </div>
+      )}
       <div style={{ flex: 1, overflowY: 'auto', padding: '0 2px' }}>
         {topTask && <div style={{ background: c.doNow, border: '2px solid ' + c.acc, borderRadius: 12, padding: '12px 14px', marginBottom: 20 }}><div style={{ fontSize: 11, fontWeight: 700, color: c.acc, textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}><Zap size={14} color={c.acc} /> Do Now</div>{renderTask(topTask, { large: true })}</div>}
         {upNext.length > 0 && <div style={{ marginBottom: 20 }}>{sectionHead('Up Next', upNext.length)}{upNext.map((t) => renderTask(t, { drag: true }))}</div>}
@@ -740,13 +959,15 @@ export default function TaskBuddyV8() {
           </div>
         )}
         {msgs.map((m, i) => <div key={i} style={{ marginBottom: 10, display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start' }}><div style={{ maxWidth: '88%', padding: '10px 14px', borderRadius: 12, background: m.role === 'user' ? c.acc : c.card, color: m.role === 'user' ? '#fff' : c.txt, fontSize: 12, lineHeight: 1.6, border: m.role === 'ai' ? '1px solid ' + c.bdr : 'none' }}>{m.role === 'ai' ? renderMd(m.text) : m.text}</div></div>)}
+        {aiThinking && <div style={{ marginBottom: 10, display: 'flex', justifyContent: 'flex-start' }}><div style={{ padding: '10px 18px', borderRadius: 12, background: c.card, border: '1px solid ' + c.bdr }}><span style={{ fontSize: 14, animation: 'pulse 1s infinite' }}>{String.fromCodePoint(0x1F914)} Thinking...</span></div></div>}
+        <div ref={chatEndRef} />
       </div>
       {recording && <div style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: 8 }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#F85149', animation: 'blink 1s infinite' }} /><span style={{ fontSize: 12, color: c.danger }}>Recording... tap mic to stop</span></div>}
       <div style={{ borderTop: '1px solid ' + c.bdr, paddingTop: 12 }}>
         <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
           <textarea value={aiInput} onChange={(e) => { setAiInput(e.target.value); e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px'; }} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(aiInput); } }} placeholder="Tell me your state..." rows={2} style={{ flex: 1, background: c.bg, border: '1px solid ' + c.bdr, borderRadius: 10, padding: '10px 14px', color: c.txt, fontSize: 13, outline: 'none', lineHeight: 1.5, minHeight: 44, maxHeight: 100, fontFamily: 'inherit', resize: 'none' }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <button onClick={() => setRecording(!recording)} style={{ width: 34, height: 34, borderRadius: '50%', border: recording ? 'none' : '1px solid ' + c.bdr, background: recording ? c.danger : c.card, color: recording ? '#fff' : c.sub, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, animation: recording ? 'micPulse 1.5s infinite' : 'none' }}><Mic size={14} /></button>
+            <button onClick={() => { if (recording) stopSpeech('chat'); else startSpeech('chat'); }} style={{ width: 34, height: 34, borderRadius: '50%', border: recording ? 'none' : '1px solid ' + c.bdr, background: recording ? c.danger : c.card, color: recording ? '#fff' : c.sub, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, animation: recording ? 'micPulse 1.5s infinite' : 'none' }}><Mic size={14} /></button>
             <button onClick={() => sendMsg(aiInput)} disabled={!aiInput.trim()} style={{ width: 34, height: 34, borderRadius: '50%', border: 'none', background: aiInput.trim() ? c.acc : c.bdr, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: aiInput.trim() ? 'pointer' : 'default', flexShrink: 0 }}><Send size={14} /></button>
           </div>
         </div>
@@ -1055,6 +1276,15 @@ export default function TaskBuddyV8() {
 
       {/* ── Add Task Modal ── */}
       {renderAddModal()}
+
+      {/* V8.3: Undo completion toast */}
+      {undoTask && (
+        <div style={{ position: 'fixed', bottom: mobile ? 70 : 24, left: '50%', transform: 'translateX(-50%)', background: c.card, border: '1px solid ' + c.bdr, borderRadius: 12, padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.15)', zIndex: 90, animation: 'fadeSlide 0.3s ease' }}>
+          <Check size={14} color={c.ok} />
+          <span style={{ fontSize: 13, color: c.txt }}>Task completed</span>
+          <button onClick={() => undoComplete(undoTask)} style={{ fontSize: 12, fontWeight: 600, color: c.acc, background: 'transparent', border: '1px solid ' + c.acc, borderRadius: 6, padding: '4px 12px', cursor: 'pointer' }}>Undo</button>
+        </div>
+      )}
 
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
