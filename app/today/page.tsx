@@ -2,46 +2,46 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Check, Sparkles, ChevronDown, ChevronRight, ChevronLeft, Mic, Send, Sun, Moon, LayoutDashboard, ListTodo, Archive, Settings, Search, X, GripVertical, Clock, User, Target, Plus, ExternalLink, Trash2, BarChart3, AlertTriangle, Calendar, Circle, Zap, Brain } from 'lucide-react';
+import { Check, Sparkles, ChevronDown, ChevronRight, ChevronLeft, Mic, Send, Sun, Moon, LayoutDashboard, ListTodo, Archive, Settings, Search, X, GripVertical, Clock, User, Target, Plus, ExternalLink, Trash2, BarChart3, AlertTriangle, Calendar, Circle, Zap, Brain, Sliders, Tag } from 'lucide-react';
 
 // ─── TASK DATA ────────────────────────────────────────────────
 const tasks0 = [
-  { id: 1, title: 'Research True Classic competitor ads', cat: 'Business', impact: 9, urgency: 8, effort: 5, time: 60, age: 4, done: false,
+  { id: 1, title: 'Research True Classic competitor ads', cat: 'Business', impact: 9, urgency: 8, effort: 5, time: 60, age: 4, done: false, status: 'todo',
     notes: 'Look at their Facebook and YouTube ad creatives. Focus on hooks, offers, and CTAs.', link: 'https://www.facebook.com/ads/library', aiReason: 'High-impact competitive intel that directly affects your ad spend ROI.',
-    dueDate: '2026-02-23', deadlineType: 'soft', subtasks: [{ id: 101, title: 'Pull Facebook ad library data', done: false }, { id: 102, title: 'Analyze top 5 video hooks', done: false }, { id: 103, title: 'Draft findings doc', done: false }] },
-  { id: 2, title: 'Review Q1 revenue projections', cat: 'Business', impact: 8, urgency: 7, effort: 6, time: 90, age: 2, done: false,
+    dueDate: '2026-02-23', deadlineType: 'soft', confidence: 8, subtasks: [{ id: 101, title: 'Pull Facebook ad library data', done: false }, { id: 102, title: 'Analyze top 5 video hooks', done: false }, { id: 103, title: 'Draft findings doc', done: false }] },
+  { id: 2, title: 'Review Q1 revenue projections', cat: 'Business', impact: 8, urgency: 7, effort: 6, time: 90, age: 2, done: false, status: 'todo',
     notes: 'Compare actuals vs forecast for Jan-Feb. Identify gaps before board meeting.', link: '', aiReason: 'Aligns with your goal of data-driven decisions. Board meeting is approaching.',
-    dueDate: '2026-02-25', deadlineType: 'soft', subtasks: [] },
-  { id: 3, title: 'Pay team salaries', cat: 'Business', impact: 6, urgency: 10, effort: 2, time: 15, age: 0, done: false,
+    dueDate: '2026-02-25', deadlineType: 'soft', confidence: 7, subtasks: [] },
+  { id: 3, title: 'Pay team salaries', cat: 'Business', impact: 6, urgency: 10, effort: 2, time: 15, age: 0, done: false, status: 'todo',
     notes: 'Process through Gusto. Verify hours for part-time team members.', link: 'https://app.gusto.com', aiReason: 'Hard deadline — team depends on this. Quick to execute.',
-    dueDate: '2026-02-22', deadlineType: 'hard', subtasks: [] },
-  { id: 4, title: 'Prepare investor pitch deck', cat: 'Work', impact: 10, urgency: 6, effort: 8, time: 180, age: 7, done: false,
+    dueDate: '2026-02-22', deadlineType: 'hard', confidence: 9, subtasks: [] },
+  { id: 4, title: 'Prepare investor pitch deck', cat: 'Work', impact: 10, urgency: 6, effort: 8, time: 180, age: 7, done: false, status: 'in_progress',
     notes: 'Use the Sequoia format. Include TAM/SAM/SOM, traction metrics, and team slide.', link: 'https://docs.google.com/presentation', aiReason: 'Your highest-impact task. Aligns with Series A goal. Consider deep-work blocks.',
-    dueDate: null, deadlineType: null, subtasks: [{ id: 104, title: 'Draft narrative arc', done: true }, { id: 105, title: 'Build financial model slide', done: false }, { id: 106, title: 'Design team slide', done: false }, { id: 107, title: 'Rehearse 3x', done: false }] },
-  { id: 5, title: 'Morning workout routine', cat: 'Health', impact: 7, urgency: 3, effort: 4, time: 45, age: 0, done: false,
+    dueDate: null, deadlineType: null, confidence: 6, subtasks: [{ id: 104, title: 'Draft narrative arc', done: true }, { id: 105, title: 'Build financial model slide', done: false }, { id: 106, title: 'Design team slide', done: false }, { id: 107, title: 'Rehearse 3x', done: false }] },
+  { id: 5, title: 'Morning workout routine', cat: 'Health', impact: 7, urgency: 3, effort: 4, time: 45, age: 0, done: false, status: 'todo',
     notes: 'Upper body + 20 min cardio. Gym opens at 6am.', link: '', aiReason: 'Consistent health habits fuel your productivity. You have been skipping this category.',
-    dueDate: null, deadlineType: null, subtasks: [] },
-  { id: 6, title: 'Call supplier about Q2 inventory', cat: 'Business', impact: 7, urgency: 7, effort: 3, time: 20, age: 3, done: false,
+    dueDate: null, deadlineType: null, confidence: 8, subtasks: [] },
+  { id: 6, title: 'Call supplier about Q2 inventory', cat: 'Business', impact: 7, urgency: 7, effort: 3, time: 20, age: 3, done: false, status: 'todo',
     notes: 'Confirm lead times for spring collection. Ask about bulk discount thresholds.', link: '', aiReason: 'Quick win with real business impact. 3 days overdue.',
-    dueDate: '2026-02-20', deadlineType: 'soft', subtasks: [] },
-  { id: 7, title: 'Update LinkedIn profile', cat: 'Personal', impact: 4, urgency: 2, effort: 3, time: 30, age: 14, done: false,
+    dueDate: '2026-02-20', deadlineType: 'soft', confidence: 9, subtasks: [] },
+  { id: 7, title: 'Update LinkedIn profile', cat: 'Personal', impact: 4, urgency: 2, effort: 3, time: 30, age: 14, done: false, status: 'todo',
     notes: 'Add recent achievements, update headline, refresh headshot.', link: 'https://linkedin.com', aiReason: 'Low urgency but 14 days old. Consider batching with other personal tasks.',
-    dueDate: null, deadlineType: null, subtasks: [] },
-  { id: 8, title: 'Send Tanaor weekly email blast', cat: 'Business', impact: 7, urgency: 8, effort: 4, time: 40, age: 1, done: false,
+    dueDate: null, deadlineType: null, confidence: 7, subtasks: [] },
+  { id: 8, title: 'Send Tanaor weekly email blast', cat: 'Business', impact: 7, urgency: 8, effort: 4, time: 40, age: 1, done: false, status: 'todo',
     notes: 'Feature new arrivals. Segment: engaged buyers.', link: 'https://klaviyo.com', aiReason: 'Time-sensitive marketing. Revenue-driving activity with clear deadline.',
-    dueDate: '2026-02-21', deadlineType: 'hard', subtasks: [] },
-  { id: 9, title: 'Quarterly tax document prep', cat: 'Work', impact: 6, urgency: 5, effort: 7, time: 120, age: 8, done: false,
+    dueDate: '2026-02-21', deadlineType: 'hard', confidence: 8, subtasks: [] },
+  { id: 9, title: 'Quarterly tax document prep', cat: 'Work', impact: 6, urgency: 5, effort: 7, time: 120, age: 8, done: false, status: 'todo',
     notes: 'Gather receipts, categorize expenses, send to accountant.', link: '', aiReason: '8 days old and high effort. Break this into smaller chunks.',
-    dueDate: '2026-03-15', deadlineType: 'hard', subtasks: [] },
-  { id: 10, title: 'Plan weekend trip with family', cat: 'Personal', impact: 5, urgency: 3, effort: 3, time: 25, age: 0, done: false,
+    dueDate: '2026-03-15', deadlineType: 'hard', confidence: 5, subtasks: [] },
+  { id: 10, title: 'Plan weekend trip with family', cat: 'Personal', impact: 5, urgency: 3, effort: 3, time: 25, age: 0, done: false, status: 'todo',
     notes: 'Look at Airbnb for 2-night getaway. Budget: $400.', link: 'https://airbnb.com', aiReason: 'Personal recharge supports long-term performance.',
-    dueDate: null, deadlineType: null, subtasks: [] },
-  { id: 11, title: 'Website redesign brief', cat: 'Business', impact: 8, urgency: 4, effort: 6, time: 60, age: 14, done: false,
+    dueDate: null, deadlineType: null, confidence: 7, subtasks: [] },
+  { id: 11, title: 'Website redesign brief', cat: 'Business', impact: 8, urgency: 4, effort: 6, time: 60, age: 14, done: false, status: 'todo',
     notes: 'Write creative brief for agency. Include brand guidelines and conversion goals.', link: '', aiReason: '14 days without progress. High impact but keeps getting pushed.',
-    dueDate: null, deadlineType: null, subtasks: [] },
-  { id: 12, title: 'Read "Zero to One" chapter 5-7', cat: 'Personal', impact: 4, urgency: 1, effort: 2, time: 30, age: 0, done: false,
+    dueDate: null, deadlineType: null, confidence: 6, subtasks: [] },
+  { id: 12, title: 'Read "Zero to One" chapter 5-7', cat: 'Personal', impact: 4, urgency: 1, effort: 2, time: 30, age: 0, done: false, status: 'todo',
     notes: 'Focus on the monopoly vs competition chapter.', link: '', aiReason: 'Quick low-effort personal development. Good for low-energy moments.',
-    dueDate: null, deadlineType: null, subtasks: [] },
+    dueDate: null, deadlineType: null, confidence: 9, subtasks: [] },
 ];
 
 const catColors = { Work: '#5B6CF0', Business: '#D4643B', Health: '#2EA043', Personal: '#8B5CF6' };
@@ -51,16 +51,23 @@ const chipDefs = [
   { key: 'deepFocus', label: 'Deep Focus', icon: '🎯' },
   { key: 'quickWins', label: 'Quick Wins', icon: '⚡' },
 ];
+// V8: Updated nav — removed Review from main nav, renamed Today→Focus
 const navItems = [
-  { id: 'today', icon: LayoutDashboard, label: 'Today' },
+  { id: 'today', icon: LayoutDashboard, label: 'Focus' },
   { id: 'all', icon: ListTodo, label: 'All Tasks' },
-  { id: 'review', icon: BarChart3, label: 'Review' },
   { id: 'archive', icon: Archive, label: 'Archive' },
   { id: 'settings', icon: Settings, label: 'Settings' },
 ];
-const aiSuggestions = ['Plan my day', 'I have 45 minutes', "I'm low energy", "What's falling behind?"];
+// V8: Updated AI suggestions (Lovable-inspired)
+const aiSuggestions = [
+  'I have 2 hours of deep work time',
+  '30 min between meetings, quick wins',
+  "I'm low energy, easy tasks please",
+  "What's the most impactful thing right now?",
+  'Reprioritize — my focus shifted to marketing',
+];
 
-export default function TaskBuddyV7() {
+export default function TaskBuddyV8() {
   const router = useRouter();
   const user = { email: 'danielm@tanaorjewelry.com' };
   const authLoading = false;
@@ -78,19 +85,21 @@ export default function TaskBuddyV7() {
   const [activeCtx, setActiveCtx] = useState(null);
   const [dragId, setDragId] = useState(null);
   const [dragOverId, setDragOverId] = useState(null);
-  const [settingsTab, setSettingsTab] = useState('context');
   const [ctxSaved, setCtxSaved] = useState(false);
-  const [aiOpen, setAiOpen] = useState(true);
   const [celPhase, setCelPhase] = useState(null);
   const [expanded, setExpanded] = useState(null);
   const [quickAdd, setQuickAdd] = useState('');
-  const [briefingOpen, setBriefingOpen] = useState(true);
   const [subInput, setSubInput] = useState('');
   const [mobile, setMobile] = useState(false);
   const [aiReview, setAiReview] = useState(null);
   const [reviewTab, setReviewTab] = useState('priority');
   const [reviewData, setReviewData] = useState(null);
   const [loadingMsg, setLoadingMsg] = useState('');
+  // V8: Add Task modal state
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newTask, setNewTask] = useState({ title: '', description: '', cat: 'Business', time: 30, urgency: 5, impact: 5, confidence: 7, ease: 5, blocking: 5, delegatable: false, dueDate: '', deadlineType: 'soft' });
+  // V8: All Tasks status filter
+  const [statusFilter, setStatusFilter] = useState('todo');
   const [userCtx, setUserCtx] = useState({
     lifeGoals: 'Build a portfolio of successful e-commerce brands. Achieve financial freedom by 35. Stay healthy and present for family.',
     currentFocus: 'Scaling Tanaor Jewelry, closing Series A funding round, maintaining work-life balance.',
@@ -108,15 +117,15 @@ export default function TaskBuddyV7() {
 
   // ─── THEME ────────────────────────────────────────────────
   const themes = {
-    light: { bg: '#F6F8FA', card: '#FFFFFF', card2: '#F9FAFB', bdr: '#E1E4E8', txt: '#24292E', sub: '#57606A', acc: '#5B6CF0', ok: '#1A7F37', side: '#FFFFFF', doNow: 'rgba(91,108,240,0.06)', warn: '#D4643B', danger: '#CF222E', briefBg: 'rgba(91,108,240,0.04)' },
+    light: { bg: '#F6F8FA', card: '#FFFFFF', card2: '#F9FAFB', bdr: '#E1E4E8', txt: '#24292E', sub: '#57606A', acc: '#E8732A', ok: '#1A7F37', side: '#FFFFFF', doNow: 'rgba(232,115,42,0.06)', warn: '#D4643B', danger: '#CF222E', briefBg: 'rgba(232,115,42,0.04)' },
     warm: { bg: '#FAF8F5', card: '#FFFDF9', card2: '#FBF9F6', bdr: '#E8E3DA', txt: '#3D3929', sub: '#7A7265', acc: '#C47B3B', ok: '#558B2F', side: '#FFFDF9', doNow: 'rgba(196,123,59,0.06)', warn: '#C47B3B', danger: '#C62828', briefBg: 'rgba(196,123,59,0.04)' },
-    dark: { bg: '#0F1117', card: '#1A1B23', card2: '#1E1F28', bdr: '#2D333B', txt: '#C9D1D9', sub: '#8B949E', acc: '#7C8CF8', ok: '#3FB950', side: '#0D0E14', doNow: 'rgba(124,140,248,0.08)', warn: '#F0883E', danger: '#F85149', briefBg: 'rgba(124,140,248,0.05)' },
+    dark: { bg: '#0F1117', card: '#1A1B23', card2: '#1E1F28', bdr: '#2D333B', txt: '#C9D1D9', sub: '#8B949E', acc: '#F0883E', ok: '#3FB950', side: '#0D0E14', doNow: 'rgba(240,136,62,0.08)', warn: '#F0883E', danger: '#F85149', briefBg: 'rgba(240,136,62,0.05)' },
   };
   const c = themes[dark] || themes.light;
 
   // ─── SCORING ──────────────────────────────────────────────
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const daysUntilDue = (t) => { if (!t.dueDate) return null; return Math.round((new Date(t.dueDate + 'T00:00:00') - today) / 86400000); };
+  const today2 = new Date(); today2.setHours(0, 0, 0, 0);
+  const daysUntilDue = (t) => { if (!t.dueDate) return null; return Math.round((new Date(t.dueDate + 'T00:00:00') - today2) / 86400000); };
   const score = (t) => {
     let s = Math.min(100, Math.round(((t.impact * 4 + t.urgency * 3 + (10 - t.effort) * 1.5) / 8.5) * 10 + t.age * 0.5));
     if (userCtx.boostCats.includes(t.cat)) s = Math.min(100, Math.round(s * 1.15));
@@ -125,19 +134,16 @@ export default function TaskBuddyV7() {
     else if (d !== null && t.deadlineType === 'soft') { if (d < 0) s = Math.min(100, s + 5); else if (d <= 2) s = Math.min(100, s + 10); }
     return s;
   };
-  const reasons = (t) => {
-    const r = []; const d = daysUntilDue(t);
-    if (d !== null && d < 0 && t.deadlineType === 'hard') r.push('🚨 OVERDUE ' + Math.abs(d) + 'd');
-    else if (d !== null && d <= 1 && t.deadlineType === 'hard') r.push('🔴 Due tomorrow — hard');
-    else if (d !== null && d <= 3 && t.deadlineType === 'hard') r.push('🔴 Due in ' + d + 'd — hard');
-    else if (d !== null && d < 0) r.push('⏰ ' + Math.abs(d) + 'd overdue');
-    else if (d !== null && d <= 3) r.push('🟡 Due in ' + d + 'd');
-    if (t.impact >= 8) r.push('🎯 High impact');
-    if (t.urgency >= 8) r.push('⏱️ Time sensitive');
-    if (t.effort <= 3 && t.time <= 20) r.push('⚡ Quick win');
-    if (t.age >= 3 && r.length < 2) r.push('⚠️ ' + t.age + 'd old');
-    if (r.length === 0) r.push('📋 Scheduled');
-    return r.slice(0, 2);
+  // V8: Smart tags (Lovable-inspired)
+  const getSmartTags = (t) => {
+    const tags = [];
+    if (t.effort <= 3) tags.push({ label: 'Delegatable', color: '#8B5CF6' });
+    const d = daysUntilDue(t);
+    if (d !== null && d <= 3 && d >= 0) tags.push({ label: 'Time sensitive', color: '#CF222E' });
+    if (d !== null && d < 0) tags.push({ label: 'Overdue', color: '#CF222E' });
+    if (t.impact >= 8 && t.urgency >= 7) tags.push({ label: 'Pipeline blocker', color: '#D4643B' });
+    if (t.effort <= 3 && t.time <= 20) tags.push({ label: 'Quick win', color: '#2EA043' });
+    return tags.slice(0, 3);
   };
   const fmt = (m) => m >= 60 ? Math.floor(m / 60) + 'h ' + (m % 60 > 0 ? (m % 60) + 'm' : '') : m + 'm';
   const fmtDate = (ds) => { if (!ds) return ''; const d = new Date(ds + 'T00:00:00'); return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()] + ' ' + d.getDate(); };
@@ -162,7 +168,7 @@ export default function TaskBuddyV7() {
   const playCompletionSound = () => { try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination); osc.frequency.setValueAtTime(800, ctx.currentTime); osc.frequency.setValueAtTime(1200, ctx.currentTime + 0.1); gain.gain.setValueAtTime(0.3, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3); osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.3); } catch(e) {} };
 
   // ─── ACTIONS ──────────────────────────────────────────────
-  const complete = (id) => { playCompletionSound(); setCelebrating(id); setCelPhase('confetti'); setTimeout(() => setCelPhase('slideout'), 600); setTimeout(() => { setTasks((p) => p.map((t) => (t.id === id ? { ...t, done: true } : t))); setCelebrating(null); setCelPhase(null); }, 1400); };
+  const complete = (id) => { playCompletionSound(); setCelebrating(id); setCelPhase('confetti'); setTimeout(() => setCelPhase('slideout'), 600); setTimeout(() => { setTasks((p) => p.map((t) => (t.id === id ? { ...t, done: true, status: 'done' } : t))); setCelebrating(null); setCelPhase(null); }, 1400); };
 
   // ─── AI TASK INSIGHT ──────────────────────────────────────
   const getTaskInsight = (t) => {
@@ -195,7 +201,6 @@ export default function TaskBuddyV7() {
     return intro + (tips.length > 0 ? tips.join('\n') + '\n' : '') + bd.join('\n');
   };
   const sendTaskInsight = (t) => {
-    setAiOpen(true);
     setMsgs((p) => [...p, { role: 'user', text: 'Tell me about "' + t.title + '"' }]);
     setTimeout(() => { setMsgs((p) => [...p, { role: 'ai', text: getTaskInsight(t) }]); }, 600);
   };
@@ -211,10 +216,34 @@ export default function TaskBuddyV7() {
     title = title.replace(/\s+/g, ' ').trim();
     return { title, dueDate, deadlineType, time };
   };
+  // V8: Add task from modal
+  const addTaskFromModal = () => {
+    if (!newTask.title.trim()) return;
+    setTasks((prev) => [...prev, {
+      id: Date.now(), title: newTask.title.trim(), cat: newTask.cat,
+      impact: newTask.impact, urgency: newTask.urgency, effort: 10 - newTask.ease,
+      time: newTask.time, age: 0, done: false, status: 'todo',
+      notes: newTask.description, link: '', aiReason: 'New task — AI will analyze on next review.',
+      dueDate: newTask.dueDate || null, deadlineType: newTask.dueDate ? newTask.deadlineType : null,
+      confidence: newTask.confidence, subtasks: [],
+    }]);
+    setShowAddModal(false);
+    setNewTask({ title: '', description: '', cat: 'Business', time: 30, urgency: 5, impact: 5, confidence: 7, ease: 5, blocking: 5, delegatable: false, dueDate: '', deadlineType: 'soft' });
+  };
+  // V8: AI Auto-Score mock
+  const aiAutoScore = () => {
+    const title = newTask.title.toLowerCase();
+    let impact = 5, urgency = 5, confidence = 7, ease = 5, blocking = 3;
+    if (title.includes('investor') || title.includes('pitch') || title.includes('revenue')) { impact = 9; urgency = 7; blocking = 8; }
+    if (title.includes('call') || title.includes('email') || title.includes('send')) { ease = 8; urgency = 7; }
+    if (title.includes('deadline') || title.includes('urgent') || title.includes('asap')) { urgency = 9; }
+    if (title.includes('workout') || title.includes('read') || title.includes('personal')) { impact = 5; ease = 7; confidence = 8; }
+    setNewTask(p => ({ ...p, impact, urgency, confidence, ease, blocking }));
+  };
   const addTask = (input) => {
     if (!input.trim()) return;
     const p = parseQuickAdd(input);
-    setTasks((prev) => [...prev, { id: Date.now(), title: p.title, cat: 'Work', impact: 5, urgency: 5, effort: 5, time: p.time, age: 0, done: false, notes: '', link: '', aiReason: 'New task — AI will analyze on next review.', dueDate: p.dueDate, deadlineType: p.deadlineType, subtasks: [] }]);
+    setTasks((prev) => [...prev, { id: Date.now(), title: p.title, cat: 'Work', impact: 5, urgency: 5, effort: 5, time: p.time, age: 0, done: false, status: 'todo', notes: '', link: '', aiReason: 'New task — AI will analyze on next review.', dueDate: p.dueDate, deadlineType: p.deadlineType, confidence: 7, subtasks: [] }]);
     setQuickAdd('');
   };
   const toggleSubtask = (taskId, subId) => { setTasks((p) => p.map((t) => t.id === taskId ? { ...t, subtasks: t.subtasks.map((s) => s.id === subId ? { ...s, done: !s.done } : s) } : t)); };
@@ -238,7 +267,7 @@ export default function TaskBuddyV7() {
       sorted.forEach((t) => {
         let u = t.aiReason || '';
         if (t.deadlineType === 'hard' && daysUntilDue(t) !== null && daysUntilDue(t) <= 2) u = 'CRITICAL: Hard deadline approaching. ' + u;
-        if (t.subtasks.length > 0) { const done = t.subtasks.filter((s) => s.done).length; u += ' Progress: ' + done + '/' + t.subtasks.length + ' subtasks done.'; }
+        if (t.subtasks.length > 0) { const dn2 = t.subtasks.filter((s) => s.done).length; u += ' Progress: ' + dn2 + '/' + t.subtasks.length + ' subtasks done.'; }
         if (t.age >= 7) u += ' This task has been sitting for ' + t.age + ' days — consider breaking it down or delegating.';
         understanding[t.id] = u;
       });
@@ -247,7 +276,7 @@ export default function TaskBuddyV7() {
         let adj = score(t);
         if (t.subtasks.length > 0 && t.subtasks.some((s) => !s.done)) adj = Math.min(100, adj + 5);
         if (t.age >= 10) adj = Math.min(100, adj + 8);
-        if (t.cat === 'Health' && !done.some((d) => d.cat === 'Health')) adj = Math.min(100, adj + 10);
+        if (t.cat === 'Health' && !done.some((d2) => d2.cat === 'Health')) adj = Math.min(100, adj + 10);
         aiScores[t.id] = adj;
       });
       const catDist = cats.reduce((a, cat) => { a[cat] = active.filter((t) => t.cat === cat).length; return a; }, {});
@@ -298,7 +327,6 @@ export default function TaskBuddyV7() {
     if (!text.trim()) return;
     setMsgs((p) => [...p, { role: 'user', text }]);
     setAiInput('');
-    setAiOpen(true);
     try {
       const resp = await fetch('/api/chat', {
         method: 'POST',
@@ -319,7 +347,7 @@ export default function TaskBuddyV7() {
   const handleDragLeave = () => setDragOverId(null);
   const handleDrop = (tid) => {
     if (!dragId || dragId === tid) return;
-    setTasks((p) => { const a = [...p]; const fi = a.findIndex((t) => t.id === dragId); const ti = a.findIndex((t) => t.id === tid); const [m] = a.splice(fi, 1); a.splice(ti, 0, m); return a; });
+    setTasks((p) => { const a = [...p]; const fi = a.findIndex((t) => t.id === dragId); const ti = a.findIndex((t) => t.id === tid); const [mv] = a.splice(fi, 1); a.splice(ti, 0, mv); return a; });
     setDragId(null); setDragOverId(null);
   };
 
@@ -338,7 +366,7 @@ export default function TaskBuddyV7() {
     );
   };
 
-  // ─── RENDER: DETAIL ──────────────────────────────────────
+  // ─── RENDER: DETAIL (V8: with scoring dimension badges) ──
   const renderDetail = (t) => (
     <div style={{ padding: '12px 16px 16px', borderTop: '1px solid ' + c.bdr, background: c.card2 }}>
       {t.aiReason && <div style={{ display: 'flex', gap: 8, marginBottom: 12, padding: '8px 10px', borderRadius: 6, background: c.briefBg }}><Sparkles size={14} color={c.acc} style={{ flexShrink: 0, marginTop: 2 }} /><span style={{ fontSize: 12, color: c.sub, fontStyle: 'italic', lineHeight: 1.5 }}>{t.aiReason}</span></div>}
@@ -354,85 +382,68 @@ export default function TaskBuddyV7() {
           </div>
         </div>
       )}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-        {[{ l: 'Impact', v: t.impact }, { l: 'Urgency', v: t.urgency }, { l: 'Effort', v: t.effort }, { l: 'Score', v: score(t) }].map((b) => <div key={b.l} style={{ flex: 1, textAlign: 'center', padding: '6px 0', borderRadius: 6, background: c.bg, border: '1px solid ' + c.bdr }}><div style={{ fontSize: 10, color: c.sub, marginBottom: 2 }}>{b.l}</div><div style={{ fontSize: 14, fontWeight: 700, color: b.l === 'Score' ? c.acc : c.txt }}>{b.v}</div></div>)}
+      {/* V8: Scoring dimension badges (Lovable style) */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+        {[
+          { l: 'Impact', v: t.impact, color: '#5B6CF0' },
+          { l: 'Urgency', v: t.urgency, color: '#D4643B' },
+          { l: 'Blocking', v: Math.min(10, Math.round(t.impact * 0.6 + t.urgency * 0.4)), color: '#CF222E' },
+          { l: 'Ease', v: 10 - t.effort, color: '#2EA043' },
+          { l: 'Confidence', v: t.confidence || 7, color: '#8B5CF6' },
+        ].map((b) => (
+          <div key={b.l} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 20, background: b.color + '15', border: '1px solid ' + b.color + '30' }}>
+            <span style={{ fontSize: 11, color: b.color, fontWeight: 500 }}>{b.l}</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: b.color }}>{b.v}</span>
+          </div>
+        ))}
       </div>
       <button onClick={(e) => { e.stopPropagation(); sendTaskInsight(t); }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1px solid ' + c.acc + '40', background: c.acc + '10', color: c.acc, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginBottom: 10, width: '100%', justifyContent: 'center' }}><Sparkles size={14} /> Get AI tips & breakdown</button>
       <button onClick={(e) => { e.stopPropagation(); deleteTask(t.id); }} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', color: c.danger, fontSize: 12, cursor: 'pointer', padding: '4px 0' }}><Trash2 size={13} /> Delete task</button>
     </div>
   );
 
-  // ─── RENDER: TASK CARD ───────────────────────────────────
+  // ─── RENDER: TASK CARD (V8: description + smart tags + score/100) ──
   const renderTask = (t, opts = {}) => {
     const { large, drag, dim } = opts;
     const isExp = expanded === t.id, isDragging = dragId === t.id, d = daysUntilDue(t);
     const isCelebrating = celebrating === t.id;
     const subDone = t.subtasks ? t.subtasks.filter((s) => s.done).length : 0, subTotal = t.subtasks ? t.subtasks.length : 0;
+    const smartTags = getSmartTags(t);
+    const scoreVal = score(t);
+    const scoreColor = scoreVal >= 81 ? c.ok : scoreVal >= 61 ? c.acc : scoreVal >= 31 ? c.warn : c.danger;
     return (
       <div key={t.id} draggable={drag} onDragStart={drag ? () => handleDragStart(t.id) : undefined} onDragOver={drag ? (e) => handleDragOver(e, t.id) : undefined} onDragLeave={drag ? handleDragLeave : undefined} onDrop={drag ? () => handleDrop(t.id) : undefined}
-        style={{ borderRadius: 10, border: large ? '2px solid ' + c.acc : '1px solid ' + c.bdr, background: large ? c.doNow : c.card, marginBottom: 8, opacity: (isCelebrating && celPhase === 'slideout') ? 0 : isDragging ? 0.4 : dim ? 0.6 : 1, cursor: drag ? 'grab' : 'default', transition: isCelebrating ? 'none' : 'opacity 0.3s ease, transform 0.3s ease', boxShadow: large ? '0 2px 12px rgba(124,140,248,0.12)' : '0 1px 3px rgba(0,0,0,0.06)', overflow: 'visible', animation: (isCelebrating && celPhase === 'slideout') ? 'taskSlideOut 0.8s ease forwards' : 'none', transform: isDragging ? 'scale(0.98)' : 'translateX(0)', borderTop: dragOverId === t.id && dragId !== t.id ? '3px solid ' + c.acc : 'none' }}>
-        <div onClick={() => setExpanded(isExp ? null : t.id)} style={{ display: 'flex', alignItems: 'center', gap: mobile ? 8 : 10, padding: large ? '14px 16px' : '10px 14px', cursor: 'pointer' }}>
-          {drag && !mobile && <GripVertical size={14} color={c.sub} style={{ flexShrink: 0, opacity: 0.5 }} />}
-          {renderChk(t)}
+        style={{ borderRadius: 12, border: large ? '2px solid ' + c.acc : '1px solid ' + c.bdr, background: large ? c.doNow : c.card, marginBottom: 8, opacity: (isCelebrating && celPhase === 'slideout') ? 0 : isDragging ? 0.4 : dim ? 0.6 : 1, cursor: drag ? 'grab' : 'default', transition: isCelebrating ? 'none' : 'opacity 0.3s ease, transform 0.3s ease', boxShadow: large ? '0 2px 12px rgba(124,140,248,0.12)' : '0 1px 3px rgba(0,0,0,0.06)', overflow: 'visible', animation: (isCelebrating && celPhase === 'slideout') ? 'taskSlideOut 0.8s ease forwards' : 'none', transform: isDragging ? 'scale(0.98)' : 'translateX(0)', borderTop: dragOverId === t.id && dragId !== t.id ? '3px solid ' + c.acc : 'none' }}>
+        <div onClick={() => setExpanded(isExp ? null : t.id)} style={{ display: 'flex', alignItems: 'flex-start', gap: mobile ? 8 : 10, padding: large ? '14px 16px' : '12px 14px', cursor: 'pointer' }}>
+          {drag && !mobile && <GripVertical size={14} color={c.sub} style={{ flexShrink: 0, opacity: 0.5, marginTop: 4 }} />}
+          <div style={{ marginTop: 2 }}>{renderChk(t)}</div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: large ? 15 : 14, fontWeight: large ? 600 : 500, color: c.txt, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.title}</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 4 }}>
-              <span style={{ fontSize: 10, fontWeight: 600, color: catColors[t.cat], background: catColors[t.cat] + '18', padding: '1px 6px', borderRadius: 4 }}>{t.cat}</span>
+            {/* V8: Description subtitle */}
+            {t.notes && <div style={{ fontSize: 12, color: c.sub, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.notes}</div>}
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 6 }}>
+              <span style={{ fontSize: 10, fontWeight: 600, color: catColors[t.cat], background: catColors[t.cat] + '18', padding: '2px 8px', borderRadius: 10 }}>{t.cat}</span>
+              {/* V8: Smart tags */}
+              {smartTags.map((tag, i) => <span key={i} style={{ fontSize: 10, fontWeight: 500, color: tag.color, background: tag.color + '15', padding: '2px 8px', borderRadius: 10 }}>{tag.label}</span>)}
               {t.dueDate && <span style={{ fontSize: 10, fontWeight: 500, color: t.deadlineType === 'hard' ? c.danger : c.sub, display: 'flex', alignItems: 'center', gap: 2 }}><Calendar size={9} /> {fmtDate(t.dueDate)}{t.deadlineType === 'hard' && d !== null && d <= 2 && <AlertTriangle size={9} style={{ marginLeft: 2 }} />}</span>}
               {subTotal > 0 && <span style={{ fontSize: 10, color: subDone === subTotal ? c.ok : c.sub, display: 'flex', alignItems: 'center', gap: 3 }}><Circle size={8} fill={subDone === subTotal ? c.ok : 'transparent'} /> {subDone}/{subTotal}</span>}
-              {reasons(t).map((r, i) => <span key={i} style={{ fontSize: 10, color: c.sub }}>{r}</span>)}
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, flexShrink: 0 }}>
+            {/* V8: Score as /100 badge */}
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, color: c.sub, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 3 }}>Priority</div>
-              <div style={{ minWidth: 36, height: 26, borderRadius: 6, background: (score(t) >= 81 ? c.ok : score(t) >= 61 ? c.acc : score(t) >= 31 ? c.warn : c.danger) + '18', border: '1px solid ' + (score(t) >= 81 ? c.ok : score(t) >= 61 ? c.acc : score(t) >= 31 ? c.warn : c.danger), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: score(t) >= 81 ? c.ok : score(t) >= 61 ? c.acc : score(t) >= 31 ? c.warn : c.danger }}>{score(t)}</div>
+              <div style={{ minWidth: 44, height: 28, borderRadius: 8, background: scoreColor + '18', border: '1px solid ' + scoreColor + '40', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: scoreColor }}>{scoreVal}</span>
+                <span style={{ fontSize: 9, fontWeight: 500, color: scoreColor, opacity: 0.7 }}>/100</span>
+              </div>
             </div>
             {!mobile && <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, color: c.sub, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 3 }}>Est.</div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: c.txt, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{fmt(t.time)}</div>
+              <div style={{ fontSize: 13, fontWeight: 500, color: c.sub, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{fmt(t.time)}</div>
             </div>}
-            <ChevronRight size={14} color={c.sub} style={{ transform: isExp ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s', marginTop: 12 }} />
+            <ChevronRight size={14} color={c.sub} style={{ transform: isExp ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s', marginTop: 6 }} />
           </div>
         </div>
         {isExp && renderDetail(t)}
-      </div>
-    );
-  };
-
-  // ─── BRIEFING ─────────────────────────────────────────────
-  const renderBriefing = () => {
-    const hour = new Date().getHours();
-    const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-    const hardSoon = tasks.filter((t) => !t.done && t.deadlineType === 'hard' && daysUntilDue(t) !== null && daysUntilDue(t) <= 2 && daysUntilDue(t) >= 0);
-    const hardOverdue = tasks.filter((t) => !t.done && t.deadlineType === 'hard' && daysUntilDue(t) !== null && daysUntilDue(t) < 0);
-    const neglected = cats.filter((cat) => !done.some((t) => t.cat === cat));
-    const pctDone = tasks.length > 0 ? Math.round((done.length / tasks.length) * 100) : 0;
-    const r = 18, circ = 2 * Math.PI * r, offset = circ - (pctDone / 100) * circ;
-    if (!briefingOpen) return <button onClick={() => setBriefingOpen(true)} style={{ background: c.briefBg, border: '1px solid ' + c.bdr, borderRadius: 8, padding: '6px 12px', color: c.acc, fontSize: 12, cursor: 'pointer', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}><Sparkles size={12} /> Daily briefing</button>;
-    return (
-      <div style={{ background: c.briefBg, border: '1px solid ' + c.bdr, borderRadius: 12, padding: mobile ? 14 : 20, marginBottom: 24, position: 'relative' }}>
-        <button onClick={() => setBriefingOpen(false)} style={{ position: 'absolute', top: 8, right: 8, background: 'transparent', border: 'none', color: c.sub, cursor: 'pointer' }}><X size={14} /></button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 10 }}>
-          <svg width={44} height={44} style={{ transform: 'rotate(-90deg)' }}><circle cx={22} cy={22} r={r} fill="transparent" stroke={c.bdr} strokeWidth={3} /><circle cx={22} cy={22} r={r} fill="transparent" stroke={c.acc} strokeWidth={3} strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round" /></svg>
-          <div><div style={{ fontSize: 16, fontWeight: 600, color: c.txt }}>{greeting}, Daniel</div><div style={{ fontSize: 12, color: c.sub }}>{active.length} tasks to focus on today</div></div>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {hardOverdue.map((t) => <div key={t.id} style={{ fontSize: 12, color: c.danger, display: 'flex', alignItems: 'flex-start', gap: 6 }}><AlertTriangle size={13} style={{ flexShrink: 0, marginTop: 1 }} /><span><strong>{t.title}</strong> is overdue — hard deadline.</span></div>)}
-          {hardSoon.map((t) => <div key={t.id} style={{ fontSize: 12, color: c.warn, display: 'flex', alignItems: 'flex-start', gap: 6 }}><AlertTriangle size={13} style={{ flexShrink: 0, marginTop: 1 }} /><span><strong>{t.title}</strong> due {daysUntilDue(t) === 0 ? 'today' : 'tomorrow'} — hard deadline.</span></div>)}
-          {done.length > 0 && <div style={{ fontSize: 12, color: c.ok }}>You completed {done.length} tasks this week.</div>}
-          {neglected.length > 0 && <div style={{ fontSize: 12, color: c.sub }}>No <strong>{neglected[0]}</strong> tasks completed recently — consider "{tasks.find((t) => !t.done && t.cat === neglected[0])?.title || 'one'}" today.</div>}
-        </div>
-        <div style={{ marginTop: 14, borderTop: '1px solid ' + c.bdr, paddingTop: 12 }}>
-          <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
-            {aiSuggestions.map((s) => <button key={s} onClick={() => sendMsg(s)} style={{ padding: '4px 10px', borderRadius: 20, border: '1px solid ' + c.bdr, background: c.card, color: c.sub, fontSize: 11, cursor: 'pointer' }}>{s}</button>)}
-          </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <Sparkles size={14} color={c.acc} />
-            <input value={aiInput} onChange={(e) => setAiInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') sendMsg(aiInput); }} placeholder="Ask your AI chief of staff..." style={{ flex: 1, background: c.card, border: '1px solid ' + c.bdr, borderRadius: 8, padding: '8px 12px', color: c.txt, fontSize: 12, outline: 'none' }} />
-            {aiInput.trim() && <button onClick={() => sendMsg(aiInput)} style={{ background: c.acc, border: 'none', color: '#fff', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Send</button>}
-          </div>
-        </div>
       </div>
     );
   };
@@ -522,63 +533,220 @@ export default function TaskBuddyV7() {
     );
   };
 
-  // ─── PAGE: TODAY ─────────────────────────────────────────
-  const renderToday = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ flex: 1, overflowY: 'auto', padding: '0 4px' }}>
-        {renderBriefing()}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
-          {chipDefs.map((ch) => <button key={ch.key} onClick={() => setActiveCtx(activeCtx === ch.key ? null : ch.key)} style={{ padding: '5px 10px', borderRadius: 20, border: '1px solid ' + (activeCtx === ch.key ? c.acc : c.bdr), background: activeCtx === ch.key ? c.acc + '18' : 'transparent', color: activeCtx === ch.key ? c.acc : c.sub, fontSize: 11, cursor: 'pointer' }}>{ch.icon} {ch.label}</button>)}
+  // ─── ADD TASK MODAL (V8: Lovable-inspired) ────────────────
+  const renderAddModal = () => {
+    if (!showAddModal) return null;
+    const sliderStyle = (val) => ({
+      width: '100%', height: 6, appearance: 'none', WebkitAppearance: 'none', borderRadius: 3,
+      background: `linear-gradient(to right, ${c.acc} ${val * 10}%, ${c.bdr} ${val * 10}%)`,
+      outline: 'none', cursor: 'pointer',
+    });
+    return (
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={() => setShowAddModal(false)}>
+        <div onClick={(e) => e.stopPropagation()} style={{ background: c.card, borderRadius: 16, width: '100%', maxWidth: 480, maxHeight: '85vh', overflowY: 'auto', padding: 24, border: '1px solid ' + c.bdr, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: c.txt, margin: 0 }}>Add New Task</h2>
+            <button onClick={() => setShowAddModal(false)} style={{ background: 'transparent', border: 'none', color: c.sub, cursor: 'pointer' }}><X size={18} /></button>
+          </div>
+
+          {/* Title */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: c.txt, marginBottom: 4, display: 'block' }}>Title</label>
+            <input value={newTask.title} onChange={(e) => setNewTask(p => ({ ...p, title: e.target.value }))} placeholder="What needs to be done?" style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid ' + c.bdr, background: c.bg, color: c.txt, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+          </div>
+
+          {/* Description */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: c.txt, marginBottom: 4, display: 'block' }}>Description</label>
+            <textarea value={newTask.description} onChange={(e) => setNewTask(p => ({ ...p, description: e.target.value }))} placeholder="Add details, notes, or context..." rows={3} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid ' + c.bdr, background: c.bg, color: c.txt, fontSize: 13, outline: 'none', resize: 'vertical', lineHeight: 1.5, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+          </div>
+
+          {/* AI Auto-Score */}
+          <button onClick={aiAutoScore} disabled={!newTask.title.trim()} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 10, border: '1px solid ' + c.acc + '40', background: c.acc + '10', color: c.acc, fontSize: 13, fontWeight: 600, cursor: newTask.title.trim() ? 'pointer' : 'default', marginBottom: 20, width: '100%', justifyContent: 'center', opacity: newTask.title.trim() ? 1 : 0.5 }}><Sparkles size={16} /> AI Auto-Score</button>
+
+          {/* Category + Time row */}
+          <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: c.txt, marginBottom: 4, display: 'block' }}>Category</label>
+              <select value={newTask.cat} onChange={(e) => setNewTask(p => ({ ...p, cat: e.target.value }))} style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid ' + c.bdr, background: c.bg, color: c.txt, fontSize: 13, outline: 'none' }}>
+                {['Business', 'Work', 'Health', 'Personal'].map(cat => <option key={cat} value={cat}>{cat}</option>)}
+              </select>
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: c.txt, marginBottom: 4, display: 'block' }}>Est. Time (min)</label>
+              <input type="number" value={newTask.time} onChange={(e) => setNewTask(p => ({ ...p, time: parseInt(e.target.value) || 0 }))} style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid ' + c.bdr, background: c.bg, color: c.txt, fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+          </div>
+
+          {/* Scoring sliders */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: c.txt, marginBottom: 10, display: 'block' }}>Scoring Dimensions</label>
+            {[
+              { key: 'urgency', label: 'Urgency' },
+              { key: 'impact', label: 'Impact' },
+              { key: 'confidence', label: 'Confidence' },
+              { key: 'ease', label: 'Ease' },
+              { key: 'blocking', label: 'Blocking Potential' },
+            ].map(dim => (
+              <div key={dim.key} style={{ marginBottom: 12 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <span style={{ fontSize: 11, color: c.sub }}>{dim.label}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: c.acc }}>{newTask[dim.key]}</span>
+                </div>
+                <input type="range" min="1" max="10" value={newTask[dim.key]} onChange={(e) => setNewTask(p => ({ ...p, [dim.key]: parseInt(e.target.value) }))} style={sliderStyle(newTask[dim.key])} />
+              </div>
+            ))}
+          </div>
+
+          {/* Due date + Delegatable row */}
+          <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: c.txt, marginBottom: 4, display: 'block' }}>Due Date (optional)</label>
+              <input type="date" value={newTask.dueDate} onChange={(e) => setNewTask(p => ({ ...p, dueDate: e.target.value }))} style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid ' + c.bdr, background: c.bg, color: c.txt, fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+              <button onClick={() => setNewTask(p => ({ ...p, delegatable: !p.delegatable }))} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 8, border: '1px solid ' + (newTask.delegatable ? c.acc : c.bdr), background: newTask.delegatable ? c.acc + '15' : 'transparent', color: newTask.delegatable ? c.acc : c.sub, fontSize: 12, cursor: 'pointer' }}>
+                <div style={{ width: 16, height: 16, borderRadius: 4, border: '2px solid ' + (newTask.delegatable ? c.acc : c.bdr), background: newTask.delegatable ? c.acc : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{newTask.delegatable && <Check size={10} color="#fff" />}</div>
+                Can be delegated?
+              </button>
+            </div>
+          </div>
+
+          {/* Submit */}
+          <button onClick={addTaskFromModal} disabled={!newTask.title.trim()} style={{ width: '100%', padding: '12px 0', borderRadius: 10, border: 'none', background: newTask.title.trim() ? c.acc : c.bdr, color: '#fff', fontSize: 14, fontWeight: 600, cursor: newTask.title.trim() ? 'pointer' : 'default' }}>Add Task</button>
         </div>
-        {topTask && <div style={{ background: c.doNow, border: '2px solid ' + c.acc, borderRadius: 12, padding: '12px 14px', marginBottom: 24 }}><div style={{ fontSize: 12, fontWeight: 700, color: c.acc, textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}><Zap size={14} color={c.acc} /> Do Now</div>{renderTask(topTask, { large: true })}</div>}
-        {upNext.length > 0 && <div style={{ marginBottom: 24 }}>{sectionHead('Up Next', upNext.length)}{upNext.map((t) => renderTask(t, { drag: true }))}</div>}
-        {later.length > 0 && <div style={{ marginBottom: 24, opacity: 0.65 }}>{sectionHead('Later', later.length)}{later.map((t) => renderTask(t, { drag: true, dim: true }))}</div>}
+      </div>
+    );
+  };
+
+  // ─── PAGE: FOCUS (V8: Task queue only — AI is in left panel) ──
+  const renderFocusQueue = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 16, fontWeight: 700, color: c.txt }}>Focus Session</span>
+          <span style={{ fontSize: 11, color: c.sub, background: c.bdr + '60', padding: '2px 8px', borderRadius: 10 }}>{active.length} tasks</span>
+        </div>
+        <button onClick={() => setShowAddModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8, border: 'none', background: c.acc, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}><Plus size={14} /> Add Task</button>
+      </div>
+      {/* Context chips */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
+        {chipDefs.map((ch) => <button key={ch.key} onClick={() => setActiveCtx(activeCtx === ch.key ? null : ch.key)} style={{ padding: '5px 10px', borderRadius: 20, border: '1px solid ' + (activeCtx === ch.key ? c.acc : c.bdr), background: activeCtx === ch.key ? c.acc + '18' : 'transparent', color: activeCtx === ch.key ? c.acc : c.sub, fontSize: 11, cursor: 'pointer' }}>{ch.icon} {ch.label}</button>)}
+      </div>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 2px' }}>
+        {topTask && <div style={{ background: c.doNow, border: '2px solid ' + c.acc, borderRadius: 12, padding: '12px 14px', marginBottom: 20 }}><div style={{ fontSize: 11, fontWeight: 700, color: c.acc, textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}><Zap size={14} color={c.acc} /> Do Now</div>{renderTask(topTask, { large: true })}</div>}
+        {upNext.length > 0 && <div style={{ marginBottom: 20 }}>{sectionHead('Up Next', upNext.length)}{upNext.map((t) => renderTask(t, { drag: true }))}</div>}
+        {later.length > 0 && <div style={{ marginBottom: 20, opacity: 0.65 }}>{sectionHead('Later', later.length)}{later.map((t) => renderTask(t, { drag: true, dim: true }))}</div>}
         {done.length > 0 && <>
           <button onClick={() => setShowDone(!showDone)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', color: c.sub, fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8, marginTop: 16, marginBottom: 8, cursor: 'pointer' }}>{showDone ? <ChevronDown size={13} /> : <ChevronRight size={13} />} Done ({done.length})</button>
           {showDone && done.map((t) => <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px', borderRadius: 8, background: c.card, border: '1px solid ' + c.bdr, marginBottom: 6, opacity: 0.5 }}><Check size={14} color={c.ok} /><span style={{ fontSize: 13, color: c.sub, textDecoration: 'line-through' }}>{t.title}</span></div>)}
         </>}
         {active.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: c.sub, fontSize: 14 }}>All caught up!</div>}
       </div>
-      <div style={{ padding: '8px 0', borderTop: '1px solid ' + c.bdr, display: 'flex', gap: 8, alignItems: 'center' }}>
-        <Plus size={16} color={c.sub} />
-        <input value={quickAdd} onChange={(e) => setQuickAdd(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') addTask(quickAdd); }} placeholder='Add task... ("Call Bob tomorrow !hard 15m")' style={{ flex: 1, background: 'transparent', border: 'none', color: c.txt, fontSize: 13, outline: 'none' }} />
-        {quickAdd && <button onClick={() => addTask(quickAdd)} style={{ background: c.acc, border: 'none', color: '#fff', borderRadius: 6, padding: '4px 10px', fontSize: 12, cursor: 'pointer' }}>Add</button>}
+    </div>
+  );
+
+  // ─── AI CHAT PANEL (V8: always visible on Focus page, left side) ──
+  const renderAiChat = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div style={{ padding: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <Brain size={18} color={c.acc} />
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: c.txt }}>AI Chief of Staff</div>
+          <div style={{ fontSize: 11, color: c.sub }}>Tell me your state, I'll plan your session</div>
+        </div>
+        <div style={{ marginLeft: 'auto' }}>
+          <span style={{ fontSize: 9, color: c.acc, background: c.acc + '18', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>Opus 4.6</span>
+        </div>
+      </div>
+      <div style={{ flex: 1, overflowY: 'auto', marginBottom: 12 }}>
+        {msgs.length === 0 && (
+          <div style={{ padding: '16px 4px' }}>
+            <div style={{ fontSize: 13, color: c.sub, marginBottom: 16, lineHeight: 1.6 }}>I can help you plan your focus session, reprioritize tasks, or give you a quick breakdown of what matters most right now.</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {aiSuggestions.map((s) => <button key={s} onClick={() => sendMsg(s)} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid ' + c.bdr, background: c.card, color: c.txt, fontSize: 12, cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>{s}</button>)}
+            </div>
+          </div>
+        )}
+        {msgs.map((m, i) => <div key={i} style={{ marginBottom: 10, display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start' }}><div style={{ maxWidth: '88%', padding: '10px 14px', borderRadius: 12, background: m.role === 'user' ? c.acc : c.card, color: m.role === 'user' ? '#fff' : c.txt, fontSize: 12, lineHeight: 1.6, border: m.role === 'ai' ? '1px solid ' + c.bdr : 'none', whiteSpace: 'pre-wrap' }}>{m.text}</div></div>)}
+      </div>
+      {recording && <div style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: 8 }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#F85149', animation: 'blink 1s infinite' }} /><span style={{ fontSize: 12, color: c.danger }}>Recording... tap mic to stop</span></div>}
+      <div style={{ borderTop: '1px solid ' + c.bdr, paddingTop: 12 }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+          <textarea value={aiInput} onChange={(e) => { setAiInput(e.target.value); e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px'; }} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(aiInput); } }} placeholder="Tell me your state..." rows={2} style={{ flex: 1, background: c.bg, border: '1px solid ' + c.bdr, borderRadius: 10, padding: '10px 14px', color: c.txt, fontSize: 13, outline: 'none', lineHeight: 1.5, minHeight: 44, maxHeight: 100, fontFamily: 'inherit', resize: 'none' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <button onClick={() => setRecording(!recording)} style={{ width: 34, height: 34, borderRadius: '50%', border: recording ? 'none' : '1px solid ' + c.bdr, background: recording ? c.danger : c.card, color: recording ? '#fff' : c.sub, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, animation: recording ? 'micPulse 1.5s infinite' : 'none' }}><Mic size={14} /></button>
+            <button onClick={() => sendMsg(aiInput)} disabled={!aiInput.trim()} style={{ width: 34, height: 34, borderRadius: '50%', border: 'none', background: aiInput.trim() ? c.acc : c.bdr, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: aiInput.trim() ? 'pointer' : 'default', flexShrink: 0 }}><Send size={14} /></button>
+          </div>
+        </div>
       </div>
     </div>
   );
 
-  // ─── PAGE: ALL TASKS ─────────────────────────────────────
-  const renderAllTasks = () => {
-    const filtered = tasks.filter((t) => !t.done).filter((t) => filterCat === 'All' || t.cat === filterCat).filter((t) => !searchQ || t.title.toLowerCase().includes(searchQ.toLowerCase())).sort((a, b) => score(b) - score(a));
-    const high = filtered.filter((t) => score(t) >= 75), med = filtered.filter((t) => score(t) >= 50 && score(t) < 75), low = filtered.filter((t) => score(t) < 50);
-    return (
-      <div style={{ overflowY: 'auto', height: '100%', padding: '0 4px' }}>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}><div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, background: c.card, border: '1px solid ' + c.bdr, borderRadius: 8, padding: '6px 10px' }}><Search size={14} color={c.sub} /><input value={searchQ} onChange={(e) => setSearchQ(e.target.value)} placeholder="Search tasks..." style={{ flex: 1, background: 'transparent', border: 'none', color: c.txt, fontSize: 13, outline: 'none' }} />{searchQ && <button onClick={() => setSearchQ('')} style={{ background: 'transparent', border: 'none', color: c.sub, cursor: 'pointer', padding: 0 }}><X size={13} /></button>}</div></div>
-        <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
-          {['All', ...cats].map((cat) => <button key={cat} onClick={() => setFilterCat(cat)} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid ' + (filterCat === cat ? c.acc : c.bdr), background: filterCat === cat ? c.acc + '18' : 'transparent', color: filterCat === cat ? c.acc : c.sub, fontSize: 11, cursor: 'pointer' }}>{cat !== 'All' && <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: catColors[cat], marginRight: 4 }} />}{cat}</button>)}
+  // ─── PAGE: FOCUS (V8: 2-panel layout) ─────────────────────
+  const renderToday = () => {
+    if (aiReview) return renderAiReview();
+    if (mobile) {
+      // Mobile: stack vertically, toggle AI
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+          {renderFocusQueue()}
         </div>
-        {[{ label: 'High Priority', items: high, color: c.danger }, { label: 'Medium', items: med, color: c.warn }, { label: 'Lower', items: low, color: c.sub }].map((g) => g.items.length > 0 && <div key={g.label}><div style={{ fontSize: 11, fontWeight: 600, color: g.color, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8, marginTop: 12, display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: g.color }} /> {g.label} ({g.items.length})</div>{g.items.map((t) => renderTask(t, { drag: true }))}</div>)}
-        {filtered.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: c.sub }}>No tasks match filters.</div>}
+      );
+    }
+    // Desktop: side-by-side AI Chat (left) + Task Queue (right)
+    return (
+      <div style={{ display: 'flex', gap: 20, height: '100%' }}>
+        <div style={{ width: '38%', minWidth: 280, background: c.card, borderRadius: 14, border: '1px solid ' + c.bdr, padding: 16, display: 'flex', flexDirection: 'column' }}>
+          {renderAiChat()}
+        </div>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          {renderFocusQueue()}
+        </div>
       </div>
     );
   };
 
-  // ─── PAGE: REVIEW ────────────────────────────────────────
-  const renderReview = () => {
-    const cc = done.length, totalTime = done.reduce((s, t) => s + t.time, 0);
-    const catCounts = cats.reduce((a, cat) => { a[cat] = done.filter((t) => t.cat === cat).length; return a; }, {});
-    const maxCat = Math.max(...Object.values(catCounts), 1);
-    const rolledOver = tasks.filter((t) => !t.done && t.age >= 5).sort((a, b) => b.age - a.age).slice(0, 5);
+  // ─── PAGE: ALL TASKS (V8: Status filter tabs) ─────────────
+  const renderAllTasks = () => {
+    const todoCount = tasks.filter(t => !t.done && (t.status || 'todo') === 'todo').length;
+    const ipCount = tasks.filter(t => !t.done && t.status === 'in_progress').length;
+    const doneCount = done.length;
+    const getFilteredByStatus = () => {
+      if (statusFilter === 'todo') return tasks.filter(t => !t.done && (t.status || 'todo') === 'todo');
+      if (statusFilter === 'in_progress') return tasks.filter(t => !t.done && t.status === 'in_progress');
+      if (statusFilter === 'done') return done;
+      return tasks.filter(t => !t.done);
+    };
+    const filtered = getFilteredByStatus()
+      .filter((t) => filterCat === 'All' || t.cat === filterCat)
+      .filter((t) => !searchQ || t.title.toLowerCase().includes(searchQ.toLowerCase()))
+      .sort((a, b) => score(b) - score(a));
     return (
       <div style={{ overflowY: 'auto', height: '100%', padding: '0 4px' }}>
-        <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
-          {[{ label: 'Completed', value: cc, icon: Check, color: c.ok }, { label: 'Time Saved', value: fmt(totalTime), icon: Clock, color: c.acc }, { label: 'Active', value: active.length, icon: Target, color: c.warn }].map((s) => <div key={s.label} style={{ flex: 1, background: c.card, border: '1px solid ' + c.bdr, borderRadius: 10, padding: '14px 12px', textAlign: 'center' }}><s.icon size={18} color={s.color} style={{ marginBottom: 6 }} /><div style={{ fontSize: 20, fontWeight: 700, color: c.txt }}>{s.value}</div><div style={{ fontSize: 11, color: c.sub }}>{s.label}</div></div>)}
+        {/* V8: Status tabs */}
+        <div style={{ display: 'flex', gap: 0, marginBottom: 16, background: c.card, borderRadius: 10, padding: 4, border: '1px solid ' + c.bdr }}>
+          {[
+            { id: 'todo', label: todoCount + ' To Do' },
+            { id: 'in_progress', label: ipCount + ' In Progress' },
+            { id: 'done', label: doneCount + ' Done' },
+          ].map(tab => (
+            <button key={tab.id} onClick={() => setStatusFilter(tab.id)} style={{ flex: 1, padding: '8px 0', borderRadius: 8, border: 'none', background: statusFilter === tab.id ? c.acc + '18' : 'transparent', color: statusFilter === tab.id ? c.acc : c.sub, fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}>{tab.label}</button>
+          ))}
         </div>
-        <div style={{ background: c.card, border: '1px solid ' + c.bdr, borderRadius: 10, padding: 16, marginBottom: 16 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: c.txt, marginBottom: 12 }}>By Category</div>
-          {cats.map((cat) => <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}><span style={{ fontSize: 12, color: c.txt, width: 70 }}>{cat}</span><div style={{ flex: 1, height: 8, background: c.bdr, borderRadius: 4, overflow: 'hidden' }}><div style={{ width: ((catCounts[cat] || 0) / maxCat) * 100 + '%', height: '100%', background: catColors[cat], borderRadius: 4 }} /></div><span style={{ fontSize: 12, color: c.sub, width: 20, textAlign: 'right' }}>{catCounts[cat] || 0}</span></div>)}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, background: c.card, border: '1px solid ' + c.bdr, borderRadius: 8, padding: '6px 10px' }}>
+            <Search size={14} color={c.sub} />
+            <input value={searchQ} onChange={(e) => setSearchQ(e.target.value)} placeholder="Search tasks..." style={{ flex: 1, background: 'transparent', border: 'none', color: c.txt, fontSize: 13, outline: 'none' }} />
+            {searchQ && <button onClick={() => setSearchQ('')} style={{ background: 'transparent', border: 'none', color: c.sub, cursor: 'pointer', padding: 0 }}><X size={13} /></button>}
+          </div>
+          <button onClick={() => setShowAddModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8, border: 'none', background: c.acc, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}><Plus size={14} /> Add</button>
         </div>
-        {rolledOver.length > 0 && <div style={{ background: c.card, border: '1px solid ' + c.bdr, borderRadius: 10, padding: 16, marginBottom: 16 }}><div style={{ fontSize: 13, fontWeight: 600, color: c.txt, marginBottom: 10 }}>Rolled Over</div>{rolledOver.map((t) => <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid ' + c.bdr }}><span style={{ fontSize: 12, color: c.txt }}>{t.title}</span><span style={{ fontSize: 11, color: t.age >= 10 ? c.danger : c.warn }}>{t.age}d old</span></div>)}</div>}
+        <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
+          {['All', ...cats].map((cat) => <button key={cat} onClick={() => setFilterCat(cat)} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid ' + (filterCat === cat ? c.acc : c.bdr), background: filterCat === cat ? c.acc + '18' : 'transparent', color: filterCat === cat ? c.acc : c.sub, fontSize: 11, cursor: 'pointer' }}>{cat !== 'All' && <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: catColors[cat], marginRight: 4 }} />}{cat}</button>)}
+        </div>
+        {filtered.map((t) => renderTask(t, { drag: true }))}
+        {filtered.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: c.sub }}>No tasks match filters.</div>}
       </div>
     );
   };
@@ -587,43 +755,76 @@ export default function TaskBuddyV7() {
   const renderArchive = () => (
     <div style={{ overflowY: 'auto', height: '100%', padding: '0 4px' }}>
       <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
-        {[{ label: 'Completed', value: done.length }, { label: 'Time Saved', value: fmt(done.reduce((s, t) => s + t.time, 0)) }, { label: 'Remaining', value: active.length }].map((s) => <div key={s.label} style={{ flex: 1, background: c.card, border: '1px solid ' + c.bdr, borderRadius: 10, padding: 14, textAlign: 'center' }}><div style={{ fontSize: 20, fontWeight: 700, color: c.txt }}>{s.value}</div><div style={{ fontSize: 11, color: c.sub }}>{s.label}</div></div>)}
+        {[{ label: 'Completed', value: done.length, icon: Check, color: c.ok }, { label: 'Time Saved', value: fmt(done.reduce((s, t) => s + t.time, 0)), icon: Clock, color: c.acc }, { label: 'Active', value: active.length, icon: Target, color: c.warn }].map((s) => <div key={s.label} style={{ flex: 1, background: c.card, border: '1px solid ' + c.bdr, borderRadius: 10, padding: '14px 12px', textAlign: 'center' }}><s.icon size={18} color={s.color} style={{ marginBottom: 6 }} /><div style={{ fontSize: 20, fontWeight: 700, color: c.txt }}>{s.value}</div><div style={{ fontSize: 11, color: c.sub }}>{s.label}</div></div>)}
       </div>
+      {/* Category chart */}
+      <div style={{ background: c.card, border: '1px solid ' + c.bdr, borderRadius: 10, padding: 16, marginBottom: 16 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: c.txt, marginBottom: 12 }}>By Category</div>
+        {cats.map((cat) => {
+          const catCount = done.filter(t => t.cat === cat).length;
+          const maxC = Math.max(...cats.map(c2 => done.filter(t => t.cat === c2).length), 1);
+          return <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}><span style={{ fontSize: 12, color: c.txt, width: 70 }}>{cat}</span><div style={{ flex: 1, height: 8, background: c.bdr, borderRadius: 4, overflow: 'hidden' }}><div style={{ width: (catCount / maxC) * 100 + '%', height: '100%', background: catColors[cat], borderRadius: 4 }} /></div><span style={{ fontSize: 12, color: c.sub, width: 20, textAlign: 'right' }}>{catCount}</span></div>;
+        })}
+      </div>
+      {/* Rolled over */}
+      {(() => { const rolledOver = tasks.filter((t) => !t.done && t.age >= 5).sort((a, b) => b.age - a.age).slice(0, 5); return rolledOver.length > 0 ? <div style={{ background: c.card, border: '1px solid ' + c.bdr, borderRadius: 10, padding: 16, marginBottom: 16 }}><div style={{ fontSize: 13, fontWeight: 600, color: c.txt, marginBottom: 10 }}>Rolled Over</div>{rolledOver.map((t) => <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid ' + c.bdr }}><span style={{ fontSize: 12, color: c.txt }}>{t.title}</span><span style={{ fontSize: 11, color: t.age >= 10 ? c.danger : c.warn }}>{t.age}d old</span></div>)}</div> : null; })()}
       {done.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: c.sub }}>No completed tasks yet.</div>}
       {done.map((t) => <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 8, background: c.card, border: '1px solid ' + c.bdr, marginBottom: 6, opacity: 0.6 }}><Check size={14} color={c.ok} /><span style={{ fontSize: 13, color: c.sub, textDecoration: 'line-through', flex: 1 }}>{t.title}</span><span style={{ fontSize: 10, color: catColors[t.cat], background: catColors[t.cat] + '18', padding: '1px 6px', borderRadius: 4 }}>{t.cat}</span></div>)}
     </div>
   );
 
-  // ─── PAGE: SETTINGS ──────────────────────────────────────
-  const stabs = [{ id: 'context', label: 'My Context', icon: Target }, { id: 'profile', label: 'Profile', icon: User }, { id: 'prefs', label: 'Preferences', icon: Settings }];
+  // ─── PAGE: SETTINGS (V8: Simplified single-page) ──────────
   const renderSettings = () => (
     <div style={{ overflowY: 'auto', height: '100%', padding: '0 4px' }}>
-      <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: c.card, borderRadius: 8, padding: 4, border: '1px solid ' + c.bdr }}>
-        {stabs.map((tab) => <button key={tab.id} onClick={() => setSettingsTab(tab.id)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 0', borderRadius: 6, border: 'none', background: settingsTab === tab.id ? c.acc + '18' : 'transparent', color: settingsTab === tab.id ? c.acc : c.sub, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}><tab.icon size={14} /> {tab.label}</button>)}
+      {/* About Me card */}
+      <div style={{ background: c.card, border: '1px solid ' + c.bdr, borderRadius: 12, padding: 20, marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: c.acc + '18', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><User size={18} color={c.acc} /></div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: c.txt }}>About Me</div>
+        </div>
+        <textarea value={userCtx.aboutMe} onChange={(e) => setUserCtx((p) => ({ ...p, aboutMe: e.target.value }))} placeholder="Tell the AI who you are, what you do, and how you work best..." style={{ width: '100%', minHeight: 80, padding: 12, borderRadius: 8, border: '1px solid ' + c.bdr, background: c.bg, color: c.txt, fontSize: 13, resize: 'vertical', outline: 'none', lineHeight: 1.6, boxSizing: 'border-box', fontFamily: 'inherit' }} />
       </div>
-      {settingsTab === 'context' && <div>
-        {[{ key: 'lifeGoals', label: 'Life Goals', ph: 'Long-term life goals?' }, { key: 'currentFocus', label: 'Current Focus', ph: 'What are you focused on?' }, { key: 'aboutMe', label: 'About Me', ph: 'Who are you?' }].map((f) => <div key={f.key} style={{ marginBottom: 14 }}><label style={{ fontSize: 12, fontWeight: 600, color: c.txt, marginBottom: 4, display: 'block' }}>{f.label}</label><textarea value={userCtx[f.key]} onChange={(e) => setUserCtx((p) => ({ ...p, [f.key]: e.target.value }))} placeholder={f.ph} style={{ width: '100%', minHeight: 60, padding: 10, borderRadius: 8, border: '1px solid ' + c.bdr, background: c.card, color: c.txt, fontSize: 12, resize: 'vertical', outline: 'none', lineHeight: 1.5, boxSizing: 'border-box' }} /></div>)}
-        <div style={{ marginBottom: 14 }}><label style={{ fontSize: 12, fontWeight: 600, color: c.txt, marginBottom: 6, display: 'block' }}>Priority Categories (+15% boost)</label><div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{cats.map((cat) => <button key={cat} onClick={() => setUserCtx((p) => ({ ...p, boostCats: p.boostCats.includes(cat) ? p.boostCats.filter((x) => x !== cat) : [...p.boostCats, cat] }))} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid ' + (userCtx.boostCats.includes(cat) ? catColors[cat] : c.bdr), background: userCtx.boostCats.includes(cat) ? catColors[cat] + '18' : 'transparent', color: userCtx.boostCats.includes(cat) ? catColors[cat] : c.sub, fontSize: 11, cursor: 'pointer' }}>{cat}</button>)}</div></div>
-        <button onClick={() => { setCtxSaved(true); setTimeout(() => setCtxSaved(false), 2000); }} style={{ background: c.acc, border: 'none', color: '#fff', padding: '8px 20px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{ctxSaved ? 'Saved!' : 'Save Context'}</button>
-      </div>}
-      {settingsTab === 'profile' && <div>{[{ l: 'Name', v: 'Daniel' }, { l: 'Companies', v: 'Tanaor Jewelry, + others' }, { l: 'Email', v: 'danielm@tanaorjewelry.com' }].map((f) => <div key={f.l} style={{ marginBottom: 14 }}><label style={{ fontSize: 12, fontWeight: 600, color: c.txt, marginBottom: 4, display: 'block' }}>{f.l}</label><div style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid ' + c.bdr, background: c.card, color: c.sub, fontSize: 13 }}>{f.v}</div></div>)}</div>}
-      {settingsTab === 'prefs' && <div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid ' + c.bdr, marginBottom: 12 }}><div><div style={{ fontSize: 13, fontWeight: 500, color: c.txt }}>Theme</div></div><div style={{ display: 'flex', gap: 6 }}>{[{ val: 'light', lbl: 'Light' }, { val: 'warm', lbl: 'Warm' }, { val: 'dark', lbl: 'Dark' }].map((t) => <button key={t.val} onClick={() => setDark(t.val)} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid ' + (dark === t.val ? c.acc : c.bdr), background: dark === t.val ? c.acc + '18' : 'transparent', color: dark === t.val ? c.acc : c.sub, fontSize: 11, cursor: 'pointer' }}>{t.lbl}</button>)}</div></div>
-        <div style={{ padding: '10px 0', borderBottom: '1px solid ' + c.bdr, marginBottom: 12 }}><div style={{ fontSize: 13, fontWeight: 500, color: c.txt }}>AI Model</div><div style={{ fontSize: 11, color: c.sub }}>Claude Opus 4.6</div></div>
-        <div style={{ padding: '10px 0' }}><div style={{ fontSize: 13, fontWeight: 500, color: c.txt }}>Scoring</div><div style={{ fontSize: 11, color: c.sub, lineHeight: 1.5 }}>Base formula + 15% category boost + hard deadline override</div></div>
-      </div>}
+
+      {/* Life Goals card */}
+      <div style={{ background: c.card, border: '1px solid ' + c.bdr, borderRadius: 12, padding: 20, marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: '#2EA043' + '18', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Target size={18} color="#2EA043" /></div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: c.txt }}>Life Goals</div>
+        </div>
+        <textarea value={userCtx.lifeGoals} onChange={(e) => setUserCtx((p) => ({ ...p, lifeGoals: e.target.value }))} placeholder="What are your long-term life goals? These help the AI understand what really matters..." style={{ width: '100%', minHeight: 80, padding: 12, borderRadius: 8, border: '1px solid ' + c.bdr, background: c.bg, color: c.txt, fontSize: 13, resize: 'vertical', outline: 'none', lineHeight: 1.6, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+      </div>
+
+      {/* Current Quarter Goals card */}
+      <div style={{ background: c.card, border: '1px solid ' + c.bdr, borderRadius: 12, padding: 20, marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: '#5B6CF0' + '18', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Target size={18} color="#5B6CF0" /></div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: c.txt }}>Current Quarter Goals</div>
+        </div>
+        <textarea value={userCtx.currentFocus} onChange={(e) => setUserCtx((p) => ({ ...p, currentFocus: e.target.value }))} placeholder="What are you focused on this quarter? The AI uses this to prioritize tasks that align with your current direction..." style={{ width: '100%', minHeight: 80, padding: 12, borderRadius: 8, border: '1px solid ' + c.bdr, background: c.bg, color: c.txt, fontSize: 13, resize: 'vertical', outline: 'none', lineHeight: 1.6, boxSizing: 'border-box', fontFamily: 'inherit' }} />
+      </div>
+
+      {/* Priority categories */}
+      <div style={{ background: c.card, border: '1px solid ' + c.bdr, borderRadius: 12, padding: 20, marginBottom: 16 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: c.txt, marginBottom: 8 }}>Priority Categories (+15% score boost)</div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {cats.map((cat) => <button key={cat} onClick={() => setUserCtx((p) => ({ ...p, boostCats: p.boostCats.includes(cat) ? p.boostCats.filter((x) => x !== cat) : [...p.boostCats, cat] }))} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid ' + (userCtx.boostCats.includes(cat) ? catColors[cat] : c.bdr), background: userCtx.boostCats.includes(cat) ? catColors[cat] + '18' : 'transparent', color: userCtx.boostCats.includes(cat) ? catColors[cat] : c.sub, fontSize: 12, cursor: 'pointer' }}>{cat}</button>)}
+        </div>
+      </div>
+
+      {/* Save button */}
+      <button onClick={() => { setCtxSaved(true); setTimeout(() => setCtxSaved(false), 2000); }} style={{ width: '100%', padding: '12px 0', borderRadius: 10, border: 'none', background: c.acc, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>{ctxSaved ? 'Saved!' : 'Save Context'}</button>
     </div>
   );
 
   // ─── ROUTING ─────────────────────────────────────────────
-  const pages = { today: renderToday, all: renderAllTasks, review: renderReview, archive: renderArchive, settings: renderSettings };
-  const pageLabel = { today: 'Today', all: 'All Tasks', review: 'Weekly Review', archive: 'Archive', settings: 'Settings' };
+  const pages = { today: renderToday, all: renderAllTasks, archive: renderArchive, settings: renderSettings };
+  const pageLabel = { today: 'Focus', all: 'All Tasks', archive: 'Archive', settings: 'Settings' };
 
   // ─── MAIN RENDER ─────────────────────────────────────────
   if (authLoading) {
     return (
       <div style={{ minHeight: '100vh', background: '#0F1117', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 32, height: 32, border: '3px solid #7C8CF8', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+        <div style={{ width: 32, height: 32, border: '3px solid #F0883E', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
@@ -633,55 +834,68 @@ export default function TaskBuddyV7() {
 
   return (
     <div style={{ display: 'flex', flexDirection: mobile ? 'column' : 'row', height: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', background: c.bg, color: c.txt, overflow: 'hidden' }}>
-      {/* ── Sidebar (desktop) / Bottom Nav (mobile) ── */}
+      {/* ── V8 Sidebar: expanded with text labels ── */}
       {!mobile && (
-        <div style={{ width: 56, background: c.side, borderRight: '1px solid ' + c.bdr, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 12, flexShrink: 0 }}>
-          <div style={{ width: 32, height: 32, borderRadius: 8, background: c.acc, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}><Sparkles size={18} color="#fff" /></div>
-          {navItems.map((n) => <button key={n.id} onClick={() => { setPage(n.id); setAiReview(null); }} title={n.label} style={{ width: 40, height: 40, borderRadius: 8, border: 'none', background: page === n.id ? (dark === 'dark' ? '#1C2129' : '#EBEEF1') : 'transparent', color: page === n.id ? c.acc : c.sub, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', marginBottom: 4 }}><n.icon size={20} /></button>)}
-          <div style={{ marginTop: 'auto', marginBottom: 10 }}><button onClick={() => setDark(dark === 'light' ? 'warm' : dark === 'warm' ? 'dark' : 'light')} style={{ width: 40, height: 40, borderRadius: 8, border: 'none', background: 'transparent', color: c.sub, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>{dark === 'dark' ? <Sun size={18} /> : dark === 'warm' ? <Moon size={18} /> : <Sun size={18} />}</button></div>
+        <div style={{ width: 200, background: c.side, borderRight: '1px solid ' + c.bdr, display: 'flex', flexDirection: 'column', paddingTop: 12, flexShrink: 0 }}>
+          {/* Logo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 16px', marginBottom: 20 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 8, background: c.acc, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Sparkles size={18} color="#fff" /></div>
+            <span style={{ fontSize: 15, fontWeight: 700, color: c.txt }}>TaskBuddy</span>
+          </div>
+          {/* Nav items */}
+          {navItems.map((n) => (
+            <button key={n.id} onClick={() => { setPage(n.id); setAiReview(null); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', border: 'none', background: page === n.id ? c.acc + '15' : 'transparent', color: page === n.id ? c.acc : c.sub, fontSize: 13, fontWeight: page === n.id ? 600 : 400, cursor: 'pointer', borderRadius: 8, margin: '0 8px 2px', textAlign: 'left' }}>
+              <n.icon size={18} />
+              <span>{n.label}</span>
+            </button>
+          ))}
+          {/* AI Review button in sidebar */}
+          <button onClick={runAiReview} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', border: 'none', background: 'transparent', color: c.sub, fontSize: 13, cursor: 'pointer', borderRadius: 8, margin: '2px 8px', textAlign: 'left' }}>
+            <Brain size={18} />
+            <span>AI Review</span>
+          </button>
+          {/* Spacer + Dark mode toggle at bottom */}
+          <div style={{ marginTop: 'auto', padding: '8px 8px 12px' }}>
+            <button onClick={() => setDark(dark === 'light' ? 'warm' : dark === 'warm' ? 'dark' : 'light')} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderRadius: 8, border: 'none', background: 'transparent', color: c.sub, fontSize: 13, cursor: 'pointer', width: '100%', textAlign: 'left' }}>
+              {dark === 'dark' ? <Sun size={18} /> : dark === 'warm' ? <Moon size={18} /> : <Sun size={18} />}
+              <span>{dark === 'light' ? 'Light Mode' : dark === 'warm' ? 'Warm Mode' : 'Dark Mode'}</span>
+            </button>
+          </div>
         </div>
       )}
 
-      {/* ── Main ── */}
+      {/* ── Main Content ── */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, paddingBottom: mobile ? 56 : 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: mobile ? '8px 12px' : '10px 20px', borderBottom: '1px solid ' + c.bdr, flexShrink: 0 }}>
+        {/* Header bar — simplified for V8 */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: mobile ? '8px 12px' : '10px 24px', borderBottom: '1px solid ' + c.bdr, flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: mobile ? 15 : 16, fontWeight: 700, color: c.txt }}>{aiReview ? 'AI Review' : pageLabel[page]}</span>
+            <span style={{ fontSize: mobile ? 15 : 17, fontWeight: 700, color: c.txt }}>{aiReview && page === 'today' ? 'AI Review' : pageLabel[page]}</span>
             {!aiReview && <span style={{ fontSize: 12, color: c.sub, background: c.bdr + '60', padding: '2px 8px', borderRadius: 10 }}>{active.length}</span>}
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
-            <button onClick={() => setDark(dark === 'light' ? 'warm' : dark === 'warm' ? 'dark' : 'light')} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 8, border: '1px solid ' + c.bdr, background: 'transparent', color: c.sub, fontSize: 12, cursor: 'pointer' }}>{dark === 'dark' ? <Sun size={13} /> : dark === 'warm' ? <Moon size={13} /> : <Sun size={13} />} {dark === 'light' ? 'Light' : dark === 'warm' ? 'Warm' : 'Dark'}</button>
-            <button onClick={runAiReview} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 8, border: 'none', background: c.acc, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}><Brain size={13} /> AI Review</button>
-            <button onClick={() => setAiOpen(!aiOpen)} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 8, border: '1px solid ' + (aiOpen ? c.acc : c.bdr), background: aiOpen ? c.acc + '15' : 'transparent', color: aiOpen ? c.acc : c.sub, fontSize: 12, cursor: 'pointer' }}><Sparkles size={13} /> AI</button>
+            {mobile && <button onClick={runAiReview} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 8, border: 'none', background: c.acc, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}><Brain size={13} /> Review</button>}
           </div>
         </div>
         <div style={{ flex: 1, padding: mobile ? '12px' : '20px 24px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          {aiReview ? renderAiReview() : pages[page]()}
+          {pages[page]()}
         </div>
       </div>
 
-      {/* ── AI Panel ── */}
-      {aiOpen && (
-        <div style={mobile ? { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: c.bg, zIndex: 50, display: 'flex', flexDirection: 'column' } : { width: 340, borderLeft: '1px solid ' + c.bdr, background: c.side, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-          <div style={{ padding: '10px 14px', borderBottom: '1px solid ' + c.bdr, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Sparkles size={14} color={c.acc} /><span style={{ fontSize: 13, fontWeight: 600, color: c.txt }}>AI Assistant</span><span style={{ fontSize: 9, color: c.acc, background: c.acc + '18', padding: '1px 5px', borderRadius: 4, fontWeight: 600 }}>Opus 4.6</span></div>
-            <button onClick={() => setAiOpen(false)} style={{ background: 'transparent', border: 'none', color: c.sub, cursor: 'pointer' }}><X size={14} /></button>
+      {/* ── Mobile: AI Panel toggle ── */}
+      {mobile && (
+        <>
+          {/* Floating AI button */}
+          <button onClick={() => {
+            // Toggle mobile AI chat overlay
+            const el = document.getElementById('mobileAiPanel');
+            if (el) el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+          }} style={{ position: 'fixed', bottom: 70, right: 16, width: 48, height: 48, borderRadius: '50%', background: c.acc, border: 'none', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 16px rgba(0,0,0,0.3)', zIndex: 45 }}><Brain size={22} /></button>
+          {/* Mobile AI panel (hidden by default) */}
+          <div id="mobileAiPanel" style={{ display: 'none', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: c.bg, zIndex: 50, flexDirection: 'column', padding: 16 }}>
+            <button onClick={() => { document.getElementById('mobileAiPanel').style.display = 'none'; }} style={{ alignSelf: 'flex-end', background: 'transparent', border: 'none', color: c.sub, cursor: 'pointer', marginBottom: 8 }}><X size={18} /></button>
+            {renderAiChat()}
           </div>
-          <div style={{ flex: 1, overflowY: 'auto', padding: 12 }}>
-            {msgs.length === 0 && <div style={{ textAlign: 'center', padding: '20px 10px' }}><Sparkles size={24} color={c.acc} style={{ marginBottom: 8 }} /><div style={{ fontSize: 13, fontWeight: 600, color: c.txt, marginBottom: 4 }}>Hi Daniel!</div><div style={{ fontSize: 12, color: c.sub, marginBottom: 6, lineHeight: 1.5 }}>Ask me anything about your tasks — plan your day, get advice, or click any task for an AI breakdown.</div><div style={{ fontSize: 11, color: c.sub, marginBottom: 16, fontStyle: 'italic' }}>Tip: Expand any task and tap "Get AI tips" for instant insights.</div><div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>{aiSuggestions.map((s) => <button key={s} onClick={() => sendMsg(s)} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid ' + c.bdr, background: c.card, color: c.txt, fontSize: 12, cursor: 'pointer', textAlign: 'left' }}>{s}</button>)}</div></div>}
-            {msgs.map((m, i) => <div key={i} style={{ marginBottom: 10, display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start' }}><div style={{ maxWidth: '88%', padding: '10px 14px', borderRadius: 12, background: m.role === 'user' ? c.acc : c.card, color: m.role === 'user' ? '#fff' : c.txt, fontSize: 12, lineHeight: 1.6, border: m.role === 'ai' ? '1px solid ' + c.bdr : 'none', whiteSpace: 'pre-wrap' }}>{m.text}</div></div>)}
-          </div>
-          {recording && <div style={{ padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 8, borderTop: '1px solid ' + c.bdr }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#F85149', animation: 'blink 1s infinite' }} /><span style={{ fontSize: 12, color: c.danger }}>Recording... tap mic to stop</span></div>}
-          <div style={{ padding: '12px 14px', borderTop: '1px solid ' + c.bdr }}>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
-              <textarea value={aiInput} onChange={(e) => { setAiInput(e.target.value); e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'; }} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(aiInput); } }} placeholder="Describe what's on your mind — use as much detail as you need..." rows={3} style={{ flex: 1, background: c.card, border: '1px solid ' + c.bdr, borderRadius: 10, padding: '10px 14px', color: c.txt, fontSize: 13, outline: 'none', lineHeight: 1.5, minHeight: 72, maxHeight: 120, fontFamily: 'inherit', resize: 'none' }} />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <button onClick={() => setRecording(!recording)} style={{ width: 36, height: 36, borderRadius: '50%', border: recording ? 'none' : '1px solid ' + c.bdr, background: recording ? c.danger : c.card, color: recording ? '#fff' : c.sub, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, animation: recording ? 'micPulse 1.5s infinite' : 'none' }}><Mic size={15} /></button>
-                <button onClick={() => sendMsg(aiInput)} disabled={!aiInput.trim()} style={{ width: 36, height: 36, borderRadius: '50%', border: 'none', background: aiInput.trim() ? c.acc : c.bdr, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: aiInput.trim() ? 'pointer' : 'default', flexShrink: 0 }}><Send size={15} /></button>
-              </div>
-            </div>
-          </div>
-        </div>
+        </>
       )}
 
       {/* ── Mobile Bottom Nav ── */}
@@ -690,6 +904,9 @@ export default function TaskBuddyV7() {
           {navItems.map((n) => <button key={n.id} onClick={() => { setPage(n.id); setAiReview(null); }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: 'transparent', border: 'none', color: page === n.id ? c.acc : c.sub, cursor: 'pointer', padding: '4px 0' }}><n.icon size={20} /><span style={{ fontSize: 9 }}>{n.label}</span></button>)}
         </div>
       )}
+
+      {/* ── Add Task Modal ── */}
+      {renderAddModal()}
 
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -708,6 +925,8 @@ export default function TaskBuddyV7() {
         @keyframes fadeSlide { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.7; } }
         @keyframes loading { 0% { width: 0%; } 50% { width: 80%; } 100% { width: 100%; } }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: ${c.acc}; cursor: pointer; border: 2px solid white; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+        input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: ${c.acc}; cursor: pointer; border: 2px solid white; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.3); border-radius: 10px; }
