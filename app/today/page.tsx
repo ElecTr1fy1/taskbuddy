@@ -67,12 +67,14 @@ const aiSuggestions = [
   'Reprioritize \u2014 my focus shifted to marketing',
 ];
 
-export default function TaskBuddyV8() {
+export default function TaskBuddyV10() {
   const router = useRouter();
   const user = { email: 'danielm@tanaorjewelry.com' };
   const authLoading = false;
 
-  const [dark, setDark] = useState('light');
+  const [dark, setDark] = useState('dark');
+  const [streak, setStreak] = useState(5);
+  const [focusMode, setFocusMode] = useState(false);
   const [tasks, setTasks] = useState(tasks0);
   const [page, setPage] = useState('today');
   const [msgs, setMsgs] = useState([]);
@@ -95,6 +97,7 @@ export default function TaskBuddyV8() {
   const [reviewTab, setReviewTab] = useState('priority');
   const [reviewData, setReviewData] = useState(null);
   const [loadingMsg, setLoadingMsg] = useState('');
+  const [showAiNudge, setShowAiNudge] = useState(null);
   // V8.1: Left panel mode \u2014'chat' or 'review'
   const [leftPanel, setLeftPanel] = useState('chat');
   // V8: Add Task modal state
@@ -139,8 +142,7 @@ export default function TaskBuddyV8() {
   // ─── THEME ────────────────────────────────────────────────
   const themes = {
     light: { bg: '#F6F8FA', card: '#FFFFFF', card2: '#F9FAFB', bdr: '#E1E4E8', txt: '#24292E', sub: '#57606A', acc: '#E8732A', ok: '#1A7F37', side: '#FFFFFF', doNow: 'rgba(232,115,42,0.06)', warn: '#D4643B', danger: '#CF222E', briefBg: 'rgba(232,115,42,0.04)' },
-    warm: { bg: '#FAF8F5', card: '#FFFDF9', card2: '#FBF9F6', bdr: '#E8E3DA', txt: '#3D3929', sub: '#7A7265', acc: '#C47B3B', ok: '#558B2F', side: '#FFFDF9', doNow: 'rgba(196,123,59,0.06)', warn: '#C47B3B', danger: '#C62828', briefBg: 'rgba(196,123,59,0.04)' },
-    dark: { bg: '#0F1117', card: '#1A1B23', card2: '#1E1F28', bdr: '#2D333B', txt: '#C9D1D9', sub: '#8B949E', acc: '#F0883E', ok: '#3FB950', side: '#0D0E14', doNow: 'rgba(240,136,62,0.08)', warn: '#F0883E', danger: '#F85149', briefBg: 'rgba(240,136,62,0.05)' },
+    dark: { bg: '#0f172a', card: '#1e293b', card2: '#0f172a', bdr: '#334155', txt: '#e2e8f0', sub: '#94a3b8', acc: '#f97316', ok: '#22c55e', side: '#0f172a', doNow: 'rgba(249,115,22,0.1)', warn: '#f97316', danger: '#ef4444', briefBg: 'rgba(249,115,22,0.08)' },
   };
   const c = themes[dark] || themes.light;
 
@@ -628,10 +630,10 @@ export default function TaskBuddyV8() {
     );
   };
 
-  // ─── RENDER: DETAIL (V8: with scoring dimension badges) ──
+  // ─── RENDER: DETAIL (V10: with conditional AI nudge display) ──
   const renderDetail = (t) => (
     <div style={{ padding: '12px 16px 16px', borderTop: '1px solid ' + c.bdr, background: c.card2 }}>
-      {t.aiReason && <div style={{ display: 'flex', gap: 8, marginBottom: 12, padding: '8px 10px', borderRadius: 6, background: c.briefBg }}><Sparkles size={14} color={c.acc} style={{ flexShrink: 0, marginTop: 2 }} /><span style={{ fontSize: 12, color: c.sub, fontStyle: 'italic', lineHeight: 1.5 }}>{t.aiReason}</span></div>}
+      {showAiNudge === t.id && t.aiReason && <div style={{ display: 'flex', gap: 8, marginBottom: 12, padding: '10px 12px', borderRadius: 8, background: c.briefBg, border: '1px solid ' + c.acc + '20' }}><Sparkles size={14} color={c.acc} style={{ flexShrink: 0, marginTop: 2 }} /><span style={{ fontSize: 12, color: c.txt, fontStyle: 'italic', lineHeight: 1.5 }}>{t.aiReason}</span></div>}
       {t.notes && <div style={{ fontSize: 12, color: c.txt, marginBottom: 10, lineHeight: 1.5 }}>{t.notes}</div>}
       {t.link && <a href={t.link} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: c.acc, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 12 }}><ExternalLink size={12} /> {t.link.replace(/https?:\/\/(www\.)?/, '').split('/')[0]}</a>}
       {t.dueDate && <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12, fontSize: 12, color: t.deadlineType === 'hard' ? c.danger : c.sub }}><Calendar size={12} /> Due {fmtDate(t.dueDate)} {t.deadlineType === 'hard' && <span style={{ background: c.danger, color: '#fff', padding: '1px 6px', borderRadius: 4, fontSize: 10, fontWeight: 600 }}>HARD</span>}{t.deadlineType === 'soft' && <span style={{ background: c.bdr, color: c.sub, padding: '1px 6px', borderRadius: 4, fontSize: 10 }}>soft</span>}</div>}
@@ -659,7 +661,7 @@ export default function TaskBuddyV8() {
           </div>
         ))}
       </div>
-      <button onClick={(e) => { e.stopPropagation(); sendTaskInsight(t); }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1px solid ' + c.acc + '40', background: c.acc + '10', color: c.acc, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginBottom: 10, width: '100%', justifyContent: 'center' }}><Sparkles size={14} /> Get AI tips & breakdown</button>
+      <button onClick={(e) => { e.stopPropagation(); setShowAiNudge(showAiNudge === t.id ? null : t.id); }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1px solid ' + c.acc + '40', background: c.acc + '10', color: c.acc, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginBottom: 10, width: '100%', justifyContent: 'center' }}><Sparkles size={14} /> {showAiNudge === t.id ? 'Hide AI Tips' : 'Get AI Tips & Breakdown'}</button>
       <div style={{ display: 'flex', gap: 12 }}>
         <button onClick={(e) => { e.stopPropagation(); startEditTask(t); }} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', color: c.acc, fontSize: 12, cursor: 'pointer', padding: '4px 0' }}><Sliders size={13} /> Edit task</button>
         <button onClick={(e) => { e.stopPropagation(); deleteTask(t.id); }} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', color: c.danger, fontSize: 12, cursor: 'pointer', padding: '4px 0' }}><Trash2 size={13} /> Delete task</button>
@@ -678,7 +680,7 @@ export default function TaskBuddyV8() {
     const scoreColor = scoreVal >= 81 ? c.ok : scoreVal >= 61 ? c.acc : scoreVal >= 31 ? c.warn : c.danger;
     return (
       <div key={t.id} draggable={drag} onDragStart={drag ? () => handleDragStart(t.id) : undefined} onDragOver={drag ? (e) => handleDragOver(e, t.id) : undefined} onDragLeave={drag ? handleDragLeave : undefined} onDrop={drag ? () => handleDrop(t.id) : undefined}
-        style={{ borderRadius: 12, border: large ? 'none' : '1px solid ' + c.bdr, background: large ? 'transparent' : c.card, marginBottom: 8, opacity: (isCelebrating && celPhase === 'slideout') ? 0 : isDragging ? 0.4 : dim ? 0.6 : 1, cursor: drag ? 'grab' : 'default', transition: isCelebrating ? 'none' : 'opacity 0.3s ease, transform 0.3s ease', boxShadow: large ? 'none' : '0 1px 3px rgba(0,0,0,0.06)', overflow: 'visible', animation: (isCelebrating && celPhase === 'slideout') ? 'taskSlideOut 0.8s ease forwards' : 'none', transform: isDragging ? 'scale(0.98)' : 'translateX(0)', borderTop: dragOverId === t.id && dragId !== t.id ? '3px solid ' + c.acc : undefined }}>
+        style={{ borderRadius: 12, border: large ? 'none' : '1px solid ' + c.bdr, background: large ? 'transparent' : c.card, marginBottom: 8, opacity: (isCelebrating && celPhase === 'slideout') ? 0 : isDragging ? 0.4 : dim ? 0.6 : 1, cursor: drag ? 'grab' : 'default', transition: isCelebrating ? 'none' : 'opacity 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease', boxShadow: large ? 'none' : '0 1px 3px rgba(0,0,0,0.06)', overflow: 'visible', animation: (isCelebrating && celPhase === 'slideout') ? 'taskSlideOut 0.8s ease forwards' : 'none', transform: isDragging ? 'scale(0.98)' : 'translateX(0)', borderTop: dragOverId === t.id && dragId !== t.id ? '3px solid ' + c.acc : undefined }} onMouseEnter={(e) => { if (!large && !drag) e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'; if (!large && !drag) e.currentTarget.style.transform = 'translateY(-2px)'; }} onMouseLeave={(e) => { if (!large && !drag) e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)'; if (!large && !drag) e.currentTarget.style.transform = 'translateY(0)'; }}>
         <div onClick={() => setExpanded(isExp ? null : t.id)} style={{ display: 'flex', alignItems: 'flex-start', gap: mobile ? 8 : 10, padding: large ? '14px 16px' : '12px 14px', cursor: 'pointer' }}>
           {drag && !mobile && <GripVertical size={14} color={c.sub} style={{ flexShrink: 0, opacity: 0.5, marginTop: 4 }} />}
           <div style={{ marginTop: 2 }}>{renderChk(t)}</div>
@@ -697,7 +699,7 @@ export default function TaskBuddyV8() {
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, flexShrink: 0 }}>
             {/* V8: Score as /100 badge */}
             <div style={{ textAlign: 'center' }}>
-              <div style={{ minWidth: 44, height: 28, borderRadius: 8, background: scoreColor + '18', border: '1px solid ' + scoreColor + '40', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+              <div style={{ minWidth: 44, height: 28, borderRadius: 12, background: scoreColor + '18', border: '1px solid ' + scoreColor + '40', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, transition: 'all 0.2s' }}>
                 <span style={{ fontSize: 14, fontWeight: 700, color: scoreColor }}>{scoreVal}</span>
                 <span style={{ fontSize: 9, fontWeight: 500, color: scoreColor, opacity: 0.7 }}>/100</span>
               </div>
@@ -828,7 +830,7 @@ export default function TaskBuddyV8() {
           {addMode === 'brainDump' && !editingTask && !reviewingDump && (
             <div>
               <div style={{ fontSize: 12, color: c.sub, marginBottom: 12, lineHeight: 1.6 }}>Dump everything on your mind — tasks, ideas, things you need to do. Speak freely or type it all out. AI will parse it into structured, ranked tasks.</div>
-              <textarea value={dumpText} onChange={(e) => setDumpText(e.target.value)} placeholder={"I need to call the supplier about Q2 inventory, it's urgent. Also review the Q1 numbers before Friday meeting. Should schedule the investor call sometime this week. Oh and I should probably work out tomorrow morning..."} rows={8} style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid ' + c.bdr, background: c.bg, color: c.txt, fontSize: 13, outline: 'none', resize: 'vertical', lineHeight: 1.7, fontFamily: 'inherit', boxSizing: 'border-box', minHeight: 160 }} />
+              <textarea value={dumpText} onChange={(e) => setDumpText(e.target.value)} placeholder={"I need to call the supplier about Q2 inventory, it's urgent. Also review the Q1 numbers before Friday — should schedule the investor call sometime this week. Oh and I should probably work out tomorrow morning..."} rows={8} style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid ' + c.bdr, background: c.bg, color: c.txt, fontSize: 13, outline: 'none', resize: 'vertical', lineHeight: 1.7, fontFamily: 'inherit', boxSizing: 'border-box', minHeight: 160 }} />
               <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                 <button onClick={() => { if (recording) stopSpeech('dump'); else startSpeech('dump'); }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 10, border: '1px solid ' + (recording ? c.danger : c.bdr), background: recording ? c.danger + '15' : c.card, color: recording ? c.danger : c.sub, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}><Mic size={14} /> {recording ? 'Stop Recording' : 'Voice Input'}</button>
                 <div style={{ flex: 1 }} />
@@ -940,16 +942,30 @@ export default function TaskBuddyV8() {
     );
   };
 
-  // ─── PAGE: FOCUS (V8: Task queue only \u2014AI is in left panel) ──
-  const renderFocusQueue = () => (
+  // ─── PAGE: FOCUS (V10: Task queue with progress bar, Start Focus button) ──
+  const renderFocusQueue = () => {
+    const completedToday = done.length;
+    const totalTasksToday = active.length + done.length;
+    const progressPct = totalTasksToday > 0 ? (completedToday / totalTasksToday) * 100 : 0;
+    return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontSize: 16, fontWeight: 700, color: c.txt }}>Focus Session</span>
           <span style={{ fontSize: 11, color: c.sub, background: c.bdr + '60', padding: '2px 8px', borderRadius: 10 }}>{active.length} tasks</span>
         </div>
         <button onClick={() => setShowAddModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8, border: 'none', background: c.acc, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}><Plus size={14} /> Add Task</button>
       </div>
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+          <span style={{ fontSize: 11, fontWeight: 600, color: c.sub }}>Today Progress</span>
+          <span style={{ fontSize: 11, fontWeight: 600, color: c.acc }}>{completedToday}/{totalTasksToday} done</span>
+        </div>
+        <div style={{ height: 6, background: c.bdr, borderRadius: 3, overflow: 'hidden' }}>
+          <div style={{ height: '100%', background: `linear-gradient(90deg, ${c.ok} 0%, ${c.acc} 100%)`, width: progressPct + '%', borderRadius: 3, transition: 'width 0.3s ease' }} />
+        </div>
+      </div>
+      <button onClick={() => setFocusMode(!focusMode)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, border: 'none', background: focusMode ? c.acc : c.card, color: focusMode ? '#fff' : c.acc, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginBottom: 14, justifyContent: 'center', transition: 'all 0.15s' }}><Zap size={14} /> {focusMode ? 'Exit Focus Mode' : 'Start Focus'}</button>
       {/* Context chips */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: activeCtx ? 8 : 16 }}>
         {chipDefs.map((ch) => <button key={ch.key} onClick={() => { if (activeCtx === ch.key) resetTaskOrder(); else { setActiveCtx(ch.key); reorderByIntent(ch.key); } }} style={{ padding: '5px 10px', borderRadius: 20, border: '1px solid ' + (activeCtx === ch.key ? c.acc : c.bdr), background: activeCtx === ch.key ? c.acc + '18' : 'transparent', color: activeCtx === ch.key ? c.acc : c.sub, fontSize: 11, cursor: 'pointer' }}>{ch.icon} {ch.label}</button>)}
@@ -962,9 +978,9 @@ export default function TaskBuddyV8() {
         </div>
       )}
       <div style={{ flex: 1, overflowY: 'auto', padding: '0 2px' }}>
-        {topTask && <div style={{ background: c.doNow, border: '2px solid ' + c.acc, borderRadius: 12, padding: '12px 14px', marginBottom: 20 }}><div style={{ fontSize: 11, fontWeight: 700, color: c.acc, textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}><Zap size={14} color={c.acc} /> Do Now</div>{renderTask(topTask, { large: true })}</div>}
-        {upNext.length > 0 && <div style={{ marginBottom: 20 }}>{sectionHead('Up Next', upNext.length)}{upNext.map((t) => renderTask(t, { drag: true }))}</div>}
-        {later.length > 0 && <div style={{ marginBottom: 20, opacity: 0.65 }}>{sectionHead('Later', later.length)}{later.map((t) => renderTask(t, { drag: true, dim: true }))}</div>}
+        {topTask && <div style={{ background: focusMode ? c.doNow : 'transparent', border: '2px solid ' + c.acc, borderRadius: 12, padding: '12px 14px', marginBottom: 20, opacity: focusMode ? 1 : 1, transition: 'opacity 0.2s' }}><div style={{ fontSize: 11, fontWeight: 700, color: c.acc, textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}><Zap size={14} color={c.acc} /> Do Now</div>{renderTask(topTask, { large: true })}</div>}
+        {upNext.length > 0 && <div style={{ marginBottom: 20, opacity: focusMode ? 0.3 : 1, transition: 'opacity 0.2s' }}>{sectionHead('Up Next', upNext.length)}{upNext.map((t) => renderTask(t, { drag: true }))}</div>}
+        {later.length > 0 && <div style={{ marginBottom: 20, opacity: focusMode ? 0.2 : 0.65, transition: 'opacity 0.2s' }}>{sectionHead('Later', later.length)}{later.map((t) => renderTask(t, { drag: true, dim: true }))}</div>}
         {done.length > 0 && <>
           <button onClick={() => setShowDone(!showDone)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', color: c.sub, fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8, marginTop: 16, marginBottom: 8, cursor: 'pointer' }}>{showDone ? <ChevronDown size={13} /> : <ChevronRight size={13} />} Done ({done.length})</button>
           {showDone && done.map((t) => <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px', borderRadius: 8, background: c.card, border: '1px solid ' + c.bdr, marginBottom: 6, opacity: 0.5 }}><Check size={14} color={c.ok} /><span style={{ fontSize: 13, color: c.sub, textDecoration: 'line-through' }}>{t.title}</span></div>)}
@@ -973,6 +989,7 @@ export default function TaskBuddyV8() {
       </div>
     </div>
   );
+  };
 
   // ─── AI CHAT PANEL (V8: always visible on Focus page, left side) ──
   // Simple markdown renderer for AI chat messages
@@ -1268,29 +1285,33 @@ export default function TaskBuddyV8() {
     <div style={{ display: 'flex', flexDirection: mobile ? 'column' : 'row', height: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', background: c.bg, color: c.txt, overflow: 'hidden' }}>
       {/* ── V8 Sidebar: expanded with text labels ── */}
       {!mobile && (
-        <div style={{ width: 200, background: c.side, borderRight: '1px solid ' + c.bdr, display: 'flex', flexDirection: 'column', paddingTop: 12, flexShrink: 0 }}>
+        <div style={{ width: 200, background: c.side, borderRight: '1px solid ' + c.bdr, display: 'flex', flexDirection: 'column', paddingTop: 12, flexShrink: 0, backgroundImage: dark === 'dark' ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' : 'none' }}>
           {/* Logo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 16px', marginBottom: 20 }}>
             <div style={{ width: 32, height: 32, borderRadius: 8, background: c.acc, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Sparkles size={18} color="#fff" /></div>
-            <span style={{ fontSize: 15, fontWeight: 700, color: c.txt }}>TaskBuddy</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ fontSize: 15, fontWeight: 700, color: c.txt }}>TaskBuddy</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: c.txt }}>{String.fromCodePoint(0x1F525)}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: c.acc }}>{streak}</span>
+            </div>
           </div>
           {/* Nav items */}
           {navItems.map((n) => (
-            <button key={n.id} onClick={() => { setPage(n.id); setAiReview(null); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', border: 'none', background: page === n.id ? c.acc + '15' : 'transparent', color: page === n.id ? c.acc : c.sub, fontSize: 13, fontWeight: page === n.id ? 600 : 400, cursor: 'pointer', borderRadius: 8, margin: '0 8px 2px', textAlign: 'left' }}>
+            <button key={n.id} onClick={() => { setPage(n.id); setAiReview(null); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', border: 'none', background: page === n.id ? c.acc + '15' : 'transparent', color: page === n.id ? c.acc : c.sub, fontSize: 13, fontWeight: page === n.id ? 600 : 400, cursor: 'pointer', borderRadius: 8, margin: '0 8px 2px', textAlign: 'left', transition: 'all 0.15s ease' }}>
               <n.icon size={18} />
               <span>{n.label}</span>
             </button>
           ))}
           {/* AI Review button in sidebar \u2014switches to review tab on Focus page */}
-          <button onClick={() => { setPage('today'); setLeftPanel('review'); if (!aiReview && !reviewData) runAiReview(); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', border: 'none', background: leftPanel === 'review' && page === 'today' ? c.acc + '15' : 'transparent', color: leftPanel === 'review' && page === 'today' ? c.acc : c.sub, fontSize: 13, fontWeight: leftPanel === 'review' && page === 'today' ? 600 : 400, cursor: 'pointer', borderRadius: 8, margin: '2px 8px', textAlign: 'left' }}>
+          <button onClick={() => { setPage('today'); setLeftPanel('review'); if (!aiReview && !reviewData) runAiReview(); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', border: 'none', background: leftPanel === 'review' && page === 'today' ? c.acc + '15' : 'transparent', color: leftPanel === 'review' && page === 'today' ? c.acc : c.sub, fontSize: 13, fontWeight: leftPanel === 'review' && page === 'today' ? 600 : 400, cursor: 'pointer', borderRadius: 8, margin: '2px 8px', textAlign: 'left', transition: 'all 0.15s ease' }}>
             <Brain size={18} />
             <span>AI Review</span>
           </button>
           {/* Spacer + Dark mode toggle at bottom */}
           <div style={{ marginTop: 'auto', padding: '8px 8px 12px' }}>
-            <button onClick={() => setDark(dark === 'light' ? 'warm' : dark === 'warm' ? 'dark' : 'light')} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderRadius: 8, border: 'none', background: 'transparent', color: c.sub, fontSize: 13, cursor: 'pointer', width: '100%', textAlign: 'left' }}>
-              {dark === 'dark' ? <Sun size={18} /> : dark === 'warm' ? <Moon size={18} /> : <Sun size={18} />}
-              <span>{dark === 'light' ? 'Light Mode' : dark === 'warm' ? 'Warm Mode' : 'Dark Mode'}</span>
+            <button onClick={() => setDark(dark === 'light' ? 'dark' : 'light')} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderRadius: 8, border: 'none', background: 'transparent', color: c.sub, fontSize: 13, cursor: 'pointer', width: '100%', textAlign: 'left', transition: 'all 0.15s' }}>
+              {dark === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+              <span>{dark === 'light' ? 'Dark' : 'Light'}</span>
             </button>
           </div>
         </div>
