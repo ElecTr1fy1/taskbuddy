@@ -1,2 +1,4 @@
 'use client';
-export default function GlobalPanels() { return null; }
+export default function GlobalPanels() {
+  return null;
+}
