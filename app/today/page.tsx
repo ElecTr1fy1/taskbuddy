@@ -60,11 +60,12 @@ const navItems = [
 ];
 // V8: Updated AI suggestions (Lovable-inspired)
 const aiSuggestions = [
-  'I have 2 hours of deep work time',
-  '30 min between meetings, quick wins',
-  "I'm low energy, easy tasks please",
-  "What's the most impactful thing right now?",
-  'Reprioritize \u2014 my focus shifted to marketing',
+  'Review my tasks',
+  'Plan my next 2 hours',
+  'Archive all completed tasks',
+  'Add task: call supplier by Friday',
+  "I have 30 min, what's most important?",
+  "What's overdue?",
 ];
 
 export default function TaskBuddyV10() {
@@ -98,8 +99,8 @@ export default function TaskBuddyV10() {
   const [reviewData, setReviewData] = useState(null);
   const [loadingMsg, setLoadingMsg] = useState('');
   const [showAiNudge, setShowAiNudge] = useState(null);
-  // V8.1: Left panel mode \u2014'chat' or 'review'
-  const [leftPanel, setLeftPanel] = useState('chat');
+  // V11: Chat context for follow-up commands
+  const [chatContext, setChatContext] = useState({ lastCmd: null, lastAffected: [], lastPlan: null, lastTasksSnapshot: null });
   // V8: Add Task modal state
   const [showAddModal, setShowAddModal] = useState(false);
   const [newTask, setNewTask] = useState({ title: '', description: '', cat: 'Business', time: 30, urgency: 5, impact: 5, confidence: 7, ease: 5, blocking: 5, delegatable: false, dueDate: '', deadlineType: 'soft' });
@@ -459,34 +460,22 @@ export default function TaskBuddyV10() {
     setPage('today');
   };
 
-  // ─── AI CHAT (V8.3: with REAL task reordering) ──────────
-  const detectIntent = (text) => {
-    const t = text.toLowerCase();
-    if (/low energy|tired|exhausted|burned out|lazy|sleepy|no energy|drained/i.test(t)) return 'lowEnergy';
-    if (/quick win|quick task|small task|easy task|fast task|knock out|batch/i.test(t)) return 'quickWins';
-    if (/deep focus|deep work|concentrate|uninterrupted|flow state|hours? of focus|block of time/i.test(t)) return 'deepFocus';
-    if (/30 min|half hour|between meeting|short window|little time|15 min/i.test(t)) return '30min';
-    // V9: Detect category-specific reprioritization
-    const catMatch = t.match(/(?:focus(?:ed)? on|shifted? to|prioritize|reprioritize.*?(?:for|to|on))\s+(\w+)/i);
-    if (catMatch) {
-      const focus = catMatch[1].toLowerCase();
-      if (/market|brand|ad|campaign|sale|revenue|ecom|business|supplier|inventory/i.test(focus)) return 'catBusiness';
-      if (/health|gym|workout|fitness|exercise/i.test(focus)) return 'catHealth';
-      if (/personal|family|friend|self/i.test(focus)) return 'catPersonal';
-      if (/work|project|code|dev|design/i.test(focus)) return 'catWork';
-    }
-    if (/impactful|most important|highest priority|what matters|biggest impact|reprioritize|re-prioritize/i.test(t)) return 'impact';
-    // V9: Time-based detection
-    const timeMatch = t.match(/(\d+)\s*(?:min(?:utes?)?|hours?)/i);
-    if (timeMatch) {
-      const mins = t.includes('hour') ? parseInt(timeMatch[1]) * 60 : parseInt(timeMatch[1]);
-      return { type: 'time', minutes: mins };
-    }
-    return null;
+  // ─── V11: AI COMMAND CENTER ──────────────────────────────
+  // Fuzzy match: find tasks by loose title reference
+  const fuzzyMatch = (query, taskList) => {
+    const q = query.toLowerCase().trim();
+    if (!q) return [];
+    const exact = taskList.filter(t => t.title.toLowerCase().includes(q));
+    if (exact.length > 0) return exact;
+    const words = q.split(/\s+/).filter(w => w.length > 2);
+    return taskList.filter(t => {
+      const title = t.title.toLowerCase();
+      return words.filter(w => title.includes(w)).length >= Math.max(1, Math.floor(words.length * 0.5));
+    });
   };
-  // V8.3: Actually reorder tasks by intent (not just filter)
+
+  // Reorder tasks by intent (used by reprioritize command and chips)
   const reorderByIntent = (intent) => {
-    // V9: Handle object intents (time-based)
     const intentKey = typeof intent === 'object' ? 'time' : intent;
     setTasks((prev) => {
       const doneT = prev.filter((t) => t.done);
@@ -508,21 +497,10 @@ export default function TaskBuddyV10() {
         const match = activeT.filter((t) => t.time <= 30).sort((a, b) => score(b) - score(a));
         const rest = activeT.filter((t) => t.time > 30).sort((a, b) => score(b) - score(a));
         sorted = [...match, ...rest];
-      } else if (intentKey === 'catBusiness') {
-        const match = activeT.filter((t) => t.cat === 'Business').sort((a, b) => score(b) - score(a));
-        const rest = activeT.filter((t) => t.cat !== 'Business').sort((a, b) => score(b) - score(a));
-        sorted = [...match, ...rest];
-      } else if (intentKey === 'catHealth') {
-        const match = activeT.filter((t) => t.cat === 'Health').sort((a, b) => score(b) - score(a));
-        const rest = activeT.filter((t) => t.cat !== 'Health').sort((a, b) => score(b) - score(a));
-        sorted = [...match, ...rest];
-      } else if (intentKey === 'catPersonal') {
-        const match = activeT.filter((t) => t.cat === 'Personal').sort((a, b) => score(b) - score(a));
-        const rest = activeT.filter((t) => t.cat !== 'Personal').sort((a, b) => score(b) - score(a));
-        sorted = [...match, ...rest];
-      } else if (intentKey === 'catWork') {
-        const match = activeT.filter((t) => t.cat === 'Work').sort((a, b) => score(b) - score(a));
-        const rest = activeT.filter((t) => t.cat !== 'Work').sort((a, b) => score(b) - score(a));
+      } else if (/^cat/.test(intentKey)) {
+        const catName = intentKey.replace('cat', '');
+        const match = activeT.filter((t) => t.cat === catName).sort((a, b) => score(b) - score(a));
+        const rest = activeT.filter((t) => t.cat !== catName).sort((a, b) => score(b) - score(a));
         sorted = [...match, ...rest];
       } else if (intentKey === 'time') {
         const mins = intent.minutes;
@@ -543,68 +521,306 @@ export default function TaskBuddyV10() {
       return [...activeT, ...doneT];
     });
   };
-  const generateAiResponse = (text, intent) => {
-    const activeTasks = getActive();
-    const top3 = activeTasks.slice(0, 3);
-    const totalActive = tasks.filter(t => !t.done).length;
-    if (intent === 'lowEnergy') {
-      const easy = activeTasks.filter(t => t.effort <= 5).sort((a, b) => a.effort - b.effort).slice(0, 3);
-      return '**Low energy mode activated** \u2014 I\'ve reordered your ' + totalActive + ' tasks to show easier wins first.\n\nHere\'s your adjusted lineup:\n' + easy.map((t, i) => (i + 1) + '. **' + t.title + '** (' + fmt(t.time) + ', effort: ' + t.effort + '/10)').join('\n') + '\n\nStart with the easiest one to build momentum. You\'ve got this!';
+
+  // V11: Command Parser
+  const parseCommand = (text) => {
+    const t = text.toLowerCase().trim();
+    const activeTasks = tasks.filter(tk => !tk.done);
+    const doneTasks = tasks.filter(tk => tk.done);
+
+    // ARCHIVE
+    if (/\b(archive|clear|clean up|remove)\b/i.test(t)) {
+      if (/\b(all|everything|every task)\b/i.test(t) && !/\b(done|completed|finished)\b/i.test(t)) {
+        return { type: 'archive', scope: 'all', matched: activeTasks };
+      }
+      if (/\b(done|completed|finished)\b/i.test(t)) {
+        return { type: 'archive', scope: 'done', matched: doneTasks.length > 0 ? doneTasks : activeTasks.filter(tk => tk.status === 'done') };
+      }
+      const afterArchive = t.replace(/^.*?\b(?:archive|clear|remove)\s+(?:the\s+)?/i, '');
+      const matched = fuzzyMatch(afterArchive, activeTasks);
+      if (matched.length > 0) return { type: 'archive', scope: 'specific', matched };
+      return { type: 'archive', scope: 'all', matched: activeTasks };
     }
-    if (intent === 'quickWins') {
-      const qw = activeTasks.filter(t => t.effort <= 3 && t.time <= 20).slice(0, 3);
-      if (qw.length === 0) return 'No super-quick tasks available right now, but I\'ve sorted by easiest first. Look for tasks under 30 minutes.';
-      return '**Quick wins mode** \u2014 I\'ve moved your ' + qw.length + ' quickest tasks to the top.\n\n' + qw.map((t, i) => (i + 1) + '. **' + t.title + '** (' + fmt(t.time) + ')').join('\n') + '\n\nKnock these out and build momentum!';
+
+    // COMPLETE
+    if (/\b(mark|done with|finished|completed?|i did|just did)\b/i.test(t)) {
+      const taskRef = t.replace(/^.*?\b(?:mark|done with|finished|completed?|i did|just did)\s+(?:the\s+)?/i, '').replace(/\s+(?:as\s+)?(?:done|complete|finished)\s*$/i, '');
+      const matched = fuzzyMatch(taskRef, activeTasks);
+      if (matched.length > 0) return { type: 'complete', matched };
     }
-    if (intent === 'deepFocus') {
-      const deep = activeTasks.filter(t => t.impact >= 7).slice(0, 3);
-      return '**Deep focus mode** \u2014 I\'ve reordered to put your highest-impact work first.\n\nYour deep work lineup:\n' + deep.map((t, i) => (i + 1) + '. **' + t.title + '** (impact: ' + t.impact + '/10, ' + fmt(t.time) + ')').join('\n') + '\n\nClose Slack, silence notifications, and go deep.';
+
+    // CREATE
+    if (/\b(add|new task|create|i need to)\b/i.test(t)) {
+      let taskText = t.replace(/^.*?\b(?:add\s+(?:a\s+)?task|new task|create\s+(?:a\s+)?task|i need to)\s*:?\s*/i, '');
+      if (!taskText || taskText === t) taskText = t.replace(/^.*?\b(?:add|create)\s+/i, '');
+      return { type: 'create', text: taskText };
     }
-    if (intent === '30min') {
-      const short = activeTasks.filter(t => t.time <= 30).slice(0, 3);
-      return '**30-minute window** \u2014 I\'ve moved ' + short.length + ' short tasks to the top.\n\n' + short.map((t, i) => (i + 1) + '. **' + t.title + '** (' + fmt(t.time) + ', score: ' + score(t) + ')').join('\n') + '\n\nPick one and execute!';
+
+    // REVIEW
+    if (/\b(review|analyze|analysis|how am i doing|assess|evaluate)\b/i.test(t) && /\b(task|prior|work|doing|progress)\b/i.test(t)) {
+      return { type: 'review' };
     }
-    if (intent === 'catBusiness' || intent === 'catHealth' || intent === 'catPersonal' || intent === 'catWork') {
-      const catName = intent.replace('cat', '');
-      const catTasks = activeTasks.filter(t => t.cat === catName).slice(0, 3);
-      return '**Reprioritized for ' + catName + '** — I\'ve moved all ' + catName + ' tasks to the top.\n\nYour ' + catName.toLowerCase() + ' lineup:\n' + catTasks.map((t, i) => (i + 1) + '. **' + t.title + '** (score: ' + score(t) + '/100, ' + fmt(t.time) + ')').join('\n') + '\n\nFocusing on what matters to you right now.';
+    if (/^review\s*$/i.test(t) || /^review my tasks$/i.test(t)) {
+      return { type: 'review' };
     }
-    if (intent === 'impact') {
-      return '**Reprioritized by impact** — here\'s what moves the needle most:\n\n' + top3.map((t, i) => (i + 1) + '. **' + t.title + '** (score: ' + score(t) + '/100, ' + fmt(t.time) + ')').join('\n') + '\n\nFocus on #1 first — it has the highest combined priority score.';
+
+    // PLAN
+    if (/\b(plan|schedule|what should i do|what.s next|next\s+\d+\s*(hour|min))\b/i.test(t)) {
+      const timeMatch2 = t.match(/(\d+)\s*(?:hour|hr)/i);
+      const minMatch = t.match(/(\d+)\s*(?:min)/i);
+      let minutes = 120;
+      if (timeMatch2) minutes = parseInt(timeMatch2[1]) * 60;
+      else if (minMatch) minutes = parseInt(minMatch[1]);
+      return { type: 'plan', minutes };
     }
-    return '**Your top priorities right now:**\n\n' + top3.map((t, i) => (i + 1) + '. **' + t.title + '** (score: ' + score(t) + '/100, ' + fmt(t.time) + ')').join('\n') + '\n\nTell me your energy level or available time and I\'ll adjust the order for you.';
+
+    // STATUS
+    if (/\b(overdue|what.?s urgent|show me|how many|status|quick wins)\b/i.test(t)) {
+      if (/overdue/i.test(t)) return { type: 'status', filter: 'overdue' };
+      if (/quick win/i.test(t)) return { type: 'status', filter: 'quickWins' };
+      if (/how many/i.test(t)) return { type: 'status', filter: 'count' };
+      if (/urgent/i.test(t)) return { type: 'status', filter: 'urgent' };
+      return { type: 'status', filter: 'summary' };
+    }
+
+    // MODIFY
+    if (/\b(change|update|set|make)\b/i.test(t) && /\b(deadline|urgency|priority|impact|effort|due)\b/i.test(t)) {
+      return { type: 'modify', text: t };
+    }
+
+    // UNDO
+    if (/\b(undo|undo that|revert)\b/i.test(t)) {
+      return { type: 'undo' };
+    }
+
+    // APPLY follow-up
+    if (/\b(apply|apply that|do it|yes.+apply|sounds good)\b/i.test(t) && chatContext.lastPlan) {
+      return { type: 'apply' };
+    }
+
+    // REPRIORITIZE
+    if (/low energy|tired|exhausted|burned out|no energy|drained/i.test(t)) return { type: 'reprioritize', intent: 'lowEnergy' };
+    if (/quick win|quick task|small task|easy task|fast task|knock out/i.test(t)) return { type: 'reprioritize', intent: 'quickWins' };
+    if (/deep focus|deep work|concentrate|uninterrupted|flow state/i.test(t)) return { type: 'reprioritize', intent: 'deepFocus' };
+    if (/30 min|half hour|between meeting|short window|15 min/i.test(t)) return { type: 'reprioritize', intent: '30min' };
+    const catMatch = t.match(/(?:focus(?:ed)? on|shifted? to|prioritize|reprioritize.*?(?:for|to|on))\s+(\w+)/i);
+    if (catMatch) {
+      const focus = catMatch[1].toLowerCase();
+      if (/market|brand|ad|campaign|sale|revenue|ecom|business|supplier|inventory/i.test(focus)) return { type: 'reprioritize', intent: 'catBusiness' };
+      if (/health|gym|workout|fitness|exercise/i.test(focus)) return { type: 'reprioritize', intent: 'catHealth' };
+      if (/personal|family|friend|self/i.test(focus)) return { type: 'reprioritize', intent: 'catPersonal' };
+      if (/work|project|code|dev|design/i.test(focus)) return { type: 'reprioritize', intent: 'catWork' };
+    }
+    if (/impactful|most important|highest priority|what matters|biggest impact/i.test(t)) return { type: 'reprioritize', intent: 'impact' };
+    const timeMatch = t.match(/(\d+)\s*(?:min(?:utes?)?|hours?)/i);
+    if (timeMatch) {
+      const mins = /hour/i.test(t) ? parseInt(timeMatch[1]) * 60 : parseInt(timeMatch[1]);
+      return { type: 'reprioritize', intent: { type: 'time', minutes: mins } };
+    }
+
+    // BULK
+    if (/\band\s+(then\s+)?(add|archive|create|mark|remove)/i.test(t)) {
+      const parts = t.split(/\band\s+(?:then\s+)?(?=add|archive|create|mark|remove)/i);
+      return { type: 'bulk', parts: parts.map(p => p.trim()) };
+    }
+
+    return null;
   };
-  const sendMsg = async (text) => {
-    if (!text.trim()) return;
+
+  // V11: Command Executor
+  const executeCommand = (cmd) => {
+    const activeTasks = tasks.filter(t => !t.done);
+    const snapshot = [...tasks];
+
+    switch (cmd.type) {
+      case 'archive': {
+        const ids = cmd.matched.map(t => t.id);
+        const count = ids.length;
+        setTasks(prev => prev.map(t => ids.includes(t.id) ? { ...t, done: true, status: 'done' } : t));
+        setChatContext(prev => ({ ...prev, lastCmd: 'archive', lastAffected: ids, lastTasksSnapshot: snapshot }));
+        const remaining = activeTasks.length - count;
+        return { type: 'action', text: 'Archived **' + count + ' task' + (count !== 1 ? 's' : '') + '**. ' + remaining + ' active task' + (remaining !== 1 ? 's' : '') + ' remaining.', action: 'archive', count, canUndo: true };
+      }
+      case 'complete': {
+        const task = cmd.matched[0];
+        complete(task.id);
+        setChatContext(prev => ({ ...prev, lastCmd: 'complete', lastAffected: [task.id], lastTasksSnapshot: snapshot }));
+        return { type: 'action', text: 'Marked **' + task.title + '** as done! Great work!', action: 'complete', count: 1 };
+      }
+      case 'create': {
+        const text = cmd.text;
+        let cat = 'Business';
+        if (/health|gym|workout|exercise/i.test(text)) cat = 'Health';
+        else if (/personal|family|friend/i.test(text)) cat = 'Personal';
+        else if (/work|code|dev|design/i.test(text)) cat = 'Work';
+        let urgency = 5, impact = 5, effort = 5, time = 30;
+        if (/high urgency|urgent|asap|critical/i.test(text)) urgency = 9;
+        if (/low urgency|whenever|no rush/i.test(text)) urgency = 3;
+        if (/high impact|important|crucial/i.test(text)) impact = 9;
+        if (/easy|simple|quick/i.test(text)) { effort = 3; time = 15; }
+        if (/hard|complex|difficult/i.test(text)) { effort = 8; time = 120; }
+        const durMatch = text.match(/(\d+)\s*(?:min|hour|hr|h)/i);
+        if (durMatch) time = /hour|hr|h/i.test(durMatch[0]) ? parseInt(durMatch[1]) * 60 : parseInt(durMatch[1]);
+        let dueDate = null, deadlineType = 'soft';
+        if (/tomorrow/i.test(text)) {
+          const d = new Date(); d.setDate(d.getDate() + 1);
+          dueDate = d.toISOString().split('T')[0];
+        } else if (/friday/i.test(text)) {
+          const d = new Date(); const day = d.getDay(); const diff = (5 - day + 7) % 7 || 7;
+          d.setDate(d.getDate() + diff); dueDate = d.toISOString().split('T')[0];
+        } else if (/monday/i.test(text)) {
+          const d = new Date(); const day = d.getDay(); const diff = (1 - day + 7) % 7 || 7;
+          d.setDate(d.getDate() + diff); dueDate = d.toISOString().split('T')[0];
+        }
+        if (/!hard|hard deadline/i.test(text)) deadlineType = 'hard';
+        let title = text.replace(/,?\s*(high|low)\s*(urgency|impact|effort)/gi, '').replace(/,?\s*by\s*(tomorrow|friday|monday)/gi, '').replace(/,?\s*!?(hard|soft)\s*(deadline)?/gi, '').replace(/,?\s*\d+\s*(?:min|hour|hr|h)\b/gi, '').replace(/,?\s*(urgent|asap|critical|important|easy|simple|quick|hard|complex|difficult)\b/gi, '').trim();
+        if (title.length < 2) title = text.trim();
+        title = title.charAt(0).toUpperCase() + title.slice(1);
+        const newT = { id: Date.now(), title, cat, impact, urgency, effort, time, age: 0, done: false, status: 'todo', notes: '', link: '', aiReason: 'Created via AI chat', dueDate, deadlineType, confidence: 7, subtasks: [] };
+        setTasks(prev => [newT, ...prev]);
+        setChatContext(prev => ({ ...prev, lastCmd: 'create', lastAffected: [newT.id], lastTasksSnapshot: snapshot }));
+        return { type: 'tasks', text: 'Created new task:', newTasks: [newT] };
+      }
+      case 'reprioritize': {
+        const intent = cmd.intent;
+        const intentKey = typeof intent === 'object' ? intent.type : intent;
+        if (intentKey === 'impact') { resetTaskOrder(); } else {
+          setActiveCtx(typeof intent === 'string' ? intent : intentKey);
+          reorderByIntent(intent);
+        }
+        setChatContext(prev => ({ ...prev, lastCmd: 'reprioritize', lastTasksSnapshot: snapshot }));
+        const topAfter = activeTasks.sort((a, b) => score(b) - score(a)).slice(0, 3);
+        let label = '';
+        if (intentKey === 'lowEnergy') label = 'Low energy mode activated';
+        else if (intentKey === 'quickWins') label = 'Quick wins mode';
+        else if (intentKey === 'deepFocus') label = 'Deep focus mode';
+        else if (intentKey === '30min') label = '30-minute window';
+        else if (intentKey === 'time') label = intent.minutes + '-minute window';
+        else if (/^cat/.test(intentKey)) label = 'Reprioritized for ' + intentKey.replace('cat', '');
+        else label = 'Reprioritized by impact';
+        return { type: 'text', text: '**' + label + '** \u2014 I\'ve reordered your ' + activeTasks.length + ' tasks.\n\nTop priorities:\n' + topAfter.map((tk, i) => (i + 1) + '. **' + tk.title + '** (' + score(tk) + '/100, ' + fmt(tk.time) + ')').join('\n') + '\n\nFocus on #1 first!' };
+      }
+      case 'plan': {
+        const sorted = [...activeTasks].sort((a, b) => score(b) - score(a));
+        let remaining = cmd.minutes;
+        const planItems = [];
+        let rt = new Date();
+        rt.setMinutes(Math.ceil(rt.getMinutes() / 5) * 5, 0, 0);
+        for (const tk of sorted) {
+          if (remaining <= 0) break;
+          if (tk.time <= remaining) {
+            const h = rt.getHours(), m = rt.getMinutes();
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            const h12 = h > 12 ? h - 12 : h === 0 ? 12 : h;
+            planItems.push({ time: h12 + ':' + String(m).padStart(2, '0') + ' ' + ampm, task: tk, duration: tk.time });
+            rt = new Date(rt.getTime() + (tk.time + 5) * 60000);
+            remaining -= tk.time;
+          }
+        }
+        const totalPlanned = planItems.reduce((s, p) => s + p.duration, 0);
+        setChatContext(prev => ({ ...prev, lastCmd: 'plan', lastPlan: planItems.map(p => p.task), lastAffected: planItems.map(p => p.task.id) }));
+        return { type: 'plan', text: 'Here\'s your **' + (cmd.minutes >= 60 ? Math.round(cmd.minutes / 60) + '-hour' : cmd.minutes + '-min') + ' plan** (' + planItems.length + ' tasks, ' + fmt(totalPlanned) + ' total):', plan: planItems };
+      }
+      case 'review': {
+        const sorted = [...activeTasks].sort((a, b) => {
+          const da = daysUntilDue(a), db = daysUntilDue(b);
+          if (a.deadlineType === 'hard' && da !== null && da <= 2) return -1;
+          if (b.deadlineType === 'hard' && db !== null && db <= 2) return 1;
+          return score(b) - score(a);
+        });
+        const catDist = cats.reduce((a2, ct) => { a2[ct] = activeTasks.filter((tk) => tk.cat === ct).length; return a2; }, {});
+        const totalMin = activeTasks.reduce((s, tk) => s + tk.time, 0);
+        const overdueTasks = activeTasks.filter(tk => { const d = daysUntilDue(tk); return d !== null && d < 0; });
+        const neglectedCat = cats.find((ct) => !tasks.filter(tk => tk.done).some((tk) => tk.cat === ct) && activeTasks.some((tk) => tk.cat === ct));
+        const bigTasks = activeTasks.filter((tk) => tk.effort >= 7 && tk.subtasks.length === 0);
+        const insights = [];
+        insights.push(String.fromCodePoint(0x1F4CA) + ' **Category Balance:** ' + Object.entries(catDist).map(([k, v]) => k + ': ' + v).join(' \u00B7 '));
+        insights.push(String.fromCodePoint(0x23F1) + ' **Total workload:** ' + fmt(totalMin) + ' across ' + activeTasks.length + ' tasks');
+        if (overdueTasks.length > 0) insights.push(String.fromCodePoint(0x26A0) + ' **Overdue:** ' + overdueTasks.length + ' task' + (overdueTasks.length > 1 ? 's' : '') + ' past due');
+        if (neglectedCat) insights.push(String.fromCodePoint(0x1F504) + ' **Blind spot:** No ' + neglectedCat + ' tasks completed recently.');
+        if (bigTasks.length > 0) insights.push(String.fromCodePoint(0x1F9E9) + ' **Break it down:** "' + bigTasks[0].title + '" is high effort with no subtasks.');
+        insights.push(String.fromCodePoint(0x1F3AF) + ' **#1 Priority:** "' + (sorted[0] ? sorted[0].title : 'None') + '" (' + (sorted[0] ? score(sorted[0]) : 0) + '/100)');
+        const suggested = sorted.slice(0, 5);
+        setChatContext(prev => ({ ...prev, lastCmd: 'review', lastPlan: sorted, lastAffected: sorted.map(tk => tk.id), lastTasksSnapshot: snapshot }));
+        return { type: 'review', text: '**AI Task Review:**\n\n' + insights.join('\n\n') + '\n\n**Suggested order:**\n' + suggested.map((tk, i) => (i + 1) + '. **' + tk.title + '** (' + score(tk) + '/100, ' + fmt(tk.time) + ')').join('\n') + '\n\nSay **"apply that"** to reorder your tasks.', sorted };
+      }
+      case 'status': {
+        if (cmd.filter === 'overdue') {
+          const overdue = activeTasks.filter(tk => { const d = daysUntilDue(tk); return d !== null && d < 0; });
+          if (overdue.length === 0) return { type: 'text', text: 'No overdue tasks! You\'re on track.' };
+          return { type: 'tasks', text: '**' + overdue.length + ' overdue task' + (overdue.length > 1 ? 's' : '') + ':**', newTasks: overdue };
+        }
+        if (cmd.filter === 'quickWins') {
+          const qw = activeTasks.filter(tk => tk.effort <= 3 && tk.time <= 20).sort((a, b) => score(b) - score(a));
+          if (qw.length === 0) return { type: 'text', text: 'No quick wins right now.' };
+          return { type: 'tasks', text: '**' + qw.length + ' quick win' + (qw.length > 1 ? 's' : '') + ':**', newTasks: qw.slice(0, 5) };
+        }
+        if (cmd.filter === 'count') {
+          const doneCount = tasks.filter(tk => tk.done).length;
+          return { type: 'text', text: 'You have **' + activeTasks.length + ' active tasks** and **' + doneCount + ' completed**. Total: ' + fmt(activeTasks.reduce((s, tk) => s + tk.time, 0)) + '.' };
+        }
+        if (cmd.filter === 'urgent') {
+          const urgent = activeTasks.filter(tk => tk.urgency >= 7).sort((a, b) => b.urgency - a.urgency);
+          if (urgent.length === 0) return { type: 'text', text: 'Nothing urgent right now!' };
+          return { type: 'tasks', text: '**' + urgent.length + ' urgent task' + (urgent.length > 1 ? 's' : '') + ':**', newTasks: urgent.slice(0, 5) };
+        }
+        const doneCount = tasks.filter(tk => tk.done).length;
+        const top = activeTasks.sort((a, b) => score(b) - score(a)).slice(0, 3);
+        return { type: 'text', text: '**Task Summary:**\n\n' + doneCount + ' completed, ' + activeTasks.length + ' active (' + fmt(activeTasks.reduce((s, tk) => s + tk.time, 0)) + ' total)\n\n**Top 3:**\n' + top.map((tk, i) => (i + 1) + '. ' + tk.title + ' (' + score(tk) + '/100)').join('\n') };
+      }
+      case 'undo': {
+        if (chatContext.lastTasksSnapshot) {
+          setTasks(chatContext.lastTasksSnapshot);
+          setChatContext(prev => ({ ...prev, lastTasksSnapshot: null, lastCmd: null }));
+          return { type: 'action', text: 'Undone! Reverted the last action.', action: 'undo', count: 0 };
+        }
+        return { type: 'text', text: 'Nothing to undo right now.' };
+      }
+      case 'apply': {
+        if (chatContext.lastPlan && Array.isArray(chatContext.lastPlan)) {
+          const orderMap = {};
+          chatContext.lastPlan.forEach((tk, i) => { orderMap[tk.id] = i; });
+          setTasks(prev => {
+            const doneT = prev.filter(tk => tk.done);
+            const activeT = prev.filter(tk => !tk.done).sort((a, b) => (orderMap[a.id] !== undefined ? orderMap[a.id] : 999) - (orderMap[b.id] !== undefined ? orderMap[b.id] : 999));
+            return [...activeT, ...doneT];
+          });
+          setChatContext(prev => ({ ...prev, lastPlan: null }));
+          return { type: 'action', text: 'Applied! Your tasks are now reordered.', action: 'apply', count: 0 };
+        }
+        return { type: 'text', text: 'No pending suggestion to apply.' };
+      }
+      default: return null;
+    }
+  };
+
+  // V11: Send message through command center
+  const sendMsg = (text) => {
+    if (!text || !text.trim()) return;
     setMsgs((p) => [...p, { role: 'user', text }]);
     setAiInput('');
     setAiThinking(true);
-    // V8.3: Detect intent and PERMANENTLY reorder tasks
-    const intent = detectIntent(text);
-    const intentKey = typeof intent === 'object' ? intent.type : intent;
-    if (intent && intentKey !== 'impact') {
-      setActiveCtx(typeof intent === 'string' ? intent : intentKey);
-      reorderByIntent(intent);
-    } else if (intentKey === 'impact') {
-      resetTaskOrder();
-    }
-    // Try API first, fall back to local AI
-    try {
-      const resp = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, conversation_history: msgs.map(m => ({ role: m.role === 'ai' ? 'assistant' : m.role, content: m.text })) }),
-      });
-      const data = await resp.json();
-      if (data.error) throw new Error(data.error);
-      setMsgs((p) => [...p, { role: 'ai', text: data.response }]);
-    } catch (err) {
-      const response = generateAiResponse(text, intent);
-      setMsgs((p) => [...p, { role: 'ai', text: response }]);
-    }
-    setAiThinking(false);
+    setTimeout(() => {
+      const cmd = parseCommand(text);
+      let response;
+      if (cmd && cmd.type === 'bulk') {
+        const results = [];
+        for (const part of cmd.parts) {
+          const subCmd = parseCommand(part);
+          if (subCmd) { const r = executeCommand(subCmd); if (r) results.push(r.text); }
+        }
+        response = { type: 'text', text: results.join('\n\n') || 'Done!' };
+      } else if (cmd) {
+        response = executeCommand(cmd);
+      }
+      if (!response) {
+        const top3 = tasks.filter(tk => !tk.done).sort((a, b) => score(b) - score(a)).slice(0, 3);
+        response = { type: 'text', text: '**Your top priorities:**\n\n' + top3.map((tk, i) => (i + 1) + '. **' + tk.title + '** (' + score(tk) + '/100, ' + fmt(tk.time) + ')').join('\n') + '\n\nTry: **archive** tasks, **add** new ones, **plan** your time, **review** priorities, or tell me your energy level.' };
+      }
+      setMsgs((p) => [...p, { role: 'ai', ...response }]);
+      setAiThinking(false);
+    }, 400);
   };
-
   // ─── DRAG ─────────────────────────────────────────────────
   const handleDragStart = (id) => setDragId(id);
   const handleDragOver = (e, tid) => { e.preventDefault(); if (dragId && dragId !== tid) setDragOverId(tid); };
@@ -954,7 +1170,10 @@ export default function TaskBuddyV10() {
           <span style={{ fontSize: 16, fontWeight: 700, color: c.txt }}>Focus Session</span>
           <span style={{ fontSize: 11, color: c.sub, background: c.bdr + '60', padding: '2px 8px', borderRadius: 10 }}>{active.length} tasks</span>
         </div>
-        <button onClick={() => setShowAddModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8, border: 'none', background: c.acc, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}><Plus size={14} /> Add Task</button>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button onClick={() => sendMsg('review my tasks')} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8, border: '1px solid ' + c.acc, background: c.acc + '15', color: c.acc, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}><Sparkles size={13} /> AI Review</button>
+          <button onClick={() => setShowAddModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8, border: 'none', background: c.acc, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}><Plus size={14} /> Add Task</button>
+        </div>
       </div>
       <div style={{ marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -1032,13 +1251,20 @@ export default function TaskBuddyV10() {
       <div style={{ flex: 1, overflowY: 'auto', marginBottom: 12 }}>
         {msgs.length === 0 && (
           <div style={{ padding: '16px 4px' }}>
-            <div style={{ fontSize: 13, color: c.sub, marginBottom: 16, lineHeight: 1.6 }}>I can help you plan your focus session, reprioritize tasks, or give you a quick breakdown of what matters most right now.</div>
+            <div style={{ fontSize: 13, color: c.sub, marginBottom: 16, lineHeight: 1.6 }}>I'm your AI Chief of Staff. I can **archive** tasks, **create** new ones, **plan** your time, **review** priorities, or **reprioritize** based on your energy and schedule. Just tell me what you need.</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {aiSuggestions.map((s) => <button key={s} onClick={() => sendMsg(s)} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid ' + c.bdr, background: c.card, color: c.txt, fontSize: 12, cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>{s}</button>)}
             </div>
           </div>
         )}
-        {msgs.map((m, i) => <div key={i} style={{ marginBottom: 10, display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start' }}><div style={{ maxWidth: '88%', padding: '10px 14px', borderRadius: 12, background: m.role === 'user' ? c.acc : c.card, color: m.role === 'user' ? '#fff' : c.txt, fontSize: 12, lineHeight: 1.6, border: m.role === 'ai' ? '1px solid ' + c.bdr : 'none' }}>{m.role === 'ai' ? renderMd(m.text) : m.text}</div></div>)}
+        {msgs.map((m, i) => <div key={i} style={{ marginBottom: 10, display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start' }}><div style={{ maxWidth: '88%', padding: '10px 14px', borderRadius: 12, background: m.role === 'user' ? c.acc : c.card, color: m.role === 'user' ? '#fff' : c.txt, fontSize: 12, lineHeight: 1.6, border: m.role === 'ai' ? '1px solid ' + c.bdr : 'none' }}>
+              {m.role === 'ai' ? (<>
+                {renderMd(m.text)}
+                {m.type === 'plan' && m.plan && (<div style={{ marginTop: 10 }}>{m.plan.map((p, pi) => (<div key={pi} style={{ display: 'flex', gap: 8, padding: '6px 8px', borderRadius: 6, background: c.bg, border: '1px solid ' + c.bdr, marginBottom: 4 }}><span style={{ fontSize: 10, fontWeight: 700, color: c.acc, whiteSpace: 'nowrap', minWidth: 65 }}>{p.time}</span><span style={{ fontSize: 11, color: c.txt, flex: 1 }}>{p.task.title}</span><span style={{ fontSize: 9, color: c.sub }}>{fmt(p.duration)}</span></div>))}</div>)}
+                {m.type === 'tasks' && m.newTasks && (<div style={{ marginTop: 8 }}>{m.newTasks.map((tk, ti) => (<div key={ti} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 8px', borderRadius: 6, background: c.bg, border: '1px solid ' + c.bdr, marginBottom: 3 }}><span style={{ fontSize: 9, color: catColors[tk.cat], background: catColors[tk.cat] + '18', padding: '1px 5px', borderRadius: 4 }}>{tk.cat}</span><span style={{ fontSize: 11, color: c.txt, flex: 1 }}>{tk.title}</span><span style={{ fontSize: 9, color: c.sub }}>{fmt(tk.time)}</span></div>))}</div>)}
+                {m.canUndo && (<button onClick={() => sendMsg('undo')} style={{ marginTop: 8, padding: '4px 12px', borderRadius: 6, border: '1px solid ' + c.bdr, background: 'transparent', color: c.acc, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Undo</button>)}
+              </>) : m.text}
+            </div></div>)}
         {aiThinking && <div style={{ marginBottom: 10, display: 'flex', justifyContent: 'flex-start' }}><div style={{ padding: '10px 18px', borderRadius: 12, background: c.card, border: '1px solid ' + c.bdr }}><span style={{ fontSize: 14, animation: 'pulse 1s infinite' }}>{String.fromCodePoint(0x1F914)} Thinking...</span></div></div>}
         <div ref={chatEndRef} />
       </div>
@@ -1119,18 +1345,10 @@ export default function TaskBuddyV10() {
     );
   };
 
-  // ─── LEFT PANEL: Tabbed Chat / Review ──────────────────────
+  // ─── LEFT PANEL: Always Chat (V11) ──────────────────────
   const renderLeftPanel = () => (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Tab switcher */}
-      <div style={{ display: 'flex', gap: 2, marginBottom: 12, background: c.bg, borderRadius: 10, padding: 3, border: '1px solid ' + c.bdr }}>
-        <button onClick={() => setLeftPanel('chat')} style={{ flex: 1, padding: '8px 0', borderRadius: 8, border: 'none', background: leftPanel === 'chat' ? c.card : 'transparent', color: leftPanel === 'chat' ? c.txt : c.sub, fontSize: 12, fontWeight: leftPanel === 'chat' ? 600 : 400, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, boxShadow: leftPanel === 'chat' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none' }}><Sparkles size={13} /> Chat</button>
-        <button onClick={() => { setLeftPanel('review'); if (!aiReview && !reviewData) runAiReview(); }} style={{ flex: 1, padding: '8px 0', borderRadius: 8, border: 'none', background: leftPanel === 'review' ? c.card : 'transparent', color: leftPanel === 'review' ? c.acc : c.sub, fontSize: 12, fontWeight: leftPanel === 'review' ? 600 : 400, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, boxShadow: leftPanel === 'review' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none' }}><Brain size={13} /> Review</button>
-      </div>
-      {/* Panel content */}
-      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-        {leftPanel === 'chat' ? renderAiChat() : renderAiReviewInline()}
-      </div>
+      {renderAiChat()}
     </div>
   );
 
@@ -1302,11 +1520,7 @@ export default function TaskBuddyV10() {
               <span>{n.label}</span>
             </button>
           ))}
-          {/* AI Review button in sidebar \u2014switches to review tab on Focus page */}
-          <button onClick={() => { setPage('today'); setLeftPanel('review'); if (!aiReview && !reviewData) runAiReview(); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', border: 'none', background: leftPanel === 'review' && page === 'today' ? c.acc + '15' : 'transparent', color: leftPanel === 'review' && page === 'today' ? c.acc : c.sub, fontSize: 13, fontWeight: leftPanel === 'review' && page === 'today' ? 600 : 400, cursor: 'pointer', borderRadius: 8, margin: '2px 8px', textAlign: 'left', transition: 'all 0.15s ease' }}>
-            <Brain size={18} />
-            <span>AI Review</span>
-          </button>
+
           {/* Spacer + Dark mode toggle at bottom */}
           <div style={{ marginTop: 'auto', padding: '8px 8px 12px' }}>
             <button onClick={() => setDark(dark === 'light' ? 'dark' : 'light')} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderRadius: 8, border: 'none', background: 'transparent', color: c.sub, fontSize: 13, cursor: 'pointer', width: '100%', textAlign: 'left', transition: 'all 0.15s' }}>
@@ -1326,7 +1540,7 @@ export default function TaskBuddyV10() {
             <span style={{ fontSize: 12, color: c.sub, background: c.bdr + '60', padding: '2px 8px', borderRadius: 10 }}>{active.length}</span>
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
-            {mobile && <button onClick={() => { runAiReview(); setAiReview('loading'); }} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 8, border: 'none', background: c.acc, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}><Brain size={13} /> Review</button>}
+            {mobile && <button onClick={() => sendMsg('review my tasks')} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 8, border: 'none', background: c.acc, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}><Sparkles size={13} /> Review</button>}
           </div>
         </div>
         <div style={{ flex: 1, padding: mobile ? '12px' : '20px 24px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
