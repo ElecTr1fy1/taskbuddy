@@ -1,4 +1,6 @@
 'use client';
+import React from 'react';
+'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -115,6 +117,7 @@ export default function TaskBuddyV8() {
   const chatEndRef = useRef(null);
   const speechRef = useRef(null);
   const dumpSpeechRef = useRef(null);
+  const completeTimerRef = useRef(null);
   const [userCtx, setUserCtx] = useState({
     lifeGoals: 'Build a portfolio of successful e-commerce brands. Achieve financial freedom by 35. Stay healthy and present for family.',
     currentFocus: 'Scaling Tanaor Jewelry, closing Series A funding round, maintaining work-life balance.',
@@ -175,6 +178,10 @@ export default function TaskBuddyV8() {
     else if (activeCtx === '30min') a = a.filter((t) => t.time <= 30);
     else if (activeCtx === 'deepFocus') a = a.filter((t) => t.impact >= 7);
     else if (activeCtx === 'quickWins') a = a.filter((t) => t.effort <= 3 && t.time <= 20);
+    else if (activeCtx === 'catBusiness') { const m = a.filter(t => t.cat === 'Business'); const r = a.filter(t => t.cat !== 'Business'); a = [...m, ...r]; }
+    else if (activeCtx === 'catHealth') { const m = a.filter(t => t.cat === 'Health'); const r = a.filter(t => t.cat !== 'Health'); a = [...m, ...r]; }
+    else if (activeCtx === 'catPersonal') { const m = a.filter(t => t.cat === 'Personal'); const r = a.filter(t => t.cat !== 'Personal'); a = [...m, ...r]; }
+    else if (activeCtx === 'catWork') { const m = a.filter(t => t.cat === 'Work'); const r = a.filter(t => t.cat !== 'Work'); a = [...m, ...r]; }
     return a;
   };
   const active = getActive();
@@ -188,8 +195,20 @@ export default function TaskBuddyV8() {
   const playCompletionSound = () => { try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination); osc.frequency.setValueAtTime(800, ctx.currentTime); osc.frequency.setValueAtTime(1200, ctx.currentTime + 0.1); gain.gain.setValueAtTime(0.3, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3); osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.3); } catch(e) {} };
 
   // ─── ACTIONS ──────────────────────────────────────────────
-  const complete = (id) => { playCompletionSound(); setCelebrating(id); setCelPhase('confetti'); setTimeout(() => setCelPhase('slideout'), 600); setTimeout(() => { setTasks((p) => p.map((t) => (t.id === id ? { ...t, done: true, status: 'done' } : t))); setCelebrating(null); setCelPhase(null); setUndoTask(id); }, 1400); };
-  const undoComplete = (id) => { setTasks((p) => p.map((t) => (t.id === id ? { ...t, done: false, status: 'todo' } : t))); setUndoTask(null); };
+  const complete = (id) => {
+    playCompletionSound(); setCelebrating(id); setCelPhase('confetti');
+    setTimeout(() => setCelPhase('slideout'), 600);
+    completeTimerRef.current = setTimeout(() => {
+      setTasks((p) => p.map((t) => (t.id === id ? { ...t, done: true, status: 'done' } : t)));
+      setCelebrating(null); setCelPhase(null); setUndoTask(id);
+      completeTimerRef.current = null;
+    }, 1400);
+  };
+  const undoComplete = (id) => {
+    if (completeTimerRef.current) { clearTimeout(completeTimerRef.current); completeTimerRef.current = null; setCelebrating(null); setCelPhase(null); }
+    setTasks((p) => p.map((t) => (t.id === id ? { ...t, done: false, status: 'todo' } : t)));
+    setUndoTask(null);
+  };
 
   // ─── AI TASK INSIGHT ──────────────────────────────────────
   const getTaskInsight = (t) => {
@@ -273,43 +292,45 @@ export default function TaskBuddyV8() {
   // ─── V8.3: BRAIN DUMP PARSER ─────────────────────────────
   const parseBrainDump = (text) => {
     if (!text.trim()) return [];
-    // Split by sentence endings, newlines, or semicolons
-    const sentences = text.split(/(?<=[.!?;])\s+|\n+/).map(s => s.trim()).filter(s => s.length > 5);
+    // V9: Much smarter splitting for ADHD brain dumps
+    // First try sentence endings
+    let sentences = text.split(/(?<=[.!?;])\s+|\n+/).map(s => s.trim()).filter(s => s.length > 5);
+    // If only 1 result, try splitting on natural phrase boundaries (commas + transition words)
+    if (sentences.length <= 1) {
+      sentences = text.split(/,\s*(?=also |oh and |and i |i also |i need |need to |i have to |i should |i want to |i keep |i gotta |plus |then |should |the \w+ (?:team|said|needs|website|warehouse))/i)
+        .map(s => s.trim()).filter(s => s.length > 8);
+    }
+    // If still 1, try splitting on just commas for long text
+    if (sentences.length <= 1 && text.length > 80) {
+      sentences = text.split(/,\s+/).map(s => s.trim()).filter(s => s.length > 10);
+    }
     const parsed = sentences.map((sentence, i) => {
       const lower = sentence.toLowerCase();
-      // Extract title: clean up, cap at reasonable length
-      let title = sentence.replace(/^(i need to|i have to|i should|i want to|i must|need to|have to|should|gotta|gonna|also|and|then|plus|oh and)\s+/i, '');
+      let title = sentence.replace(/^(ok so |so |ok |i need to |i have to |i should |i want to |i must |need to |have to |should |gotta |gonna |also |and |then |plus |oh and |oh |and i should probably )/i, '');
       title = title.charAt(0).toUpperCase() + title.slice(1);
       if (title.length > 80) title = title.slice(0, 77) + '...';
-      // Remove trailing period
       title = title.replace(/[.!;]+$/, '').trim();
-      // Detect urgency
       let urgency = 5;
-      if (/urgent|asap|today|right now|immediately|critical|deadline|overdue/i.test(lower)) urgency = 9;
-      else if (/soon|this week|important|priority|before friday|before monday/i.test(lower)) urgency = 7;
-      else if (/sometime|eventually|when i can|no rush|low priority/i.test(lower)) urgency = 3;
-      // Detect effort/time
+      if (/urgent|asap|today|right now|immediately|critical|deadline|overdue|super important|that's super/i.test(lower)) urgency = 9;
+      else if (/soon|this week|important|priority|before friday|before monday|in \d+ (?:day|week)/i.test(lower)) urgency = 7;
+      else if (/sometime|eventually|when i can|no rush|low priority|probably|keep forgetting/i.test(lower)) urgency = 3;
       let time = 30, effort = 5;
-      if (/quick|fast|5 min|10 min|simple|easy|just|small/i.test(lower)) { time = 15; effort = 2; }
-      else if (/research|build|create|develop|design|write.*report|prepare.*presentation/i.test(lower)) { time = 90; effort = 7; }
+      if (/quick|fast|5 min|10 min|simple|easy|just|small|renew/i.test(lower)) { time = 15; effort = 2; }
+      else if (/research|build|create|develop|design|write.*report|prepare|prep|presentation|landing page/i.test(lower)) { time = 90; effort = 7; }
       else if (/call|email|send|text|message|reply|respond|schedule/i.test(lower)) { time = 15; effort = 2; }
-      else if (/review|check|look at|read|go through/i.test(lower)) { time = 30; effort = 4; }
-      // Time override from explicit mentions
+      else if (/review|check|look at|read|go through|portfolio/i.test(lower)) { time = 30; effort = 4; }
       const minMatch = lower.match(/(\d+)\s*min/); if (minMatch) time = parseInt(minMatch[1]);
       const hrMatch = lower.match(/(\d+)\s*h(?:our|r)/); if (hrMatch) time = parseInt(hrMatch[1]) * 60;
-      // Detect category
       let cat = 'Work';
-      if (/investor|revenue|sales|marketing|ad|campaign|supplier|inventory|brand|shop|store|product|customer|order|shipment/i.test(lower)) cat = 'Business';
-      else if (/workout|gym|health|exercise|sleep|diet|run|walk|meditate|doctor|dentist/i.test(lower)) cat = 'Health';
-      else if (/family|friend|personal|hobby|read|book|trip|vacation|birthday|gift|netflix/i.test(lower)) cat = 'Personal';
-      // Detect impact
+      if (/investor|revenue|sales|marketing|ad|campaign|supplier|inventory|brand|shop|store|product|customer|order|shipment|warehouse|landing page|spring collection|series a|raising|funding|website|new hire|design role|portfolio/i.test(lower)) cat = 'Business';
+      else if (/workout|gym|health|exercise|sleep|diet|eat|run|walk|meditate|doctor|dentist|healthy|membership/i.test(lower)) cat = 'Health';
+      else if (/family|friend|personal|hobby|read|book|trip|vacation|birthday|gift|netflix|mom|dad|brother|sister|call.*back/i.test(lower)) cat = 'Personal';
       let impact = 5;
-      if (/investor|revenue|pitch|funding|critical|key|major|huge|game.?changer/i.test(lower)) impact = 9;
-      else if (/important|significant|strategic|growth/i.test(lower)) impact = 7;
+      if (/investor|revenue|pitch|funding|critical|key|major|huge|game.?changer|series a|raising/i.test(lower)) impact = 9;
+      else if (/important|significant|strategic|growth|landing page|spring collection|inventory/i.test(lower)) impact = 7;
       else if (/small|minor|trivial|nice.?to.?have/i.test(lower)) impact = 3;
-      // Calculate score
       const s = Math.min(100, Math.round(((impact * 4 + urgency * 3 + (10 - effort) * 1.5) / 8.5) * 10));
-      return { id: Date.now() + i, title, cat, impact, urgency, effort, time, age: 0, done: false, status: 'todo', notes: sentence !== title ? sentence : '', link: '', aiReason: 'Added via Brain Dump \u2014 AI will refine on next review.', dueDate: null, deadlineType: null, confidence: 7, subtasks: [], _score: s };
+      return { id: Date.now() + i, title, cat, impact, urgency, effort, time, age: 0, done: false, status: 'todo', notes: sentence !== title ? sentence : '', link: '', aiReason: 'Added via Brain Dump — AI will refine on next review.', dueDate: null, deadlineType: null, confidence: 7, subtasks: [], _score: s };
     });
     return parsed.sort((a, b) => b._score - a._score);
   };
@@ -445,30 +466,68 @@ export default function TaskBuddyV8() {
     if (/quick win|quick task|small task|easy task|fast task|knock out|batch/i.test(t)) return 'quickWins';
     if (/deep focus|deep work|concentrate|uninterrupted|flow state|hours? of focus|block of time/i.test(t)) return 'deepFocus';
     if (/30 min|half hour|between meeting|short window|little time|15 min/i.test(t)) return '30min';
+    // V9: Detect category-specific reprioritization
+    const catMatch = t.match(/(?:focus(?:ed)? on|shifted? to|prioritize|reprioritize.*?(?:for|to|on))\s+(\w+)/i);
+    if (catMatch) {
+      const focus = catMatch[1].toLowerCase();
+      if (/market|brand|ad|campaign|sale|revenue|ecom|business|supplier|inventory/i.test(focus)) return 'catBusiness';
+      if (/health|gym|workout|fitness|exercise/i.test(focus)) return 'catHealth';
+      if (/personal|family|friend|self/i.test(focus)) return 'catPersonal';
+      if (/work|project|code|dev|design/i.test(focus)) return 'catWork';
+    }
     if (/impactful|most important|highest priority|what matters|biggest impact|reprioritize|re-prioritize/i.test(t)) return 'impact';
+    // V9: Time-based detection
+    const timeMatch = t.match(/(\d+)\s*(?:min(?:utes?)?|hours?)/i);
+    if (timeMatch) {
+      const mins = t.includes('hour') ? parseInt(timeMatch[1]) * 60 : parseInt(timeMatch[1]);
+      return { type: 'time', minutes: mins };
+    }
     return null;
   };
   // V8.3: Actually reorder tasks by intent (not just filter)
   const reorderByIntent = (intent) => {
+    // V9: Handle object intents (time-based)
+    const intentKey = typeof intent === 'object' ? 'time' : intent;
     setTasks((prev) => {
       const doneT = prev.filter((t) => t.done);
       const activeT = prev.filter((t) => !t.done);
       let sorted;
-      if (intent === 'lowEnergy') {
+      if (intentKey === 'lowEnergy') {
         const match = activeT.filter((t) => t.effort <= 5).sort((a, b) => a.effort - b.effort);
         const rest = activeT.filter((t) => t.effort > 5).sort((a, b) => score(b) - score(a));
         sorted = [...match, ...rest];
-      } else if (intent === 'quickWins') {
+      } else if (intentKey === 'quickWins') {
         const match = activeT.filter((t) => t.effort <= 3 && t.time <= 20).sort((a, b) => a.time - b.time);
         const rest = activeT.filter((t) => !(t.effort <= 3 && t.time <= 20)).sort((a, b) => score(b) - score(a));
         sorted = [...match, ...rest];
-      } else if (intent === 'deepFocus') {
+      } else if (intentKey === 'deepFocus') {
         const match = activeT.filter((t) => t.impact >= 7).sort((a, b) => b.impact - a.impact);
         const rest = activeT.filter((t) => t.impact < 7).sort((a, b) => score(b) - score(a));
         sorted = [...match, ...rest];
-      } else if (intent === '30min') {
+      } else if (intentKey === '30min') {
         const match = activeT.filter((t) => t.time <= 30).sort((a, b) => score(b) - score(a));
         const rest = activeT.filter((t) => t.time > 30).sort((a, b) => score(b) - score(a));
+        sorted = [...match, ...rest];
+      } else if (intentKey === 'catBusiness') {
+        const match = activeT.filter((t) => t.cat === 'Business').sort((a, b) => score(b) - score(a));
+        const rest = activeT.filter((t) => t.cat !== 'Business').sort((a, b) => score(b) - score(a));
+        sorted = [...match, ...rest];
+      } else if (intentKey === 'catHealth') {
+        const match = activeT.filter((t) => t.cat === 'Health').sort((a, b) => score(b) - score(a));
+        const rest = activeT.filter((t) => t.cat !== 'Health').sort((a, b) => score(b) - score(a));
+        sorted = [...match, ...rest];
+      } else if (intentKey === 'catPersonal') {
+        const match = activeT.filter((t) => t.cat === 'Personal').sort((a, b) => score(b) - score(a));
+        const rest = activeT.filter((t) => t.cat !== 'Personal').sort((a, b) => score(b) - score(a));
+        sorted = [...match, ...rest];
+      } else if (intentKey === 'catWork') {
+        const match = activeT.filter((t) => t.cat === 'Work').sort((a, b) => score(b) - score(a));
+        const rest = activeT.filter((t) => t.cat !== 'Work').sort((a, b) => score(b) - score(a));
+        sorted = [...match, ...rest];
+      } else if (intentKey === 'time') {
+        const mins = intent.minutes;
+        const match = activeT.filter((t) => t.time <= mins).sort((a, b) => score(b) - score(a));
+        const rest = activeT.filter((t) => t.time > mins).sort((a, b) => score(b) - score(a));
         sorted = [...match, ...rest];
       } else {
         sorted = activeT.sort((a, b) => score(b) - score(a));
@@ -505,8 +564,13 @@ export default function TaskBuddyV8() {
       const short = activeTasks.filter(t => t.time <= 30).slice(0, 3);
       return '**30-minute window** \u2014 I\'ve moved ' + short.length + ' short tasks to the top.\n\n' + short.map((t, i) => (i + 1) + '. **' + t.title + '** (' + fmt(t.time) + ', score: ' + score(t) + ')').join('\n') + '\n\nPick one and execute!';
     }
+    if (intent === 'catBusiness' || intent === 'catHealth' || intent === 'catPersonal' || intent === 'catWork') {
+      const catName = intent.replace('cat', '');
+      const catTasks = activeTasks.filter(t => t.cat === catName).slice(0, 3);
+      return '**Reprioritized for ' + catName + '** — I\'ve moved all ' + catName + ' tasks to the top.\n\nYour ' + catName.toLowerCase() + ' lineup:\n' + catTasks.map((t, i) => (i + 1) + '. **' + t.title + '** (score: ' + score(t) + '/100, ' + fmt(t.time) + ')').join('\n') + '\n\nFocusing on what matters to you right now.';
+    }
     if (intent === 'impact') {
-      return '**Reprioritized by impact** \u2014 here\'s what moves the needle most:\n\n' + top3.map((t, i) => (i + 1) + '. **' + t.title + '** (score: ' + score(t) + '/100, ' + fmt(t.time) + ')').join('\n') + '\n\nFocus on #1 first \u2014 it has the highest combined priority score.';
+      return '**Reprioritized by impact** — here\'s what moves the needle most:\n\n' + top3.map((t, i) => (i + 1) + '. **' + t.title + '** (score: ' + score(t) + '/100, ' + fmt(t.time) + ')').join('\n') + '\n\nFocus on #1 first — it has the highest combined priority score.';
     }
     return '**Your top priorities right now:**\n\n' + top3.map((t, i) => (i + 1) + '. **' + t.title + '** (score: ' + score(t) + '/100, ' + fmt(t.time) + ')').join('\n') + '\n\nTell me your energy level or available time and I\'ll adjust the order for you.';
   };
@@ -517,10 +581,11 @@ export default function TaskBuddyV8() {
     setAiThinking(true);
     // V8.3: Detect intent and PERMANENTLY reorder tasks
     const intent = detectIntent(text);
-    if (intent && intent !== 'impact') {
-      setActiveCtx(intent);
+    const intentKey = typeof intent === 'object' ? intent.type : intent;
+    if (intent && intentKey !== 'impact') {
+      setActiveCtx(typeof intent === 'string' ? intent : intentKey);
       reorderByIntent(intent);
-    } else if (intent === 'impact') {
+    } else if (intentKey === 'impact') {
       resetTaskOrder();
     }
     // Try API first, fall back to local AI
@@ -764,7 +829,7 @@ export default function TaskBuddyV8() {
           {/* ── BRAIN DUMP TAB ── */}
           {addMode === 'brainDump' && !editingTask && !reviewingDump && (
             <div>
-              <div style={{ fontSize: 12, color: c.sub, marginBottom: 12, lineHeight: 1.6 }}>Dump everything on your mind \u2014 tasks, ideas, things you need to do. Speak freely or type it all out. AI will parse it into structured, ranked tasks.</div>
+              <div style={{ fontSize: 12, color: c.sub, marginBottom: 12, lineHeight: 1.6 }}>Dump everything on your mind — tasks, ideas, things you need to do. Speak freely or type it all out. AI will parse it into structured, ranked tasks.</div>
               <textarea value={dumpText} onChange={(e) => setDumpText(e.target.value)} placeholder={"I need to call the supplier about Q2 inventory, it's urgent. Also review the Q1 numbers before Friday meeting. Should schedule the investor call sometime this week. Oh and I should probably work out tomorrow morning..."} rows={8} style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid ' + c.bdr, background: c.bg, color: c.txt, fontSize: 13, outline: 'none', resize: 'vertical', lineHeight: 1.7, fontFamily: 'inherit', boxSizing: 'border-box', minHeight: 160 }} />
               <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                 <button onClick={() => { if (recording) stopSpeech('dump'); else startSpeech('dump'); }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 10, border: '1px solid ' + (recording ? c.danger : c.bdr), background: recording ? c.danger + '15' : c.card, color: recording ? c.danger : c.sub, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}><Mic size={14} /> {recording ? 'Stop Recording' : 'Voice Input'}</button>
@@ -894,7 +959,7 @@ export default function TaskBuddyV8() {
       {/* V8.3: Active filter banner */}
       {activeCtx && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: 8, background: c.acc + '12', border: '1px solid ' + c.acc + '30', marginBottom: 16 }}>
-          <span style={{ fontSize: 12, fontWeight: 600, color: c.acc }}>Sorted for: {activeCtx === 'lowEnergy' ? 'Low Energy' : activeCtx === 'quickWins' ? 'Quick Wins' : activeCtx === 'deepFocus' ? 'Deep Focus' : activeCtx === '30min' ? '30 Min' : activeCtx}</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: c.acc }}>Sorted for: {activeCtx === 'lowEnergy' ? 'Low Energy' : activeCtx === 'quickWins' ? 'Quick Wins' : activeCtx === 'deepFocus' ? 'Deep Focus' : activeCtx === '30min' ? '30 Min' : activeCtx === 'catBusiness' ? 'Business Focus' : activeCtx === 'catHealth' ? 'Health Focus' : activeCtx === 'catPersonal' ? 'Personal Focus' : activeCtx === 'catWork' ? 'Work Focus' : activeCtx === 'time' ? 'Time Window' : activeCtx}</span>
           <button onClick={resetTaskOrder} style={{ fontSize: 11, color: c.acc, background: 'transparent', border: '1px solid ' + c.acc + '40', borderRadius: 6, padding: '3px 10px', cursor: 'pointer' }}>Reset Order</button>
         </div>
       )}
@@ -1010,7 +1075,7 @@ export default function TaskBuddyV8() {
                   <div style={{ fontSize: 10, color: c.sub, fontStyle: 'italic', lineHeight: 1.4, marginBottom: 3 }}>{reviewData.understanding[t.id]}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ fontSize: 9, color: catColors[t.cat], background: catColors[t.cat] + '18', padding: '1px 5px', borderRadius: 4 }}>{t.cat}</span>
-                    {diff !== 0 && <span style={{ fontSize: 9, fontWeight: 600, color: diff > 0 ? c.ok : c.danger }}>{diff > 0 ? '\u2191' : '\u2193'} {origScore} \u2192 {aiScore}</span>}
+                    {diff !== 0 && <span style={{ fontSize: 9, fontWeight: 600, color: diff > 0 ? c.ok : c.danger }}>{diff > 0 ? '↑' : '↓'} {origScore} → {aiScore}</span>}
                     <span style={{ fontSize: 9, color: c.sub }}>{fmt(t.time)}</span>
                   </div>
                 </div>
