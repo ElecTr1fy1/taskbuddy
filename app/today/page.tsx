@@ -68,7 +68,7 @@ const aiSuggestions = [
   "What's overdue?",
 ];
 
-export default function TaskBuddyV10() {
+export default function TaskBuddyV12() {
   const router = useRouter();
   const user = { email: 'danielm@tanaorjewelry.com' };
   const authLoading = false;
@@ -76,6 +76,10 @@ export default function TaskBuddyV10() {
   const [dark, setDark] = useState('dark');
   const [streak, setStreak] = useState(5);
   const [focusMode, setFocusMode] = useState(false);
+  const [focusTimer, setFocusTimer] = useState(0);
+  const [focusDuration, setFocusDuration] = useState(0);
+  const [focusPickerOpen, setFocusPickerOpen] = useState(false);
+  const focusIntervalRef = useRef(null);
   const [tasks, setTasks] = useState(tasks0);
   const [page, setPage] = useState('today');
   const [msgs, setMsgs] = useState([]);
@@ -139,6 +143,26 @@ export default function TaskBuddyV10() {
   useEffect(() => { if (chatEndRef.current) chatEndRef.current.scrollIntoView({ behavior: 'smooth' }); }, [msgs]);
   // V8.3: Undo toast auto-dismiss
   useEffect(() => { if (undoTask) { const t = setTimeout(() => setUndoTask(null), 5000); return () => clearTimeout(t); } }, [undoTask]);
+  // V12: Focus timer countdown
+  useEffect(() => {
+    if (focusMode && focusTimer > 0) {
+      focusIntervalRef.current = setInterval(() => {
+        setFocusTimer(prev => {
+          if (prev <= 1) {
+            clearInterval(focusIntervalRef.current);
+            setFocusMode(false); setFocusDuration(0);
+            try { new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbsGQcBj+a2teleC8MLICi0dCrWBwJWZ/R5a9hIhBEjcXcrGQsDzuDq9XIrFsjDk2Zy+GwYx0MR5LA3apkKBBBhbTWyKldIRFIkr/apGcoEkKHstrIp10fD0yUw96qZigRPIC00c6tYSQSTZK+3KpmKQ==').play(); } catch(e) {}
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(focusIntervalRef.current);
+    }
+  }, [focusMode, focusTimer > 0]);
+  const startFocus = (mins) => { setFocusDuration(mins * 60); setFocusTimer(mins * 60); setFocusMode(true); setFocusPickerOpen(false); };
+  const stopFocus = () => { clearInterval(focusIntervalRef.current); setFocusMode(false); setFocusTimer(0); setFocusDuration(0); };
+  const fmtTimer = (s) => { const m = Math.floor(s / 60); const sec = s % 60; return String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0'); };
 
   // ─── THEME ────────────────────────────────────────────────
   const themes = {
@@ -158,6 +182,15 @@ export default function TaskBuddyV10() {
     else if (d !== null && t.deadlineType === 'soft') { if (d < 0) s = Math.min(100, s + 5); else if (d <= 2) s = Math.min(100, s + 10); }
     return s;
   };
+  const sortTasks = (arr) => [...arr].sort((a, b) => {
+    const diff = score(b) - score(a);
+    if (diff !== 0) return diff;
+    const dA = daysUntilDue(a), dB = daysUntilDue(b);
+    if (dA !== null && dB !== null) { const dd = dA - dB; if (dd !== 0) return dd; }
+    if (dA !== null) return -1;
+    if (dB !== null) return 1;
+    return a.id - b.id;
+  });
   // V8: Smart tags (Lovable-inspired)
   const getSmartTags = (t) => {
     const tags = [];
@@ -174,7 +207,7 @@ export default function TaskBuddyV10() {
 
   // ─── FILTERED ─────────────────────────────────────────────
   const getActive = () => {
-    let a = tasks.filter((t) => !t.done).sort((a, b) => score(b) - score(a));
+    let a = sortTasks(tasks.filter((t) => !t.done));
     if (activeCtx === 'lowEnergy') a = a.filter((t) => t.effort <= 5).sort((x, y) => x.effort - y.effort);
     else if (activeCtx === '30min') a = a.filter((t) => t.time <= 30);
     else if (activeCtx === 'deepFocus') a = a.filter((t) => t.impact >= 7);
@@ -483,32 +516,32 @@ export default function TaskBuddyV10() {
       let sorted;
       if (intentKey === 'lowEnergy') {
         const match = activeT.filter((t) => t.effort <= 5).sort((a, b) => a.effort - b.effort);
-        const rest = activeT.filter((t) => t.effort > 5).sort((a, b) => score(b) - score(a));
+        const rest = activeT.filter((t) => t.effort > 5).sort((a, b) => { const d = score(b) - score(a); if (d !== 0) return d; const dA = daysUntilDue(a), dB = daysUntilDue(b); if (dA !== null && dB !== null) { const dd = dA - dB; if (dd !== 0) return dd; } if (dA !== null) return -1; if (dB !== null) return 1; return a.id - b.id; });
         sorted = [...match, ...rest];
       } else if (intentKey === 'quickWins') {
         const match = activeT.filter((t) => t.effort <= 3 && t.time <= 20).sort((a, b) => a.time - b.time);
-        const rest = activeT.filter((t) => !(t.effort <= 3 && t.time <= 20)).sort((a, b) => score(b) - score(a));
+        const rest = activeT.filter((t) => !(t.effort <= 3 && t.time <= 20)).sort((a, b) => { const d = score(b) - score(a); if (d !== 0) return d; const dA = daysUntilDue(a), dB = daysUntilDue(b); if (dA !== null && dB !== null) { const dd = dA - dB; if (dd !== 0) return dd; } if (dA !== null) return -1; if (dB !== null) return 1; return a.id - b.id; });
         sorted = [...match, ...rest];
       } else if (intentKey === 'deepFocus') {
         const match = activeT.filter((t) => t.impact >= 7).sort((a, b) => b.impact - a.impact);
-        const rest = activeT.filter((t) => t.impact < 7).sort((a, b) => score(b) - score(a));
+        const rest = activeT.filter((t) => t.impact < 7).sort((a, b) => { const d = score(b) - score(a); if (d !== 0) return d; const dA = daysUntilDue(a), dB = daysUntilDue(b); if (dA !== null && dB !== null) { const dd = dA - dB; if (dd !== 0) return dd; } if (dA !== null) return -1; if (dB !== null) return 1; return a.id - b.id; });
         sorted = [...match, ...rest];
       } else if (intentKey === '30min') {
-        const match = activeT.filter((t) => t.time <= 30).sort((a, b) => score(b) - score(a));
-        const rest = activeT.filter((t) => t.time > 30).sort((a, b) => score(b) - score(a));
+        const match = activeT.filter((t) => t.time <= 30).sort((a, b) => { const d = score(b) - score(a); if (d !== 0) return d; const dA = daysUntilDue(a), dB = daysUntilDue(b); if (dA !== null && dB !== null) { const dd = dA - dB; if (dd !== 0) return dd; } if (dA !== null) return -1; if (dB !== null) return 1; return a.id - b.id; });
+        const rest = activeT.filter((t) => t.time > 30).sort((a, b) => { const d = score(b) - score(a); if (d !== 0) return d; const dA = daysUntilDue(a), dB = daysUntilDue(b); if (dA !== null && dB !== null) { const dd = dA - dB; if (dd !== 0) return dd; } if (dA !== null) return -1; if (dB !== null) return 1; return a.id - b.id; });
         sorted = [...match, ...rest];
       } else if (/^cat/.test(intentKey)) {
         const catName = intentKey.replace('cat', '');
-        const match = activeT.filter((t) => t.cat === catName).sort((a, b) => score(b) - score(a));
-        const rest = activeT.filter((t) => t.cat !== catName).sort((a, b) => score(b) - score(a));
+        const match = activeT.filter((t) => t.cat === catName).sort((a, b) => { const d = score(b) - score(a); if (d !== 0) return d; const dA = daysUntilDue(a), dB = daysUntilDue(b); if (dA !== null && dB !== null) { const dd = dA - dB; if (dd !== 0) return dd; } if (dA !== null) return -1; if (dB !== null) return 1; return a.id - b.id; });
+        const rest = activeT.filter((t) => t.cat !== catName).sort((a, b) => { const d = score(b) - score(a); if (d !== 0) return d; const dA = daysUntilDue(a), dB = daysUntilDue(b); if (dA !== null && dB !== null) { const dd = dA - dB; if (dd !== 0) return dd; } if (dA !== null) return -1; if (dB !== null) return 1; return a.id - b.id; });
         sorted = [...match, ...rest];
       } else if (intentKey === 'time') {
         const mins = intent.minutes;
-        const match = activeT.filter((t) => t.time <= mins).sort((a, b) => score(b) - score(a));
-        const rest = activeT.filter((t) => t.time > mins).sort((a, b) => score(b) - score(a));
+        const match = activeT.filter((t) => t.time <= mins).sort((a, b) => { const d = score(b) - score(a); if (d !== 0) return d; const dA = daysUntilDue(a), dB = daysUntilDue(b); if (dA !== null && dB !== null) { const dd = dA - dB; if (dd !== 0) return dd; } if (dA !== null) return -1; if (dB !== null) return 1; return a.id - b.id; });
+        const rest = activeT.filter((t) => t.time > mins).sort((a, b) => { const d = score(b) - score(a); if (d !== 0) return d; const dA = daysUntilDue(a), dB = daysUntilDue(b); if (dA !== null && dB !== null) { const dd = dA - dB; if (dd !== 0) return dd; } if (dA !== null) return -1; if (dB !== null) return 1; return a.id - b.id; });
         sorted = [...match, ...rest];
       } else {
-        sorted = activeT.sort((a, b) => score(b) - score(a));
+        sorted = activeT.sort((a, b) => { const d = score(b) - score(a); if (d !== 0) return d; const dA = daysUntilDue(a), dB = daysUntilDue(b); if (dA !== null && dB !== null) { const dd = dA - dB; if (dd !== 0) return dd; } if (dA !== null) return -1; if (dB !== null) return 1; return a.id - b.id; });
       }
       return [...sorted, ...doneT];
     });
@@ -517,7 +550,7 @@ export default function TaskBuddyV10() {
     setActiveCtx(null);
     setTasks((prev) => {
       const doneT = prev.filter((t) => t.done);
-      const activeT = prev.filter((t) => !t.done).sort((a, b) => score(b) - score(a));
+      const activeT = sortTasks(prev.filter((t) => !t.done));
       return [...activeT, ...doneT];
     });
   };
@@ -645,7 +678,7 @@ export default function TaskBuddyV10() {
         const task = cmd.matched[0];
         complete(task.id);
         setChatContext(prev => ({ ...prev, lastCmd: 'complete', lastAffected: [task.id], lastTasksSnapshot: snapshot }));
-        return { type: 'action', text: 'Marked **' + task.title + '** as done! Great work!', action: 'complete', count: 1 };
+        return { type: 'action', text: 'Marked **' + task.title + '** as done! Great work!', action: 'complete', count: 1, canUndo: true };
       }
       case 'create': {
         const text = cmd.text;
@@ -689,7 +722,7 @@ export default function TaskBuddyV10() {
           reorderByIntent(intent);
         }
         setChatContext(prev => ({ ...prev, lastCmd: 'reprioritize', lastTasksSnapshot: snapshot }));
-        const topAfter = activeTasks.sort((a, b) => score(b) - score(a)).slice(0, 3);
+        const topAfter = activeTasks.sort((a, b) => { const d = score(b) - score(a); if (d !== 0) return d; const dA = daysUntilDue(a), dB = daysUntilDue(b); if (dA !== null && dB !== null) { const dd = dA - dB; if (dd !== 0) return dd; } if (dA !== null) return -1; if (dB !== null) return 1; return a.id - b.id; }).slice(0, 3);
         let label = '';
         if (intentKey === 'lowEnergy') label = 'Low energy mode activated';
         else if (intentKey === 'quickWins') label = 'Quick wins mode';
@@ -701,25 +734,49 @@ export default function TaskBuddyV10() {
         return { type: 'text', text: '**' + label + '** \u2014 I\'ve reordered your ' + activeTasks.length + ' tasks.\n\nTop priorities:\n' + topAfter.map((tk, i) => (i + 1) + '. **' + tk.title + '** (' + score(tk) + '/100, ' + fmt(tk.time) + ')').join('\n') + '\n\nFocus on #1 first!' };
       }
       case 'plan': {
-        const sorted = [...activeTasks].sort((a, b) => score(b) - score(a));
+        const hr = new Date().getHours();
+        const sorted = [...activeTasks].sort((a, b) => { const d = score(b) - score(a); if (d !== 0) return d; const dA = daysUntilDue(a), dB = daysUntilDue(b); if (dA !== null && dB !== null) { const dd = dA - dB; if (dd !== 0) return dd; } if (dA !== null) return -1; if (dB !== null) return 1; return a.id - b.id; });
+        // Time-of-day awareness: deprioritize contextually inappropriate tasks
+        const timeAppropriate = [];
+        const timeInappropriate = [];
+        for (const tk of sorted) {
+          const tl = tk.title.toLowerCase();
+          if (hr >= 17 && /\bmorning\b/.test(tl)) timeInappropriate.push(tk);
+          else if (hr < 12 && /\b(evening|night)\b/.test(tl)) timeInappropriate.push(tk);
+          else timeAppropriate.push(tk);
+        }
+        const planPool = [...timeAppropriate, ...timeInappropriate];
         let remaining = cmd.minutes;
         const planItems = [];
+        const usedIds = new Set();
         let rt = new Date();
         rt.setMinutes(Math.ceil(rt.getMinutes() / 5) * 5, 0, 0);
-        for (const tk of sorted) {
+        const addToPlan = (tk) => {
+          const h = rt.getHours(), m = rt.getMinutes();
+          const ampm = h >= 12 ? 'PM' : 'AM';
+          const h12 = h > 12 ? h - 12 : h === 0 ? 12 : h;
+          planItems.push({ time: h12 + ':' + String(m).padStart(2, '0') + ' ' + ampm, task: tk, duration: tk.time });
+          rt = new Date(rt.getTime() + (tk.time + 5) * 60000);
+          remaining -= tk.time;
+          usedIds.add(tk.id);
+        };
+        // First pass: greedy by score
+        for (const tk of planPool) {
           if (remaining <= 0) break;
-          if (tk.time <= remaining) {
-            const h = rt.getHours(), m = rt.getMinutes();
-            const ampm = h >= 12 ? 'PM' : 'AM';
-            const h12 = h > 12 ? h - 12 : h === 0 ? 12 : h;
-            planItems.push({ time: h12 + ':' + String(m).padStart(2, '0') + ' ' + ampm, task: tk, duration: tk.time });
-            rt = new Date(rt.getTime() + (tk.time + 5) * 60000);
-            remaining -= tk.time;
+          if (tk.time <= remaining) addToPlan(tk);
+        }
+        // Second pass: fill remaining time with shorter tasks
+        if (remaining > 0) {
+          const leftover = planPool.filter(tk => !usedIds.has(tk.id) && tk.time <= remaining).sort((a, b) => b.time - a.time);
+          for (const tk of leftover) {
+            if (remaining <= 0) break;
+            if (tk.time <= remaining) addToPlan(tk);
           }
         }
         const totalPlanned = planItems.reduce((s, p) => s + p.duration, 0);
         setChatContext(prev => ({ ...prev, lastCmd: 'plan', lastPlan: planItems.map(p => p.task), lastAffected: planItems.map(p => p.task.id) }));
-        return { type: 'plan', text: 'Here\'s your **' + (cmd.minutes >= 60 ? Math.round(cmd.minutes / 60) + '-hour' : cmd.minutes + '-min') + ' plan** (' + planItems.length + ' tasks, ' + fmt(totalPlanned) + ' total):', plan: planItems };
+        const taskWord = planItems.length === 1 ? 'task' : 'tasks';
+        return { type: 'plan', text: 'Here\'s your **' + (cmd.minutes >= 60 ? Math.round(cmd.minutes / 60) + '-hour' : cmd.minutes + '-min') + ' plan** (' + planItems.length + ' ' + taskWord + ', ' + fmt(totalPlanned) + ' total):', plan: planItems };
       }
       case 'review': {
         const sorted = [...activeTasks].sort((a, b) => {
@@ -751,7 +808,7 @@ export default function TaskBuddyV10() {
           return { type: 'tasks', text: '**' + overdue.length + ' overdue task' + (overdue.length > 1 ? 's' : '') + ':**', newTasks: overdue };
         }
         if (cmd.filter === 'quickWins') {
-          const qw = activeTasks.filter(tk => tk.effort <= 3 && tk.time <= 20).sort((a, b) => score(b) - score(a));
+          const qw = activeTasks.filter(tk => tk.effort <= 3 && tk.time <= 20).sort((a, b) => { const d = score(b) - score(a); if (d !== 0) return d; const dA = daysUntilDue(a), dB = daysUntilDue(b); if (dA !== null && dB !== null) { const dd = dA - dB; if (dd !== 0) return dd; } if (dA !== null) return -1; if (dB !== null) return 1; return a.id - b.id; });
           if (qw.length === 0) return { type: 'text', text: 'No quick wins right now.' };
           return { type: 'tasks', text: '**' + qw.length + ' quick win' + (qw.length > 1 ? 's' : '') + ':**', newTasks: qw.slice(0, 5) };
         }
@@ -765,7 +822,7 @@ export default function TaskBuddyV10() {
           return { type: 'tasks', text: '**' + urgent.length + ' urgent task' + (urgent.length > 1 ? 's' : '') + ':**', newTasks: urgent.slice(0, 5) };
         }
         const doneCount = tasks.filter(tk => tk.done).length;
-        const top = activeTasks.sort((a, b) => score(b) - score(a)).slice(0, 3);
+        const top = activeTasks.sort((a, b) => { const d = score(b) - score(a); if (d !== 0) return d; const dA = daysUntilDue(a), dB = daysUntilDue(b); if (dA !== null && dB !== null) { const dd = dA - dB; if (dd !== 0) return dd; } if (dA !== null) return -1; if (dB !== null) return 1; return a.id - b.id; }).slice(0, 3);
         return { type: 'text', text: '**Task Summary:**\n\n' + doneCount + ' completed, ' + activeTasks.length + ' active (' + fmt(activeTasks.reduce((s, tk) => s + tk.time, 0)) + ' total)\n\n**Top 3:**\n' + top.map((tk, i) => (i + 1) + '. ' + tk.title + ' (' + score(tk) + '/100)').join('\n') };
       }
       case 'undo': {
@@ -814,7 +871,7 @@ export default function TaskBuddyV10() {
         response = executeCommand(cmd);
       }
       if (!response) {
-        const top3 = tasks.filter(tk => !tk.done).sort((a, b) => score(b) - score(a)).slice(0, 3);
+        const top3 = tasks.filter(tk => !tk.done).sort((a, b) => { const d = score(b) - score(a); if (d !== 0) return d; const dA = daysUntilDue(a), dB = daysUntilDue(b); if (dA !== null && dB !== null) { const dd = dA - dB; if (dd !== 0) return dd; } if (dA !== null) return -1; if (dB !== null) return 1; return a.id - b.id; }).slice(0, 3);
         response = { type: 'text', text: '**Your top priorities:**\n\n' + top3.map((tk, i) => (i + 1) + '. **' + tk.title + '** (' + score(tk) + '/100, ' + fmt(tk.time) + ')').join('\n') + '\n\nTry: **archive** tasks, **add** new ones, **plan** your time, **review** priorities, or tell me your energy level.' };
       }
       setMsgs((p) => [...p, { role: 'ai', ...response }]);
@@ -1178,13 +1235,27 @@ export default function TaskBuddyV10() {
       <div style={{ marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
           <span style={{ fontSize: 11, fontWeight: 600, color: c.sub }}>Today Progress</span>
-          <span style={{ fontSize: 11, fontWeight: 600, color: c.acc }}>{completedToday}/{totalTasksToday} done</span>
+          <span style={{ fontSize: 11, fontWeight: 600, color: c.acc }}>{completedToday} of {totalTasksToday} completed</span>
         </div>
         <div style={{ height: 6, background: c.bdr, borderRadius: 3, overflow: 'hidden' }}>
           <div style={{ height: '100%', background: `linear-gradient(90deg, ${c.ok} 0%, ${c.acc} 100%)`, width: progressPct + '%', borderRadius: 3, transition: 'width 0.3s ease' }} />
         </div>
       </div>
-      <button onClick={() => setFocusMode(!focusMode)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, border: 'none', background: focusMode ? c.acc : c.card, color: focusMode ? '#fff' : c.acc, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginBottom: 14, justifyContent: 'center', transition: 'all 0.15s' }}><Zap size={14} /> {focusMode ? 'Exit Focus Mode' : 'Start Focus'}</button>
+      {!focusMode && !focusPickerOpen && <button onClick={() => setFocusPickerOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, border: 'none', background: c.card, color: c.acc, fontSize: 12, fontWeight: 600, cursor: 'pointer', marginBottom: 14, justifyContent: 'center', transition: 'all 0.15s', width: '100%' }}><Zap size={14} /> Start Focus</button>}
+      {focusPickerOpen && !focusMode && <div style={{ marginBottom: 14, padding: 12, borderRadius: 10, background: c.card, border: '1px solid ' + c.acc + '40' }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: c.txt, marginBottom: 8 }}>Choose focus duration:</div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {[25, 45, 60, 90].map(m => <button key={m} onClick={() => startFocus(m)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid ' + c.bdr, background: 'transparent', color: c.txt, fontSize: 11, cursor: 'pointer', fontWeight: 500 }}>{m}m</button>)}
+          {topTask && topTask.time && <button onClick={() => startFocus(topTask.time)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid ' + c.acc, background: c.acc + '12', color: c.acc, fontSize: 11, cursor: 'pointer', fontWeight: 600 }}>{topTask.time}m (task)</button>}
+        </div>
+        <button onClick={() => setFocusPickerOpen(false)} style={{ marginTop: 6, fontSize: 10, color: c.sub, background: 'transparent', border: 'none', cursor: 'pointer' }}>Cancel</button>
+      </div>}
+      {focusMode && <div style={{ marginBottom: 14, padding: 12, borderRadius: 10, background: c.acc + '12', border: '1px solid ' + c.acc + '40', textAlign: 'center' }}>
+        {topTask && <div style={{ fontSize: 11, fontWeight: 600, color: c.acc, marginBottom: 4 }}>Focusing on: {topTask.title}</div>}
+        <div style={{ fontSize: 28, fontWeight: 700, color: c.acc, fontFamily: 'monospace', letterSpacing: 2 }}>{fmtTimer(focusTimer)}</div>
+        <div style={{ height: 3, background: c.bdr, borderRadius: 2, marginTop: 8, overflow: 'hidden' }}><div style={{ height: '100%', background: c.acc, borderRadius: 2, width: (focusDuration > 0 ? ((focusDuration - focusTimer) / focusDuration * 100) : 0) + '%', transition: 'width 1s linear' }} /></div>
+        <button onClick={stopFocus} style={{ marginTop: 8, padding: '4px 14px', borderRadius: 6, border: 'none', background: c.danger, color: '#fff', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Exit Focus</button>
+      </div>}
       {/* Context chips */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: activeCtx ? 8 : 16 }}>
         {chipDefs.map((ch) => <button key={ch.key} onClick={() => { if (activeCtx === ch.key) resetTaskOrder(); else { setActiveCtx(ch.key); reorderByIntent(ch.key); } }} style={{ padding: '5px 10px', borderRadius: 20, border: '1px solid ' + (activeCtx === ch.key ? c.acc : c.bdr), background: activeCtx === ch.key ? c.acc + '18' : 'transparent', color: activeCtx === ch.key ? c.acc : c.sub, fontSize: 11, cursor: 'pointer' }}>{ch.icon} {ch.label}</button>)}
@@ -1251,7 +1322,7 @@ export default function TaskBuddyV10() {
       <div style={{ flex: 1, overflowY: 'auto', marginBottom: 12 }}>
         {msgs.length === 0 && (
           <div style={{ padding: '16px 4px' }}>
-            <div style={{ fontSize: 13, color: c.sub, marginBottom: 16, lineHeight: 1.6 }}>I'm your AI Chief of Staff. I can **archive** tasks, **create** new ones, **plan** your time, **review** priorities, or **reprioritize** based on your energy and schedule. Just tell me what you need.</div>
+            <div style={{ fontSize: 13, color: c.sub, marginBottom: 16, lineHeight: 1.6 }}>{renderMd("I'm your AI Chief of Staff. I can **archive** tasks, **create** new ones, **plan** your time, **review** priorities, or **reprioritize** based on your energy and schedule. Just tell me what you need.")}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {aiSuggestions.map((s) => <button key={s} onClick={() => sendMsg(s)} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid ' + c.bdr, background: c.card, color: c.txt, fontSize: 12, cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>{s}</button>)}
             </div>
@@ -1260,7 +1331,7 @@ export default function TaskBuddyV10() {
         {msgs.map((m, i) => <div key={i} style={{ marginBottom: 10, display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start' }}><div style={{ maxWidth: '88%', padding: '10px 14px', borderRadius: 12, background: m.role === 'user' ? c.acc : c.card, color: m.role === 'user' ? '#fff' : c.txt, fontSize: 12, lineHeight: 1.6, border: m.role === 'ai' ? '1px solid ' + c.bdr : 'none' }}>
               {m.role === 'ai' ? (<>
                 {renderMd(m.text)}
-                {m.type === 'plan' && m.plan && (<div style={{ marginTop: 10 }}>{m.plan.map((p, pi) => (<div key={pi} style={{ display: 'flex', gap: 8, padding: '6px 8px', borderRadius: 6, background: c.bg, border: '1px solid ' + c.bdr, marginBottom: 4 }}><span style={{ fontSize: 10, fontWeight: 700, color: c.acc, whiteSpace: 'nowrap', minWidth: 65 }}>{p.time}</span><span style={{ fontSize: 11, color: c.txt, flex: 1 }}>{p.task.title}</span><span style={{ fontSize: 9, color: c.sub }}>{fmt(p.duration)}</span></div>))}</div>)}
+                {m.type === 'plan' && m.plan && (<div style={{ marginTop: 10 }}>{m.plan.map((p, pi) => (<div key={pi} style={{ display: 'flex', gap: 8, padding: '6px 8px', borderRadius: 6, background: c.bg, border: '1px solid ' + c.bdr, marginBottom: 4 }}><span style={{ fontSize: 10, fontWeight: 700, color: c.acc, whiteSpace: 'nowrap', minWidth: 65 }}>{p.time}</span><span style={{ fontSize: 11, color: c.txt, flex: 1 }}>{p.task.title}</span><span style={{ fontSize: 9, color: c.sub }}>{fmt(p.duration)}</span></div>))}<button onClick={() => sendMsg('apply that')} style={{ marginTop: 6, padding: '5px 14px', borderRadius: 6, border: '1px solid ' + c.acc, background: c.acc + '12', color: c.acc, fontSize: 11, fontWeight: 600, cursor: 'pointer', width: '100%' }}>Apply this plan</button></div>)}
                 {m.type === 'tasks' && m.newTasks && (<div style={{ marginTop: 8 }}>{m.newTasks.map((tk, ti) => (<div key={ti} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 8px', borderRadius: 6, background: c.bg, border: '1px solid ' + c.bdr, marginBottom: 3 }}><span style={{ fontSize: 9, color: catColors[tk.cat], background: catColors[tk.cat] + '18', padding: '1px 5px', borderRadius: 4 }}>{tk.cat}</span><span style={{ fontSize: 11, color: c.txt, flex: 1 }}>{tk.title}</span><span style={{ fontSize: 9, color: c.sub }}>{fmt(tk.time)}</span></div>))}</div>)}
                 {m.canUndo && (<button onClick={() => sendMsg('undo')} style={{ marginTop: 8, padding: '4px 12px', borderRadius: 6, border: '1px solid ' + c.bdr, background: 'transparent', color: c.acc, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Undo</button>)}
               </>) : m.text}
@@ -1271,12 +1342,22 @@ export default function TaskBuddyV10() {
       {recording && <div style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: 8 }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#F85149', animation: 'blink 1s infinite' }} /><span style={{ fontSize: 12, color: c.danger }}>Recording... tap mic to stop</span></div>}
       <div style={{ borderTop: '1px solid ' + c.bdr, paddingTop: 12 }}>
         <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+          <button onClick={() => { if (recording) stopSpeech('chat'); else startSpeech('chat'); }} style={{ width: 34, height: 34, borderRadius: '50%', border: recording ? 'none' : '1px solid ' + c.bdr, background: recording ? c.danger : c.card, color: recording ? '#fff' : c.sub, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, animation: recording ? 'micPulse 1.5s infinite' : 'none' }}><Mic size={14} /></button>
           <textarea value={aiInput} onChange={(e) => { setAiInput(e.target.value); e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px'; }} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(aiInput); } }} placeholder="Tell me your state..." rows={2} style={{ flex: 1, background: c.bg, border: '1px solid ' + c.bdr, borderRadius: 10, padding: '10px 14px', color: c.txt, fontSize: 13, outline: 'none', lineHeight: 1.5, minHeight: 44, maxHeight: 100, fontFamily: 'inherit', resize: 'none' }} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <button onClick={() => { if (recording) stopSpeech('chat'); else startSpeech('chat'); }} style={{ width: 34, height: 34, borderRadius: '50%', border: recording ? 'none' : '1px solid ' + c.bdr, background: recording ? c.danger : c.card, color: recording ? '#fff' : c.sub, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, animation: recording ? 'micPulse 1.5s infinite' : 'none' }}><Mic size={14} /></button>
-            <button onClick={() => sendMsg(aiInput)} disabled={!aiInput.trim()} style={{ width: 34, height: 34, borderRadius: '50%', border: 'none', background: aiInput.trim() ? c.acc : c.bdr, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: aiInput.trim() ? 'pointer' : 'default', flexShrink: 0 }}><Send size={14} /></button>
-          </div>
+          <button onClick={() => sendMsg(aiInput)} disabled={!aiInput.trim()} style={{ width: 34, height: 34, borderRadius: '50%', border: 'none', background: aiInput.trim() ? c.acc : c.bdr, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: aiInput.trim() ? 'pointer' : 'default', flexShrink: 0 }}><Send size={14} /></button>
         </div>
+        {msgs.length > 0 && (() => {
+          const hr = new Date().getHours();
+          const allActive = tasks.filter(tk => !tk.done);
+          const overdue = allActive.filter(tk => { const d = daysUntilDue(tk); return d !== null && d < 0; });
+          const hints = [];
+          if (overdue.length > 0) hints.push("What's overdue?");
+          if (hr >= 14) hints.push('Plan my remaining time');
+          if (hr < 12) hints.push("Plan my morning");
+          hints.push('Review my priorities');
+          if (chatContext.lastPlan) hints.push('Apply that');
+          return <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 8 }}>{hints.slice(0, 4).map(h => <button key={h} onClick={() => sendMsg(h)} style={{ padding: '3px 8px', borderRadius: 12, border: '1px solid ' + c.bdr, background: 'transparent', color: c.sub, fontSize: 10, cursor: 'pointer' }}>{h}</button>)}</div>;
+        })()}
       </div>
     </div>
   );
@@ -1388,7 +1469,7 @@ export default function TaskBuddyV10() {
     const filtered = getFilteredByStatus()
       .filter((t) => filterCat === 'All' || t.cat === filterCat)
       .filter((t) => !searchQ || t.title.toLowerCase().includes(searchQ.toLowerCase()))
-      .sort((a, b) => score(b) - score(a));
+      .sort((a, b) => { const d = score(b) - score(a); if (d !== 0) return d; const dA = daysUntilDue(a), dB = daysUntilDue(b); if (dA !== null && dB !== null) { const dd = dA - dB; if (dd !== 0) return dd; } if (dA !== null) return -1; if (dB !== null) return 1; return a.id - b.id; });
     return (
       <div style={{ overflowY: 'auto', height: '100%', padding: '0 4px' }}>
         {/* V8: Status tabs */}
