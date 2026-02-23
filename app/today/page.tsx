@@ -870,7 +870,7 @@ const TaskBuddyV10 = () => {
             width: '350px'
           }}>
             {/* Chat header */}
-            <div style{{
+            <div style={{
               padding: '16px',
               borderBottom: `1px solid ${colors.border}`,
               fontWeight: '600',
