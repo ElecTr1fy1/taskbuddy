@@ -105,6 +105,9 @@ export default function TaskBuddyV12() {
   const [showAiNudge, setShowAiNudge] = useState(null);
   // V11: Chat context for follow-up commands
   const [chatContext, setChatContext] = useState({ lastCmd: null, lastAffected: [], lastPlan: null, lastTasksSnapshot: null });
+  // V14: Gemini AI integration
+  const [geminiApiKey] = useState('AIzaSyDRClPj-DFXY6eJwOyuwCK8YG91s0H0BgM');
+  const [geminiConvo, setGeminiConvo] = useState([]);
   // V8: Add Task modal state
   const [showAddModal, setShowAddModal] = useState(false);
   const [newTask, setNewTask] = useState({ title: '', description: '', cat: 'Business', time: 30, urgency: 5, impact: 5, confidence: 7, ease: 5, blocking: 5, delegatable: false, dueDate: '', deadlineType: 'soft' });
@@ -555,6 +558,68 @@ export default function TaskBuddyV12() {
     });
   };
 
+  // V14: Gemini AI - Build system prompt with task context
+  const buildGeminiPrompt = () => {
+    const active = tasks.filter(t => !t.done);
+    const overdue = active.filter(t => { const d = daysUntilDue(t); return d !== null && d < 0; });
+    const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    const hour = new Date().getHours();
+    const timeOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+    return `You are TaskBuddy AI — a sharp, supportive productivity assistant for ADHD entrepreneurs. You're embedded in a task management app.
+
+TODAY: ${today} (${timeOfDay})
+USER: ${userCtx.aboutMe}
+GOALS: ${userCtx.lifeGoals}
+CURRENT FOCUS: ${userCtx.currentFocus}
+PRIORITY CATEGORIES: ${userCtx.boostCats.join(', ')}
+
+TASK SUMMARY: ${active.length} active tasks, ${tasks.filter(t => t.done).length} completed, ${overdue.length} overdue
+
+ALL ACTIVE TASKS (sorted by priority score):
+${active.sort((a, b) => score(b) - score(a)).map((t, i) => `${i + 1}. "${t.title}" [${t.cat}] Score: ${score(t)}/100, Time: ${t.time}min, Impact: ${t.impact}/10, Urgency: ${t.urgency}/10${t.dueDate ? ', Due: ' + t.dueDate : ''}${t.notes ? ', Notes: ' + t.notes.substring(0, 80) : ''}${t.subtasks?.length ? ', Subtasks: ' + t.subtasks.filter(s => s.done).length + '/' + t.subtasks.length + ' done' : ''}`).join('\n')}
+
+INSTRUCTIONS:
+- Be conversational, warm, and concise (2-4 short paragraphs max)
+- Reference specific tasks by name when giving advice
+- Understand the user's emotional state and energy level
+- Give actionable, specific recommendations — not generic productivity tips
+- If the user seems overwhelmed, help them focus on just ONE next step
+- You can suggest app commands like: "mark [task] as done", "plan my next 30 min", "add task: [name]", "review"
+- Format with **bold** for emphasis, use line breaks for readability
+- Don't repeat task lists the user can already see — add insight and strategy instead
+- If the user asks you to do something to tasks (complete, create, modify), tell them the exact command to type`;
+  };
+
+  // V14: Call Gemini API
+  const callGemini = async (userMessage) => {
+    const systemPrompt = buildGeminiPrompt();
+    const newConvo = [...geminiConvo, { role: 'user', parts: [{ text: userMessage }] }];
+
+    try {
+      const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-05-06:generateContent?key=' + geminiApiKey, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          contents: newConvo,
+          generationConfig: { maxOutputTokens: 800, temperature: 0.8 }
+        })
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error?.message || 'API error ' + res.status);
+      }
+
+      const data = await res.json();
+      const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I couldn\'t generate a response.';
+      setGeminiConvo([...newConvo, { role: 'model', parts: [{ text: aiText }] }]);
+      return { type: 'text', text: aiText };
+    } catch (err) {
+      return { type: 'text', text: '⚠️ Gemini error: ' + err.message + '\n\nTry a built-in command like **"help"**, **"plan my next 30 min"**, or **"review"**.' };
+    }
+  };
+
   // V11: Command Parser
   const parseCommand = (text) => {
     const t = text.toLowerCase().trim();
@@ -967,13 +1032,14 @@ export default function TaskBuddyV12() {
     }
   };
 
-  // V11: Send message through command center
+  // V14: Send message - commands first, Gemini fallback for conversation
   const sendMsg = (text) => {
     if (!text || !text.trim()) return;
     setMsgs((p) => [...p, { role: 'user', text }]);
     setAiInput('');
     setAiThinking(true);
-    setTimeout(() => {
+
+    const processMsg = async () => {
       const cmd = parseCommand(text);
       let response;
       if (cmd && cmd.type === 'bulk') {
@@ -987,12 +1053,14 @@ export default function TaskBuddyV12() {
         response = executeCommand(cmd);
       }
       if (!response) {
-        const top3 = tasks.filter(tk => !tk.done).sort((a, b) => { const d = score(b) - score(a); if (d !== 0) return d; const dA = daysUntilDue(a), dB = daysUntilDue(b); if (dA !== null && dB !== null) { const dd = dA - dB; if (dd !== 0) return dd; } if (dA !== null) return -1; if (dB !== null) return 1; return a.id - b.id; }).slice(0, 3);
-        response = { type: 'text', text: 'I didn\'t quite catch that. Here are your **top priorities:**\n\n' + top3.map((tk, i) => (i + 1) + '. **' + tk.title + '** (' + score(tk) + '/100, ' + fmt(tk.time) + ')').join('\n') + '\n\nTry: **"mark [task] as done"**, **"add task: [name]"**, **"plan my next 30 min"**, **"review"**, or say **"help"** for all commands.' };
+        // V14: No command matched — send to Gemini for real AI conversation
+        response = await callGemini(text);
       }
       setMsgs((p) => [...p, { role: 'ai', ...response }]);
       setAiThinking(false);
-    }, 400);
+    };
+
+    setTimeout(processMsg, 200);
   };
   // ─── DRAG ─────────────────────────────────────────────────
   const handleDragStart = (id) => setDragId(id);
