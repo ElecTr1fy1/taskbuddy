@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Check, Sparkles, ChevronDown, ChevronRight, ChevronLeft, Mic, Send, Sun, Moon, LayoutDashboard, ListTodo, Archive, Settings, Search, X, GripVertical, Clock, User, Target, Plus, ExternalLink, Trash2, BarChart3, AlertTriangle, Calendar, Circle, Zap, Brain, Sliders, Tag } from 'lucide-react';
 
-// ─── TASK DATA ────────────────────────────────────────────────
+// âââ TASK DATA ââââââââââââââââââââââââââââââââââââââââââââââââ
 const tasks0 = [
   { id: 1, title: 'Research True Classic competitor ads', cat: 'Business', impact: 9, urgency: 8, effort: 5, time: 60, age: 4, done: false, status: 'todo',
     notes: 'Look at their Facebook and YouTube ad creatives. Focus on hooks, offers, and CTAs.', link: 'https://www.facebook.com/ads/library', aiReason: 'High-impact competitive intel that directly affects your ad spend ROI.',
@@ -134,7 +134,7 @@ export default function TaskBuddyV12() {
     boostCats: ['Business'],
   });
 
-  // ─── RESPONSIVE ───────────────────────────────────────────
+  // âââ RESPONSIVE âââââââââââââââââââââââââââââââââââââââââââ
   useEffect(() => {
     const check = () => setMobile(window.innerWidth < 700);
     check();
@@ -167,14 +167,14 @@ export default function TaskBuddyV12() {
   const stopFocus = () => { clearInterval(focusIntervalRef.current); setFocusMode(false); setFocusTimer(0); setFocusDuration(0); };
   const fmtTimer = (s) => { const m = Math.floor(s / 60); const sec = s % 60; return String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0'); };
 
-  // ─── THEME ────────────────────────────────────────────────
+  // âââ THEME ââââââââââââââââââââââââââââââââââââââââââââââââ
   const themes = {
     light: { bg: '#F6F8FA', card: '#FFFFFF', card2: '#F9FAFB', bdr: '#E1E4E8', txt: '#24292E', sub: '#57606A', acc: '#E8732A', ok: '#1A7F37', side: '#FFFFFF', doNow: 'rgba(232,115,42,0.06)', warn: '#D4643B', danger: '#CF222E', briefBg: 'rgba(232,115,42,0.04)' },
     dark: { bg: '#0f172a', card: '#1e293b', card2: '#0f172a', bdr: '#334155', txt: '#e2e8f0', sub: '#94a3b8', acc: '#f97316', ok: '#22c55e', side: '#0f172a', doNow: 'rgba(249,115,22,0.1)', warn: '#f97316', danger: '#ef4444', briefBg: 'rgba(249,115,22,0.08)' },
   };
   const c = themes[dark] || themes.light;
 
-  // ─── SCORING ──────────────────────────────────────────────
+  // âââ SCORING ââââââââââââââââââââââââââââââââââââââââââââââ
   const today2 = new Date(); today2.setHours(0, 0, 0, 0);
   const daysUntilDue = (t) => { if (!t.dueDate) return null; return Math.round((new Date(t.dueDate + 'T00:00:00') - today2) / 86400000); };
   const score = (t) => {
@@ -208,7 +208,7 @@ export default function TaskBuddyV12() {
   const fmt = (m) => m >= 60 ? Math.floor(m / 60) + 'h ' + (m % 60 > 0 ? (m % 60) + 'm' : '') : m + 'm';
   const fmtDate = (ds) => { if (!ds) return ''; const d = new Date(ds + 'T00:00:00'); return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()] + ' ' + d.getDate(); };
 
-  // ─── FILTERED ─────────────────────────────────────────────
+  // âââ FILTERED âââââââââââââââââââââââââââââââââââââââââââââ
   const getActive = () => {
     let a = sortTasks(tasks.filter((t) => !t.done));
     if (activeCtx === 'lowEnergy') a = a.filter((t) => t.effort <= 5).sort((x, y) => x.effort - y.effort);
@@ -228,10 +228,10 @@ export default function TaskBuddyV12() {
   const later = active.slice(5);
   const cats = [...new Set(tasks.map((t) => t.cat))];
 
-  // ─── SOUND & EFFECTS ──────────────────────────────────────
+  // âââ SOUND & EFFECTS ââââââââââââââââââââââââââââââââââââââ
   const playCompletionSound = () => { try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination); osc.frequency.setValueAtTime(800, ctx.currentTime); osc.frequency.setValueAtTime(1200, ctx.currentTime + 0.1); gain.gain.setValueAtTime(0.3, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3); osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.3); } catch(e) {} };
 
-  // ─── ACTIONS ──────────────────────────────────────────────
+  // âââ ACTIONS ââââââââââââââââââââââââââââââââââââââââââââââ
   const complete = (id) => {
     playCompletionSound(); setCelebrating(id); setCelPhase('confetti');
     setTimeout(() => setCelPhase('slideout'), 600);
@@ -247,7 +247,7 @@ export default function TaskBuddyV12() {
     setUndoTask(null);
   };
 
-  // ─── AI TASK INSIGHT ──────────────────────────────────────
+  // âââ AI TASK INSIGHT ââââââââââââââââââââââââââââââââââââââ
   const getTaskInsight = (t) => {
     const s = score(t);
     const tips = [];
@@ -326,7 +326,7 @@ export default function TaskBuddyV12() {
   const toggleSubtask = (taskId, subId) => { setTasks((p) => p.map((t) => t.id === taskId ? { ...t, subtasks: t.subtasks.map((s) => s.id === subId ? { ...s, done: !s.done } : s) } : t)); };
   const addSubtask = (taskId) => { if (!subInput.trim()) return; setTasks((p) => p.map((t) => t.id === taskId ? { ...t, subtasks: [...t.subtasks, { id: Date.now(), title: subInput.trim(), done: false }] } : t)); setSubInput(''); };
 
-  // ─── V8.3: BRAIN DUMP PARSER ─────────────────────────────
+  // âââ V8.3: BRAIN DUMP PARSER âââââââââââââââââââââââââââââ
   const parseBrainDump = (text) => {
     if (!text.trim()) return [];
     // V9: Much smarter splitting for ADHD brain dumps
@@ -367,7 +367,7 @@ export default function TaskBuddyV12() {
       else if (/important|significant|strategic|growth|landing page|spring collection|inventory/i.test(lower)) impact = 7;
       else if (/small|minor|trivial|nice.?to.?have/i.test(lower)) impact = 3;
       const s = Math.min(100, Math.round(((impact * 4 + urgency * 3 + (10 - effort) * 1.5) / 8.5) * 10));
-      return { id: Date.now() + i, title, cat, impact, urgency, effort, time, age: 0, done: false, status: 'todo', notes: sentence !== title ? sentence : '', link: '', aiReason: 'Added via Brain Dump — AI will refine on next review.', dueDate: null, deadlineType: null, confidence: 7, subtasks: [], _score: s };
+      return { id: Date.now() + i, title, cat, impact, urgency, effort, time, age: 0, done: false, status: 'todo', notes: sentence !== title ? sentence : '', link: '', aiReason: 'Added via Brain Dump â AI will refine on next review.', dueDate: null, deadlineType: null, confidence: 7, subtasks: [], _score: s };
     });
     return parsed.sort((a, b) => b._score - a._score);
   };
@@ -377,7 +377,7 @@ export default function TaskBuddyV12() {
     setParsedTasks([]); setSelectedParsed(new Set()); setReviewingDump(false); setDumpText(''); setShowAddModal(false); setAddMode('brainDump');
   };
 
-  // ─── V8.3: WEB SPEECH API ──────────────────────────────
+  // âââ V8.3: WEB SPEECH API ââââââââââââââââââââââââââââââ
   const startSpeech = (target) => {
     const SpeechRecognition = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition);
     if (!SpeechRecognition) { alert('Speech recognition not supported in this browser. Try Chrome.'); return; }
@@ -409,7 +409,7 @@ export default function TaskBuddyV12() {
     setRecording(false);
   };
 
-  // ─── V8.3: EDIT TASK ──────────────────────────────────────
+  // âââ V8.3: EDIT TASK ââââââââââââââââââââââââââââââââââââââ
   const startEditTask = (t) => {
     setEditingTask(t.id);
     setNewTask({ title: t.title, description: t.notes || '', cat: t.cat, time: t.time, urgency: t.urgency, impact: t.impact, confidence: t.confidence || 7, ease: 10 - t.effort, blocking: Math.min(10, Math.round(t.impact * 0.6 + t.urgency * 0.4)), delegatable: t.effort <= 3, dueDate: t.dueDate || '', deadlineType: t.deadlineType || 'soft' });
@@ -423,7 +423,7 @@ export default function TaskBuddyV12() {
     setNewTask({ title: '', description: '', cat: 'Business', time: 30, urgency: 5, impact: 5, confidence: 7, ease: 5, blocking: 5, delegatable: false, dueDate: '', deadlineType: 'soft' });
   };
 
-  // ─── AI REVIEW ENGINE ─────────────────────────────────────
+  // âââ AI REVIEW ENGINE âââââââââââââââââââââââââââââââââââââ
   const runAiReview = () => {
     setAiReview('loading'); setReviewTab('priority'); setLoadingMsg('Reading your goals...');
     setTimeout(() => setLoadingMsg('Analyzing ' + active.length + ' tasks...'), 500);
@@ -496,7 +496,7 @@ export default function TaskBuddyV12() {
     setPage('today');
   };
 
-  // ─── V11: AI COMMAND CENTER ──────────────────────────────
+  // âââ V11: AI COMMAND CENTER ââââââââââââââââââââââââââââââ
   // Fuzzy match: find tasks by loose title reference
   const fuzzyMatch = (query, taskList) => {
     const q = query.toLowerCase().trim();
@@ -565,7 +565,7 @@ export default function TaskBuddyV12() {
     const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
     const hour = new Date().getHours();
     const timeOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
-    return `You are TaskBuddy AI — a sharp, supportive productivity assistant for ADHD entrepreneurs. You're embedded in a task management app.
+    return `You are TaskBuddy AI â a sharp, supportive productivity assistant for ADHD entrepreneurs. You're embedded in a task management app.
 
 TODAY: ${today} (${timeOfDay})
 USER: ${userCtx.aboutMe}
@@ -582,11 +582,11 @@ INSTRUCTIONS:
 - Be conversational, warm, and concise (2-4 short paragraphs max)
 - Reference specific tasks by name when giving advice
 - Understand the user's emotional state and energy level
-- Give actionable, specific recommendations — not generic productivity tips
+- Give actionable, specific recommendations â not generic productivity tips
 - If the user seems overwhelmed, help them focus on just ONE next step
 - You can suggest app commands like: "mark [task] as done", "plan my next 30 min", "add task: [name]", "review"
 - Format with **bold** for emphasis, use line breaks for readability
-- Don't repeat task lists the user can already see — add insight and strategy instead
+- Don't repeat task lists the user can already see â add insight and strategy instead
 - If the user asks you to do something to tasks (complete, create, modify), tell them the exact command to type`;
   };
 
@@ -596,7 +596,7 @@ INSTRUCTIONS:
     const newConvo = [...geminiConvo, { role: 'user', parts: [{ text: userMessage }] }];
 
     try {
-      const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-05-06:generateContent?key=' + geminiApiKey, {
+      const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + geminiApiKey, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -616,7 +616,7 @@ INSTRUCTIONS:
       setGeminiConvo([...newConvo, { role: 'model', parts: [{ text: aiText }] }]);
       return { type: 'text', text: aiText };
     } catch (err) {
-      return { type: 'text', text: '⚠️ Gemini error: ' + err.message + '\n\nTry a built-in command like **"help"**, **"plan my next 30 min"**, or **"review"**.' };
+      return { type: 'text', text: 'â ï¸ Gemini error: ' + err.message + '\n\nTry a built-in command like **"help"**, **"plan my next 30 min"**, or **"review"**.' };
     }
   };
 
@@ -637,7 +637,7 @@ INSTRUCTIONS:
       if (dumpText.length > 5) return { type: 'braindump', text: dumpText };
     }
 
-    // COMPLETE ALL — check before specific complete to avoid "all" going to fuzzyMatch
+    // COMPLETE ALL â check before specific complete to avoid "all" going to fuzzyMatch
     if (/\b(mark|done with|finished|completed?|i did|just did|i.ve done)\b/i.test(t) && /\b(all|every|everything)\b/i.test(t) && /\b(task|them|it|my)\b/i.test(t)) {
       return { type: 'completeAll', matched: activeTasks };
     }
@@ -675,7 +675,7 @@ INSTRUCTIONS:
 
     // RENAME / EDIT TASK NAME
     if (/\b(rename|change\s+(?:the\s+)?name|retitle)\b/i.test(t)) {
-      const renameMatch = t.match(/(?:rename|change\s+(?:the\s+)?name\s+(?:of\s+)?|retitle)\s*(.+?)\s+(?:to|→|->)\s+(.+)/i);
+      const renameMatch = t.match(/(?:rename|change\s+(?:the\s+)?name\s+(?:of\s+)?|retitle)\s*(.+?)\s+(?:to|â|->)\s+(.+)/i);
       if (renameMatch) {
         const oldName = renameMatch[1].trim();
         const newName = renameMatch[2].trim();
@@ -687,7 +687,7 @@ INSTRUCTIONS:
     // MODIFY (change due date, priority, urgency, etc.)
     if (/\b(change|update|set|move|reschedule)\b/i.test(t) && /\b(deadline|urgency|priority|impact|effort|due|date)\b/i.test(t)) {
       // Try to extract task name and the property being changed
-      const dueDateMatch = t.match(/(?:due\s*(?:date)?|deadline)\s*(?:of|for)\s+(.+?)\s+(?:to|→)\s+(.+)/i) || t.match(/(?:change|move|reschedule|set)\s+(?:the\s+)?(?:due\s*(?:date)?|deadline)\s+(?:of|for)\s+(.+?)\s+(?:to|→)\s+(.+)/i) || t.match(/(.+?)\s+(?:due\s*(?:date)?|deadline)\s+(?:to|→)\s+(.+)/i);
+      const dueDateMatch = t.match(/(?:due\s*(?:date)?|deadline)\s*(?:of|for)\s+(.+?)\s+(?:to|â)\s+(.+)/i) || t.match(/(?:change|move|reschedule|set)\s+(?:the\s+)?(?:due\s*(?:date)?|deadline)\s+(?:of|for)\s+(.+?)\s+(?:to|â)\s+(.+)/i) || t.match(/(.+?)\s+(?:due\s*(?:date)?|deadline)\s+(?:to|â)\s+(.+)/i);
       if (dueDateMatch) {
         const taskName = dueDateMatch[1].replace(/^(?:the\s+)/i, '').trim();
         const dateStr = dueDateMatch[2].trim();
@@ -1053,7 +1053,7 @@ INSTRUCTIONS:
         response = executeCommand(cmd);
       }
       if (!response) {
-        // V14: No command matched — send to Gemini for real AI conversation
+        // V14: No command matched â send to Gemini for real AI conversation
         response = await callGemini(text);
       }
       setMsgs((p) => [...p, { role: 'ai', ...response }]);
@@ -1062,7 +1062,7 @@ INSTRUCTIONS:
 
     setTimeout(processMsg, 200);
   };
-  // ─── DRAG ─────────────────────────────────────────────────
+  // âââ DRAG âââââââââââââââââââââââââââââââââââââââââââââââââ
   const handleDragStart = (id) => setDragId(id);
   const handleDragOver = (e, tid) => { e.preventDefault(); if (dragId && dragId !== tid) setDragOverId(tid); };
   const handleDragLeave = () => setDragOverId(null);
@@ -1074,7 +1074,7 @@ INSTRUCTIONS:
 
   const confetti = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#F38181', '#AA96DA', '#95E1D3', '#FF9FF3', '#48DBFB'];
 
-  // ─── RENDER: CHECKBOX ────────────────────────────────────
+  // âââ RENDER: CHECKBOX ââââââââââââââââââââââââââââââââââââ
   const renderChk = (t) => {
     const isCel = celebrating === t.id;
     const isConfetti = isCel && celPhase === 'confetti';
@@ -1087,7 +1087,7 @@ INSTRUCTIONS:
     );
   };
 
-  // ─── RENDER: DETAIL (V10: with conditional AI nudge display) ──
+  // âââ RENDER: DETAIL (V10: with conditional AI nudge display) ââ
   const renderDetail = (t) => (
     <div style={{ padding: '12px 16px 16px', borderTop: '1px solid ' + c.bdr, background: c.card2 }}>
       {showAiNudge === t.id && t.aiReason && <div style={{ display: 'flex', gap: 8, marginBottom: 12, padding: '10px 12px', borderRadius: 8, background: c.briefBg, border: '1px solid ' + c.acc + '20' }}><Sparkles size={14} color={c.acc} style={{ flexShrink: 0, marginTop: 2 }} /><span style={{ fontSize: 12, color: c.txt, fontStyle: 'italic', lineHeight: 1.5 }}>{t.aiReason}</span></div>}
@@ -1126,7 +1126,7 @@ INSTRUCTIONS:
     </div>
   );
 
-  // ─── RENDER: TASK CARD (V8: description + smart tags + score/100) ──
+  // âââ RENDER: TASK CARD (V8: description + smart tags + score/100) ââ
   const renderTask = (t, opts = {}) => {
     const { large, drag, dim } = opts;
     const isExp = expanded === t.id, isDragging = dragId === t.id, d = daysUntilDue(t);
@@ -1174,7 +1174,7 @@ INSTRUCTIONS:
 
   const sectionHead = (label, count) => <div style={{ fontSize: 11, fontWeight: 600, color: c.sub, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8, marginTop: 16, display: 'flex', alignItems: 'center', gap: 8 }}>{label} <span style={{ fontSize: 10, fontWeight: 400 }}>({count})</span></div>;
 
-  // ─── AI REVIEW PANEL ──────────────────────────────────────
+  // âââ AI REVIEW PANEL ââââââââââââââââââââââââââââââââââââââ
   const renderAiReview = () => {
     if (aiReview === 'loading') return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 16 }}>
@@ -1212,7 +1212,7 @@ INSTRUCTIONS:
                       <div style={{ fontSize: 11, color: c.sub, fontStyle: 'italic', lineHeight: 1.4, marginBottom: 4 }}>{reviewData.understanding[t.id]}</div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ fontSize: 10, color: catColors[t.cat], background: catColors[t.cat] + '18', padding: '1px 6px', borderRadius: 4 }}>{t.cat}</span>
-                        {diff !== 0 && <span style={{ fontSize: 10, fontWeight: 600, color: diff > 0 ? c.ok : c.danger }}>{diff > 0 ? '↑' : '↓'} {origScore} → {aiScore}</span>}
+                        {diff !== 0 && <span style={{ fontSize: 10, fontWeight: 600, color: diff > 0 ? c.ok : c.danger }}>{diff > 0 ? 'â' : 'â'} {origScore} â {aiScore}</span>}
                         <span style={{ fontSize: 10, color: c.sub }}>{fmt(t.time)}</span>
                       </div>
                     </div>
@@ -1257,7 +1257,7 @@ INSTRUCTIONS:
     );
   };
 
-  // ─── ADD TASK MODAL (V8.3: Brain Dump default + Manual tab) ──
+  // âââ ADD TASK MODAL (V8.3: Brain Dump default + Manual tab) ââ
   const renderAddModal = () => {
     if (!showAddModal) return null;
     const sliderStyle = (val) => ({
@@ -1283,11 +1283,11 @@ INSTRUCTIONS:
             </div>
           )}
 
-          {/* ── BRAIN DUMP TAB ── */}
+          {/* ââ BRAIN DUMP TAB ââ */}
           {addMode === 'brainDump' && !editingTask && !reviewingDump && (
             <div>
-              <div style={{ fontSize: 12, color: c.sub, marginBottom: 12, lineHeight: 1.6 }}>Dump everything on your mind — tasks, ideas, things you need to do. Speak freely or type it all out. AI will parse it into structured, ranked tasks.</div>
-              <textarea value={dumpText} onChange={(e) => setDumpText(e.target.value)} placeholder={"I need to call the supplier about Q2 inventory, it's urgent. Also review the Q1 numbers before Friday — should schedule the investor call sometime this week. Oh and I should probably work out tomorrow morning..."} rows={8} style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid ' + c.bdr, background: c.bg, color: c.txt, fontSize: 13, outline: 'none', resize: 'vertical', lineHeight: 1.7, fontFamily: 'inherit', boxSizing: 'border-box', minHeight: 160 }} />
+              <div style={{ fontSize: 12, color: c.sub, marginBottom: 12, lineHeight: 1.6 }}>Dump everything on your mind â tasks, ideas, things you need to do. Speak freely or type it all out. AI will parse it into structured, ranked tasks.</div>
+              <textarea value={dumpText} onChange={(e) => setDumpText(e.target.value)} placeholder={"I need to call the supplier about Q2 inventory, it's urgent. Also review the Q1 numbers before Friday â should schedule the investor call sometime this week. Oh and I should probably work out tomorrow morning..."} rows={8} style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid ' + c.bdr, background: c.bg, color: c.txt, fontSize: 13, outline: 'none', resize: 'vertical', lineHeight: 1.7, fontFamily: 'inherit', boxSizing: 'border-box', minHeight: 160 }} />
               <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                 <button onClick={() => { if (recording) stopSpeech('dump'); else startSpeech('dump'); }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 10, border: '1px solid ' + (recording ? c.danger : c.bdr), background: recording ? c.danger + '15' : c.card, color: recording ? c.danger : c.sub, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}><Mic size={14} /> {recording ? 'Stop Recording' : 'Voice Input'}</button>
                 <div style={{ flex: 1 }} />
@@ -1297,7 +1297,7 @@ INSTRUCTIONS:
             </div>
           )}
 
-          {/* ── BRAIN DUMP REVIEW ── */}
+          {/* ââ BRAIN DUMP REVIEW ââ */}
           {addMode === 'brainDump' && !editingTask && reviewingDump && (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -1330,7 +1330,7 @@ INSTRUCTIONS:
             </div>
           )}
 
-          {/* ── MANUAL TAB (original form) ── */}
+          {/* ââ MANUAL TAB (original form) ââ */}
           {(addMode === 'manual' || editingTask) && (
             <div>
               {/* Title */}
@@ -1399,7 +1399,7 @@ INSTRUCTIONS:
     );
   };
 
-  // ─── PAGE: FOCUS (V10: Task queue with progress bar, Start Focus button) ──
+  // âââ PAGE: FOCUS (V10: Task queue with progress bar, Start Focus button) ââ
   const renderFocusQueue = () => {
     const completedToday = done.length;
     const totalTasksToday = active.length + done.length;
@@ -1465,7 +1465,7 @@ INSTRUCTIONS:
   );
   };
 
-  // ─── AI CHAT PANEL (V8: always visible on Focus page, left side) ──
+  // âââ AI CHAT PANEL (V8: always visible on Focus page, left side) ââ
   // Simple markdown renderer for AI chat messages
   const renderMd = (text) => {
     if (!text) return text;
@@ -1546,7 +1546,7 @@ INSTRUCTIONS:
     </div>
   );
 
-  // ─── AI Review rendered inline in left panel ──────────────
+  // âââ AI Review rendered inline in left panel ââââââââââââââ
   const renderAiReviewInline = () => {
     if (aiReview === 'loading') return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 16 }}>
@@ -1581,7 +1581,7 @@ INSTRUCTIONS:
                   <div style={{ fontSize: 10, color: c.sub, fontStyle: 'italic', lineHeight: 1.4, marginBottom: 3 }}>{reviewData.understanding[t.id]}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ fontSize: 9, color: catColors[t.cat], background: catColors[t.cat] + '18', padding: '1px 5px', borderRadius: 4 }}>{t.cat}</span>
-                    {diff !== 0 && <span style={{ fontSize: 9, fontWeight: 600, color: diff > 0 ? c.ok : c.danger }}>{diff > 0 ? '↑' : '↓'} {origScore} → {aiScore}</span>}
+                    {diff !== 0 && <span style={{ fontSize: 9, fontWeight: 600, color: diff > 0 ? c.ok : c.danger }}>{diff > 0 ? 'â' : 'â'} {origScore} â {aiScore}</span>}
                     <span style={{ fontSize: 9, color: c.sub }}>{fmt(t.time)}</span>
                   </div>
                 </div>
@@ -1610,14 +1610,14 @@ INSTRUCTIONS:
     );
   };
 
-  // ─── LEFT PANEL: Always Chat (V11) ──────────────────────
+  // âââ LEFT PANEL: Always Chat (V11) ââââââââââââââââââââââ
   const renderLeftPanel = () => (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {renderAiChat()}
     </div>
   );
 
-  // ─── PAGE: FOCUS (V8.1: 2-panel with tabbed left panel) ───
+  // âââ PAGE: FOCUS (V8.1: 2-panel with tabbed left panel) âââ
   const renderToday = () => {
     if (mobile) {
       return (
@@ -1639,7 +1639,7 @@ INSTRUCTIONS:
     );
   };
 
-  // ─── PAGE: ALL TASKS (V8: Status filter tabs) ─────────────
+  // âââ PAGE: ALL TASKS (V8: Status filter tabs) âââââââââââââ
   const renderAllTasks = () => {
     const todoCount = tasks.filter(t => !t.done && (t.status || 'todo') === 'todo').length;
     const ipCount = tasks.filter(t => !t.done && t.status === 'in_progress').length;
@@ -1683,7 +1683,7 @@ INSTRUCTIONS:
     );
   };
 
-  // ─── PAGE: ARCHIVE ───────────────────────────────────────
+  // âââ PAGE: ARCHIVE âââââââââââââââââââââââââââââââââââââââ
   const renderArchive = () => (
     <div style={{ overflowY: 'auto', height: '100%', padding: '0 4px' }}>
       <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
@@ -1705,7 +1705,7 @@ INSTRUCTIONS:
     </div>
   );
 
-  // ─── PAGE: SETTINGS (V8: Simplified single-page) ──────────
+  // âââ PAGE: SETTINGS (V8: Simplified single-page) ââââââââââ
   const renderSettings = () => (
     <div style={{ overflowY: 'auto', height: '100%', padding: '0 4px' }}>
       {/* About Me card */}
@@ -1748,11 +1748,11 @@ INSTRUCTIONS:
     </div>
   );
 
-  // ─── ROUTING ─────────────────────────────────────────────
+  // âââ ROUTING âââââââââââââââââââââââââââââââââââââââââââââ
   const pages = { today: renderToday, all: renderAllTasks, archive: renderArchive, settings: renderSettings };
   const pageLabel = { today: 'Focus', all: 'All Tasks', archive: 'Archive', settings: 'Settings' };
 
-  // ─── MAIN RENDER ─────────────────────────────────────────
+  // âââ MAIN RENDER âââââââââââââââââââââââââââââââââââââââââ
   if (authLoading) {
     return (
       <div style={{ minHeight: '100vh', background: '#0F1117', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1766,7 +1766,7 @@ INSTRUCTIONS:
 
   return (
     <div style={{ display: 'flex', flexDirection: mobile ? 'column' : 'row', height: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', background: c.bg, color: c.txt, overflow: 'hidden' }}>
-      {/* ── V8 Sidebar: expanded with text labels ── */}
+      {/* ââ V8 Sidebar: expanded with text labels ââ */}
       {!mobile && (
         <div style={{ width: 200, background: c.side, borderRight: '1px solid ' + c.bdr, display: 'flex', flexDirection: 'column', paddingTop: 12, flexShrink: 0, backgroundImage: dark === 'dark' ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' : 'none' }}>
           {/* Logo */}
@@ -1796,7 +1796,7 @@ INSTRUCTIONS:
         </div>
       )}
 
-      {/* ── Main Content ── */}
+      {/* ââ Main Content ââ */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, paddingBottom: mobile ? 56 : 0 }}>
         {/* Header bar \u2014simplified for V8 */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: mobile ? '8px 12px' : '10px 24px', borderBottom: '1px solid ' + c.bdr, flexShrink: 0 }}>
@@ -1813,7 +1813,7 @@ INSTRUCTIONS:
         </div>
       </div>
 
-      {/* ── Mobile: AI Panel toggle ── */}
+      {/* ââ Mobile: AI Panel toggle ââ */}
       {mobile && (
         <>
           {/* Floating AI button */}
@@ -1830,14 +1830,14 @@ INSTRUCTIONS:
         </>
       )}
 
-      {/* ── Mobile Bottom Nav ── */}
+      {/* ââ Mobile Bottom Nav ââ */}
       {mobile && (
         <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, height: 56, background: c.side, borderTop: '1px solid ' + c.bdr, display: 'flex', alignItems: 'center', justifyContent: 'space-around', zIndex: 40 }}>
           {navItems.map((n) => <button key={n.id} onClick={() => { setPage(n.id); setAiReview(null); }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: 'transparent', border: 'none', color: page === n.id ? c.acc : c.sub, cursor: 'pointer', padding: '4px 0' }}><n.icon size={20} /><span style={{ fontSize: 9 }}>{n.label}</span></button>)}
         </div>
       )}
 
-      {/* ── Add Task Modal ── */}
+      {/* ââ Add Task Modal ââ */}
       {renderAddModal()}
 
       {/* V8.3: Undo completion toast */}
