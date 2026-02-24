@@ -105,6 +105,9 @@ export default function TaskBuddyV12() {
   const [showAiNudge, setShowAiNudge] = useState(null);
   // V11: Chat context for follow-up commands
   const [chatContext, setChatContext] = useState({ lastCmd: null, lastAffected: [], lastPlan: null, lastTasksSnapshot: null });
+  // V14: Gemini AI integration
+  const [geminiApiKey] = useState('AIzaSyDRClPj-DFXY6eJwOyuwCK8YG91s0H0BgM');
+  const [geminiConvo, setGeminiConvo] = useState([]);
   // V8: Add Task modal state
   const [showAddModal, setShowAddModal] = useState(false);
   const [newTask, setNewTask] = useState({ title: '', description: '', cat: 'Business', time: 30, urgency: 5, impact: 5, confidence: 7, ease: 5, blocking: 5, delegatable: false, dueDate: '', deadlineType: 'soft' });
@@ -555,11 +558,89 @@ export default function TaskBuddyV12() {
     });
   };
 
+  // V14: Gemini AI - Build system prompt with task context
+  const buildGeminiPrompt = () => {
+    const active = tasks.filter(t => !t.done);
+    const overdue = active.filter(t => { const d = daysUntilDue(t); return d !== null && d < 0; });
+    const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    const hour = new Date().getHours();
+    const timeOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+    return `You are TaskBuddy AI — a sharp, supportive productivity assistant for ADHD entrepreneurs. You're embedded in a task management app.
+
+TODAY: ${today} (${timeOfDay})
+USER: ${userCtx.aboutMe}
+GOALS: ${userCtx.lifeGoals}
+CURRENT FOCUS: ${userCtx.currentFocus}
+PRIORITY CATEGORIES: ${userCtx.boostCats.join(', ')}
+
+TASK SUMMARY: ${active.length} active tasks, ${tasks.filter(t => t.done).length} completed, ${overdue.length} overdue
+
+ALL ACTIVE TASKS (sorted by priority score):
+${active.sort((a, b) => score(b) - score(a)).map((t, i) => `${i + 1}. "${t.title}" [${t.cat}] Score: ${score(t)}/100, Time: ${t.time}min, Impact: ${t.impact}/10, Urgency: ${t.urgency}/10${t.dueDate ? ', Due: ' + t.dueDate : ''}${t.notes ? ', Notes: ' + t.notes.substring(0, 80) : ''}${t.subtasks?.length ? ', Subtasks: ' + t.subtasks.filter(s => s.done).length + '/' + t.subtasks.length + ' done' : ''}`).join('\n')}
+
+INSTRUCTIONS:
+- Be conversational, warm, and concise (2-4 short paragraphs max)
+- Reference specific tasks by name when giving advice
+- Understand the user's emotional state and energy level
+- Give actionable, specific recommendations — not generic productivity tips
+- If the user seems overwhelmed, help them focus on just ONE next step
+- You can suggest app commands like: "mark [task] as done", "plan my next 30 min", "add task: [name]", "review"
+- Format with **bold** for emphasis, use line breaks for readability
+- Don't repeat task lists the user can already see — add insight and strategy instead
+- If the user asks you to do something to tasks (complete, create, modify), tell them the exact command to type`;
+  };
+
+  // V14: Call Gemini API
+  const callGemini = async (userMessage) => {
+    const systemPrompt = buildGeminiPrompt();
+    const newConvo = [...geminiConvo, { role: 'user', parts: [{ text: userMessage }] }];
+
+    try {
+      const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-05-06:generateContent?key=' + geminiApiKey, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          contents: newConvo,
+          generationConfig: { maxOutputTokens: 800, temperature: 0.8 }
+        })
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error?.message || 'API error ' + res.status);
+      }
+
+      const data = await res.json();
+      const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I couldn\'t generate a response.';
+      setGeminiConvo([...newConvo, { role: 'model', parts: [{ text: aiText }] }]);
+      return { type: 'text', text: aiText };
+    } catch (err) {
+      return { type: 'text', text: '⚠️ Gemini error: ' + err.message + '\n\nTry a built-in command like **"help"**, **"plan my next 30 min"**, or **"review"**.' };
+    }
+  };
+
   // V11: Command Parser
   const parseCommand = (text) => {
     const t = text.toLowerCase().trim();
     const activeTasks = tasks.filter(tk => !tk.done);
     const doneTasks = tasks.filter(tk => tk.done);
+
+    // HELP
+    if (/^(help|what can you do|commands|how do i use|how does this work|what do you do)\??$/i.test(t) || /\b(help me|show.+commands|what are.+commands)\b/i.test(t)) {
+      return { type: 'help' };
+    }
+
+    // BRAIN DUMP (must be before CREATE to catch "brain dump: I need to..." before "i need to" triggers create)
+    if (/^brain\s*dump\s*[:;-]\s*/i.test(t)) {
+      const dumpText = text.replace(/^brain\s*dump\s*[:;-]\s*/i, '').trim();
+      if (dumpText.length > 5) return { type: 'braindump', text: dumpText };
+    }
+
+    // COMPLETE ALL — check before specific complete to avoid "all" going to fuzzyMatch
+    if (/\b(mark|done with|finished|completed?|i did|just did|i.ve done)\b/i.test(t) && /\b(all|every|everything)\b/i.test(t) && /\b(task|them|it|my)\b/i.test(t)) {
+      return { type: 'completeAll', matched: activeTasks };
+    }
 
     // ARCHIVE
     if (/\b(archive|clear|clean up|remove)\b/i.test(t)) {
@@ -575,14 +656,49 @@ export default function TaskBuddyV12() {
       return { type: 'archive', scope: 'all', matched: activeTasks };
     }
 
-    // COMPLETE
-    if (/\b(mark|done with|finished|completed?|i did|just did)\b/i.test(t)) {
-      const taskRef = t.replace(/^.*?\b(?:mark|done with|finished|completed?|i did|just did)\s+(?:the\s+)?/i, '').replace(/\s+(?:as\s+)?(?:done|complete|finished)\s*$/i, '');
+    // COMPLETE (single or multiple tasks)
+    if (/\b(mark|done with|finished|completed?|i did|just did|i.ve done)\b/i.test(t)) {
+      const taskRef = t.replace(/^.*?\b(?:mark|done with|finished|completed?|i did|just did|i've done|i.ve done)\s+(?:the\s+)?/i, '').replace(/\s+(?:as\s+)?(?:done|complete|finished)\s*$/i, '');
+      // Check for multiple tasks separated by "and" or commas
+      const parts = taskRef.split(/\s*(?:,\s*(?:and\s+)?|\s+and\s+)\s*/i).map(p => p.trim()).filter(p => p.length > 2);
+      if (parts.length > 1) {
+        const allMatched = [];
+        for (const part of parts) {
+          const m = fuzzyMatch(part, activeTasks);
+          if (m.length > 0) allMatched.push(m[0]);
+        }
+        if (allMatched.length > 0) return { type: 'complete', matched: allMatched };
+      }
       const matched = fuzzyMatch(taskRef, activeTasks);
       if (matched.length > 0) return { type: 'complete', matched };
     }
 
-    // CREATE
+    // RENAME / EDIT TASK NAME
+    if (/\b(rename|change\s+(?:the\s+)?name|retitle)\b/i.test(t)) {
+      const renameMatch = t.match(/(?:rename|change\s+(?:the\s+)?name\s+(?:of\s+)?|retitle)\s*(.+?)\s+(?:to|→|->)\s+(.+)/i);
+      if (renameMatch) {
+        const oldName = renameMatch[1].trim();
+        const newName = renameMatch[2].trim();
+        const matched = fuzzyMatch(oldName, activeTasks);
+        if (matched.length > 0) return { type: 'rename', task: matched[0], newName: newName.charAt(0).toUpperCase() + newName.slice(1) };
+      }
+    }
+
+    // MODIFY (change due date, priority, urgency, etc.)
+    if (/\b(change|update|set|move|reschedule)\b/i.test(t) && /\b(deadline|urgency|priority|impact|effort|due|date)\b/i.test(t)) {
+      // Try to extract task name and the property being changed
+      const dueDateMatch = t.match(/(?:due\s*(?:date)?|deadline)\s*(?:of|for)\s+(.+?)\s+(?:to|→)\s+(.+)/i) || t.match(/(?:change|move|reschedule|set)\s+(?:the\s+)?(?:due\s*(?:date)?|deadline)\s+(?:of|for)\s+(.+?)\s+(?:to|→)\s+(.+)/i) || t.match(/(.+?)\s+(?:due\s*(?:date)?|deadline)\s+(?:to|→)\s+(.+)/i);
+      if (dueDateMatch) {
+        const taskName = dueDateMatch[1].replace(/^(?:the\s+)/i, '').trim();
+        const dateStr = dueDateMatch[2].trim();
+        const matched = fuzzyMatch(taskName, activeTasks);
+        if (matched.length > 0) return { type: 'modify', subtype: 'dueDate', task: matched[0], value: dateStr };
+      }
+      // Generic modify for other properties
+      return { type: 'modify', text: t };
+    }
+
+    // CREATE (including "i need to" but NOT if it's a brain dump)
     if (/\b(add|new task|create|i need to)\b/i.test(t)) {
       let taskText = t.replace(/^.*?\b(?:add\s+(?:a\s+)?task|new task|create\s+(?:a\s+)?task|i need to)\s*:?\s*/i, '');
       if (!taskText || taskText === t) taskText = t.replace(/^.*?\b(?:add|create)\s+/i, '');
@@ -616,11 +732,6 @@ export default function TaskBuddyV12() {
       return { type: 'status', filter: 'summary' };
     }
 
-    // MODIFY
-    if (/\b(change|update|set|make)\b/i.test(t) && /\b(deadline|urgency|priority|impact|effort|due)\b/i.test(t)) {
-      return { type: 'modify', text: t };
-    }
-
     // UNDO
     if (/\b(undo|undo that|revert)\b/i.test(t)) {
       return { type: 'undo' };
@@ -632,7 +743,7 @@ export default function TaskBuddyV12() {
     }
 
     // REPRIORITIZE
-    if (/low energy|tired|exhausted|burned out|no energy|drained/i.test(t)) return { type: 'reprioritize', intent: 'lowEnergy' };
+    if (/low energy|tired|exhausted|burned out|no energy|drained|overwhelmed|stressed|anxious|can.t focus|scattered|foggy/i.test(t)) return { type: 'reprioritize', intent: 'lowEnergy' };
     if (/quick win|quick task|small task|easy task|fast task|knock out/i.test(t)) return { type: 'reprioritize', intent: 'quickWins' };
     if (/deep focus|deep work|concentrate|uninterrupted|flow state/i.test(t)) return { type: 'reprioritize', intent: 'deepFocus' };
     if (/30 min|half hour|between meeting|short window|15 min/i.test(t)) return { type: 'reprioritize', intent: '30min' };
@@ -644,7 +755,7 @@ export default function TaskBuddyV12() {
       if (/personal|family|friend|self/i.test(focus)) return { type: 'reprioritize', intent: 'catPersonal' };
       if (/work|project|code|dev|design/i.test(focus)) return { type: 'reprioritize', intent: 'catWork' };
     }
-    if (/impactful|most important|highest priority|what matters|biggest impact/i.test(t)) return { type: 'reprioritize', intent: 'impact' };
+    if (/impactful|most important|highest priority|what matters|biggest impact|what should i tackle/i.test(t)) return { type: 'reprioritize', intent: 'impact' };
     const timeMatch = t.match(/(\d+)\s*(?:min(?:utes?)?|hours?)/i);
     if (timeMatch) {
       const mins = /hour/i.test(t) ? parseInt(timeMatch[1]) * 60 : parseInt(timeMatch[1]);
@@ -666,6 +777,37 @@ export default function TaskBuddyV12() {
     const snapshot = [...tasks];
 
     switch (cmd.type) {
+      case 'help': {
+        return { type: 'text', text: '**Here\'s what I can do:**\n\n' +
+          '**Complete tasks:** "mark [task] as done", "I finished [task]", "done with [task and task]"\n' +
+          '**Complete all:** "mark all tasks as done", "I\'ve done everything"\n' +
+          '**Add tasks:** "add task: [name] by [date], [time]"\n' +
+          '**Brain dump:** "brain dump: [list everything on your mind]"\n' +
+          '**Plan time:** "plan my next 30 minutes", "I have 2 hours"\n' +
+          '**Review:** "review my tasks", "how am I doing"\n' +
+          '**Status:** "what\'s overdue?", "how many tasks?", "show quick wins"\n' +
+          '**Energy/mood:** "I\'m tired", "low energy", "overwhelmed", "deep focus"\n' +
+          '**Archive:** "archive [task]", "clear done tasks"\n' +
+          '**Rename:** "rename [task] to [new name]"\n' +
+          '**Undo:** "undo" (reverts last action)\n\n' +
+          'Or just tell me how you\'re feeling and I\'ll reorder your tasks!' };
+      }
+      case 'braindump': {
+        const parsed = parseBrainDump(cmd.text);
+        if (parsed.length === 0) return { type: 'text', text: 'I couldn\'t parse any tasks from that. Try separating them with commas or periods.' };
+        const newTasks = parsed.map(t => ({ ...t, _score: undefined }));
+        setTasks(prev => [...newTasks, ...prev]);
+        setChatContext(prev => ({ ...prev, lastCmd: 'braindump', lastAffected: newTasks.map(t => t.id), lastTasksSnapshot: snapshot }));
+        const taskWord = newTasks.length === 1 ? 'task' : 'tasks';
+        return { type: 'tasks', text: 'Brain dump processed! Created **' + newTasks.length + ' ' + taskWord + '**:', newTasks, canUndo: true };
+      }
+      case 'completeAll': {
+        const ids = cmd.matched.map(t => t.id);
+        const count = ids.length;
+        ids.forEach(id => complete(id));
+        setChatContext(prev => ({ ...prev, lastCmd: 'completeAll', lastAffected: ids, lastTasksSnapshot: snapshot }));
+        return { type: 'action', text: 'Marked all **' + count + ' task' + (count !== 1 ? 's' : '') + '** as done! Amazing work!', action: 'complete', count, canUndo: true };
+      }
       case 'archive': {
         const ids = cmd.matched.map(t => t.id);
         const count = ids.length;
@@ -675,10 +817,49 @@ export default function TaskBuddyV12() {
         return { type: 'action', text: 'Archived **' + count + ' task' + (count !== 1 ? 's' : '') + '**. ' + remaining + ' active task' + (remaining !== 1 ? 's' : '') + ' remaining.', action: 'archive', count, canUndo: true };
       }
       case 'complete': {
+        // Support completing multiple tasks at once
+        if (cmd.matched.length > 1) {
+          const ids = cmd.matched.map(t => t.id);
+          cmd.matched.forEach(t => complete(t.id));
+          setChatContext(prev => ({ ...prev, lastCmd: 'complete', lastAffected: ids, lastTasksSnapshot: snapshot }));
+          const names = cmd.matched.map(t => '**' + t.title + '**');
+          return { type: 'action', text: 'Marked ' + names.join(' and ') + ' as done! Great work!', action: 'complete', count: cmd.matched.length, canUndo: true };
+        }
         const task = cmd.matched[0];
         complete(task.id);
         setChatContext(prev => ({ ...prev, lastCmd: 'complete', lastAffected: [task.id], lastTasksSnapshot: snapshot }));
         return { type: 'action', text: 'Marked **' + task.title + '** as done! Great work!', action: 'complete', count: 1, canUndo: true };
+      }
+      case 'rename': {
+        const task = cmd.task;
+        const oldTitle = task.title;
+        setTasks(prev => prev.map(t => t.id === task.id ? { ...t, title: cmd.newName } : t));
+        setChatContext(prev => ({ ...prev, lastCmd: 'rename', lastAffected: [task.id], lastTasksSnapshot: snapshot }));
+        return { type: 'action', text: 'Renamed **' + oldTitle + '** to **' + cmd.newName + '**.', action: 'rename', count: 1, canUndo: true };
+      }
+      case 'modify': {
+        if (cmd.subtype === 'dueDate' && cmd.task) {
+          let dueDate = null;
+          const val = cmd.value.toLowerCase();
+          if (/tomorrow/i.test(val)) {
+            const d = new Date(); d.setDate(d.getDate() + 1); dueDate = d.toISOString().split('T')[0];
+          } else if (/next\s*friday|friday/i.test(val)) {
+            const d = new Date(); const day = d.getDay(); const diff = (5 - day + 7) % 7 || 7; d.setDate(d.getDate() + diff); dueDate = d.toISOString().split('T')[0];
+          } else if (/next\s*monday|monday/i.test(val)) {
+            const d = new Date(); const day = d.getDay(); const diff = (1 - day + 7) % 7 || 7; d.setDate(d.getDate() + diff); dueDate = d.toISOString().split('T')[0];
+          } else if (/next\s*week/i.test(val)) {
+            const d = new Date(); d.setDate(d.getDate() + 7); dueDate = d.toISOString().split('T')[0];
+          } else if (/\d{4}-\d{2}-\d{2}/.test(val)) {
+            dueDate = val.match(/\d{4}-\d{2}-\d{2}/)[0];
+          }
+          if (dueDate) {
+            setTasks(prev => prev.map(t => t.id === cmd.task.id ? { ...t, dueDate } : t));
+            setChatContext(prev => ({ ...prev, lastCmd: 'modify', lastAffected: [cmd.task.id], lastTasksSnapshot: snapshot }));
+            return { type: 'action', text: 'Updated **' + cmd.task.title + '** due date to **' + dueDate + '**.', action: 'modify', count: 1, canUndo: true };
+          }
+          return { type: 'text', text: 'I couldn\'t parse that date. Try: "tomorrow", "next friday", "next monday", or a date like "2026-03-01".' };
+        }
+        return { type: 'text', text: 'To modify a task, try:\n- "change due date of [task] to [date]"\n- Or click on a task card and use **Edit task**.' };
       }
       case 'create': {
         const text = cmd.text;
@@ -851,13 +1032,14 @@ export default function TaskBuddyV12() {
     }
   };
 
-  // V11: Send message through command center
+  // V14: Send message - commands first, Gemini fallback for conversation
   const sendMsg = (text) => {
     if (!text || !text.trim()) return;
     setMsgs((p) => [...p, { role: 'user', text }]);
     setAiInput('');
     setAiThinking(true);
-    setTimeout(() => {
+
+    const processMsg = async () => {
       const cmd = parseCommand(text);
       let response;
       if (cmd && cmd.type === 'bulk') {
@@ -871,12 +1053,14 @@ export default function TaskBuddyV12() {
         response = executeCommand(cmd);
       }
       if (!response) {
-        const top3 = tasks.filter(tk => !tk.done).sort((a, b) => { const d = score(b) - score(a); if (d !== 0) return d; const dA = daysUntilDue(a), dB = daysUntilDue(b); if (dA !== null && dB !== null) { const dd = dA - dB; if (dd !== 0) return dd; } if (dA !== null) return -1; if (dB !== null) return 1; return a.id - b.id; }).slice(0, 3);
-        response = { type: 'text', text: '**Your top priorities:**\n\n' + top3.map((tk, i) => (i + 1) + '. **' + tk.title + '** (' + score(tk) + '/100, ' + fmt(tk.time) + ')').join('\n') + '\n\nTry: **archive** tasks, **add** new ones, **plan** your time, **review** priorities, or tell me your energy level.' };
+        // V14: No command matched — send to Gemini for real AI conversation
+        response = await callGemini(text);
       }
       setMsgs((p) => [...p, { role: 'ai', ...response }]);
       setAiThinking(false);
-    }, 400);
+    };
+
+    setTimeout(processMsg, 200);
   };
   // ─── DRAG ─────────────────────────────────────────────────
   const handleDragStart = (id) => setDragId(id);
